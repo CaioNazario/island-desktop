@@ -181,6 +181,19 @@ export const Island = GObject.registerClass(
       this.add_action(clickGesture);
 
       this.connectObject(
+        // Com o grab modal, o clique fora da ilha é entregue a ela: fecha
+        // tudo, como os menus do Shell. STOP para não virar clique na ilha
+        // (já em `compact`, abriria o cartão central).
+        'captured-event',
+        (_actor: St.Widget, event: Clutter.Event) => {
+          const type = event.type();
+          if (type !== Clutter.EventType.BUTTON_PRESS && type !== Clutter.EventType.TOUCH_BEGIN)
+            return Clutter.EVENT_PROPAGATE;
+          const target = global.stage.get_event_actor(event);
+          if (target && this.contains(target)) return Clutter.EVENT_PROPAGATE;
+          this.state.closeAll();
+          return Clutter.EVENT_STOP;
+        },
         'enter-event',
         () => {
           if (this.isTargetMonitor) this.state.hoverStart();
