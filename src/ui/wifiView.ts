@@ -147,7 +147,6 @@ export const WifiView = GObject.registerClass(
       this.scroll = new St.ScrollView({
         hscrollbar_policy: St.PolicyType.NEVER,
         vscrollbar_policy: St.PolicyType.AUTOMATIC,
-        overlay_scrollbars: true,
         y_expand: true,
       });
       this.scroll.set_child(this.listBox);
