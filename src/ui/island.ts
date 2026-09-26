@@ -13,7 +13,7 @@ import { ControlsRow, type ControlsRowActor } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
-import { effects } from './tokens.js';
+import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
 
@@ -28,8 +28,13 @@ export interface IslandSystem {
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
 // entre monitores (specs/02-barra.md); esta view só renderiza o modo atual
 // quando `isTarget` é true, e fica em `compact` nos demais monitores.
+//
+// A ilha em si não pinta nada: o fundo, o anel e o corte do conteúdo
+// (`overflow: hidden` no design) ficam na `surface`, para que sombra e brilho
+// possam ser atores irmãos fora da área cortada.
 export const Island = GObject.registerClass(
-  class Island extends St.Bin {
+  class Island extends St.Widget {
+    private readonly surface: St.Widget;
     private readonly state: IslandState;
     private readonly onIslandClick: () => void;
     private readonly onEscape: () => void;
@@ -50,11 +55,19 @@ export const Island = GObject.registerClass(
     ) {
       super({
         style_class: 'island',
+        layout_manager: new Clutter.BinLayout(),
         reactive: true,
         can_focus: true,
         track_hover: true,
-        style: 'background-color: #161826; border: 1px solid #3f424d;',
       });
+
+      this.surface = new St.Widget({
+        layout_manager: new Clutter.BinLayout(),
+        clip_to_allocation: true,
+        x_expand: true,
+        y_expand: true,
+      });
+      this.add_child(this.surface);
 
       this.state = state;
       this.onIslandClick = onIslandClick;
@@ -87,7 +100,7 @@ export const Island = GObject.registerClass(
         onLeave: () => this.state.closeAll(),
       });
 
-      this.set_child(this.clockLabel);
+      this.setContent(this.clockLabel);
 
       this.applySize(getSize('compact'), false);
       this.updateClock();
@@ -107,7 +120,7 @@ export const Island = GObject.registerClass(
           if (this.isTargetMonitor) this.state.hoverEnd();
         },
         'key-press-event',
-        (_actor: St.Bin, event: Clutter.Event) => {
+        (_actor: St.Widget, event: Clutter.Event) => {
           if (event.get_key_symbol() === Clutter.KEY_Escape) {
             // Regra 9 da spec 03: com o painel de senha aberto, Esc fecha só ele.
             if (this.contentMode === 'wifi' && this.wifiView.closePasswordIfOpen())
@@ -154,25 +167,30 @@ export const Island = GObject.registerClass(
       this.contentMode = mode;
       switch (mode) {
         case 'compact':
-          this.set_child(this.clockLabel);
+          this.setContent(this.clockLabel);
           break;
         case 'volume':
-          this.set_child(this.volumeRow);
+          this.setContent(this.volumeRow);
           break;
         case 'brightness':
-          this.set_child(this.brightnessRow);
+          this.setContent(this.brightnessRow);
           break;
         case 'quick':
-          this.set_child(this.quickRow);
+          this.setContent(this.quickRow);
           break;
         case 'wifi':
-          this.set_child(this.wifiView);
+          this.setContent(this.wifiView);
           this.wifiView.onOpen();
           break;
         // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
         default:
-          this.set_child(null);
+          this.setContent(null);
       }
+    }
+
+    private setContent(content: Clutter.Actor | null): void {
+      this.surface.remove_all_children();
+      if (content) this.surface.add_child(content);
     }
 
     private updateClock(): void {
@@ -186,7 +204,7 @@ export const Island = GObject.registerClass(
     ): void {
       if (!animate) {
         this.set_size(size.width, size.height);
-        this.style = `background-color: #161826; border: 1px solid #3f424d; border-radius: ${size.radius}px;`;
+        this.surface.style = `background-color: ${colors.bg}; border: 1px solid ${colors.neutral800}; border-radius: ${size.radius}px;`;
         return;
       }
       this.ease({
