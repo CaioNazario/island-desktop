@@ -4,7 +4,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { IslandState, type Scheduler } from '../core/island.js';
+import { isFixedMode, IslandState, type Scheduler } from '../core/island.js';
 import { Island, type IslandActor } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { layout } from './tokens.js';
@@ -110,6 +110,7 @@ class Bar {
     monitor: { index: number; x: number; y: number; width: number },
     state: IslandState,
     onIslandClick: () => void,
+    onEscape: () => void,
   ) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
@@ -120,7 +121,7 @@ class Bar {
     });
 
     const leftPill = new Pill();
-    const island = new Island(state, onIslandClick);
+    const island = new Island(state, onIslandClick, onEscape);
     this.island = island;
     const rightPill = new Pill();
     this.chrome = new BarChrome(leftPill, island, rightPill);
@@ -143,6 +144,8 @@ export class BarManager {
   private readonly state: IslandState;
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
+  private grab: Clutter.Grab | null = null;
+  private grabbedIsland: IslandActor | null = null;
 
   constructor() {
     this.state = new IslandState(new GLibScheduler(), {
@@ -150,6 +153,11 @@ export class BarManager {
     });
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
+  }
+
+  private handleEscape(): void {
+    // Sem campo de senha ainda (specs 08): Esc sempre fecha tudo (regra 9).
+    this.state.escape(false);
   }
 
   /** `Super+S`: alterna `quick` na ilha do monitor da janela focada (specs/03-ilha.md). */
@@ -171,19 +179,55 @@ export class BarManager {
   }
 
   private rebuild(): void {
+    if (this.grab) {
+      Main.popModal(this.grab);
+      this.grab = null;
+      this.grabbedIsland = null;
+    }
     this.bars.forEach((bar) => bar.destroy());
     this.bars = Main.layoutManager.monitors.map(
-      (monitor, index) => new Bar(monitor, this.state, () => this.handleIslandClick(index)),
+      (monitor, index) =>
+        new Bar(
+          monitor,
+          this.state,
+          () => this.handleIslandClick(index),
+          () => this.handleEscape(),
+        ),
     );
     this.render();
   }
 
   private render(): void {
     this.bars.forEach((bar, index) => bar.island.render(index === this.targetMonitorIndex));
+    this.syncGrab();
+  }
+
+  /** Modos fixos e o cartão central tomam o foco de teclado (specs/03-ilha.md). */
+  private syncGrab(): void {
+    const shouldGrab = this.state.cardOpen || isFixedMode(this.state.mode);
+    const targetIsland = this.bars[this.targetMonitorIndex]?.island ?? null;
+    const wantedIsland = shouldGrab ? targetIsland : null;
+
+    if (wantedIsland === this.grabbedIsland) return;
+
+    if (this.grab) {
+      Main.popModal(this.grab);
+      this.grab = null;
+      this.grabbedIsland = null;
+    }
+    if (wantedIsland) {
+      this.grab = Main.pushModal(wantedIsland);
+      this.grabbedIsland = wantedIsland;
+    }
   }
 
   destroy(): void {
     Main.layoutManager.disconnectObject(this);
+    if (this.grab) {
+      Main.popModal(this.grab);
+      this.grab = null;
+      this.grabbedIsland = null;
+    }
     this.bars.forEach((bar) => bar.destroy());
     this.bars = [];
   }

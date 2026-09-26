@@ -16,20 +16,23 @@ export const Island = GObject.registerClass(
   class Island extends St.Bin {
     private readonly state: IslandState;
     private readonly onIslandClick: () => void;
+    private readonly onEscape: () => void;
     private readonly clockLabel: St.Label;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
 
-    constructor(state: IslandState, onIslandClick: () => void) {
+    constructor(state: IslandState, onIslandClick: () => void, onEscape: () => void) {
       super({
         style_class: 'island',
         reactive: true,
+        can_focus: true,
         track_hover: true,
         style: 'background-color: #161826; border: 1px solid #3f424d;',
       });
 
       this.state = state;
       this.onIslandClick = onIslandClick;
+      this.onEscape = onEscape;
 
       this.clockLabel = new St.Label({
         style: `
@@ -59,6 +62,14 @@ export const Island = GObject.registerClass(
         'leave-event',
         () => {
           if (this.isTargetMonitor) this.state.hoverEnd();
+        },
+        'key-press-event',
+        (_actor: St.Bin, event: Clutter.Event) => {
+          if (event.get_key_symbol() === Clutter.KEY_Escape) {
+            this.onEscape();
+            return Clutter.EVENT_STOP;
+          }
+          return Clutter.EVENT_PROPAGATE;
         },
         'destroy',
         () => this.onDestroy(),

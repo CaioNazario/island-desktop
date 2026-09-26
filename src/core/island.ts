@@ -26,6 +26,11 @@ function isTransient(mode: Mode): boolean {
   return mode in TRANSIENT_MS;
 }
 
+/** Modos fixos (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`) tomam o foco de teclado (specs/03-ilha.md). */
+export function isFixedMode(mode: Mode): boolean {
+  return mode !== 'compact' && !isTransient(mode);
+}
+
 export interface Scheduler {
   setTimeout(callback: () => void, ms: number): number;
   clearTimeout(id: number): void;

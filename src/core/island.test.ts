@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getSize, IslandState, type Scheduler } from './island.js';
+import { getSize, isFixedMode, IslandState, type Scheduler } from './island.js';
 
 class FakeScheduler implements Scheduler {
   private nextId = 1;
@@ -206,6 +206,22 @@ describe('IslandState', () => {
 
     expect(state.escape(false)).toBe('noop'); // já em compact
     expect(changes).toBe(4);
+  });
+});
+
+describe('isFixedMode', () => {
+  it('só stack, calendar, quick, wifi, bt e ai tomam foco de teclado', () => {
+    expect(isFixedMode('compact')).toBe(false);
+    expect(isFixedMode('notif')).toBe(false);
+    expect(isFixedMode('music')).toBe(false);
+    expect(isFixedMode('volume')).toBe(false);
+    expect(isFixedMode('brightness')).toBe(false);
+    expect(isFixedMode('stack')).toBe(true);
+    expect(isFixedMode('calendar')).toBe(true);
+    expect(isFixedMode('quick')).toBe(true);
+    expect(isFixedMode('wifi')).toBe(true);
+    expect(isFixedMode('bt')).toBe(true);
+    expect(isFixedMode('ai')).toBe(true);
   });
 });
 
