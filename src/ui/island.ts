@@ -74,6 +74,7 @@ export const Island = GObject.registerClass(
   },
   class Island extends St.Widget {
     private readonly surface: St.Widget;
+    private readonly accentLine: St.Widget;
     private readonly state: IslandState;
     private readonly onIslandClick: () => void;
     private readonly onEscape: () => void;
@@ -109,6 +110,16 @@ export const Island = GObject.registerClass(
         y_expand: true,
       });
       this.add_child(this.surface);
+
+      this.accentLine = new St.Widget({
+        style: `background-color: ${colors.accent}; border-radius: 0 0 2px 2px;`,
+        width: 36,
+        height: 2,
+        opacity: 0,
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.START,
+      });
+      this.add_child(this.accentLine);
 
       this.state = state;
       this.onIslandClick = onIslandClick;
@@ -200,6 +211,17 @@ export const Island = GObject.registerClass(
       const mode = isTargetMonitor ? this.state.mode : 'compact';
       this.showContentFor(mode);
       this.applySize(getSize(mode, this.sizeContext()), true);
+      this.syncExpanded(mode !== 'compact' || (isTargetMonitor && this.state.cardOpen));
+    }
+
+    // "opacidade 1 quando a ilha não está em `compact` ou o cartão central está
+    // aberto (300ms)" (specs/03-ilha.md).
+    private syncExpanded(expanded: boolean): void {
+      this.accentLine.ease({
+        opacity: expanded ? 255 : 0,
+        duration: effects.islandChrome.durationMs,
+        mode: Clutter.AnimationMode.EASE,
+      });
     }
 
     /** O conteúdo do modo atual mudou de altura (ex.: painel de senha do `wifi`). */

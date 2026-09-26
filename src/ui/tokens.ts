@@ -88,6 +88,7 @@ export const layout = {
 export const effects = {
   islandSpring: { durationMs: 460, easing: 'EASE_OUT_BACK' },
   islandRadius: { durationMs: 460, easing: 'EASE' },
+  islandChrome: { durationMs: 300, easing: 'EASE' }, // linha de acento e sombra
   cardSpring: { durationMs: 400, easing: 'EASE_OUT_BACK' },
   contentCrossfade: { durationMs: 220, delayMs: 80, easing: 'EASE' },
   contentScale: {
