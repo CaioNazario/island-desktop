@@ -93,11 +93,14 @@ export function getSize(mode: Mode, ctx: SizeContext = {}): Size {
 
 export interface IslandStateOptions {
   islandClickOpens?: 'card' | 'calendar';
+  /** Chamado sempre que `mode` ou `cardOpen` muda, para a UI se re-sincronizar. */
+  onChange?: () => void;
 }
 
 export class IslandState {
   private readonly scheduler: Scheduler;
   private readonly islandClickOpens: 'card' | 'calendar';
+  private readonly onChange: () => void;
   private _mode: Mode = 'compact';
   private _cardOpen = false;
   private hovering = false;
@@ -106,6 +109,7 @@ export class IslandState {
   constructor(scheduler: Scheduler, options: IslandStateOptions = {}) {
     this.scheduler = scheduler;
     this.islandClickOpens = options.islandClickOpens ?? 'card';
+    this.onChange = options.onChange ?? (() => {});
   }
 
   get mode(): Mode {
@@ -150,6 +154,7 @@ export class IslandState {
         return 'opened-calendar';
       }
       this._cardOpen = !this._cardOpen;
+      this.onChange();
       return 'toggled-card';
     }
     if (this._mode === 'notif') {
@@ -196,6 +201,7 @@ export class IslandState {
     this.clearTimer();
     this._mode = 'compact';
     this._cardOpen = false;
+    this.onChange();
   }
 
   private setMode(mode: Mode): void {
@@ -203,6 +209,7 @@ export class IslandState {
     this._mode = mode;
     this._cardOpen = false;
     this.arm(mode);
+    this.onChange();
   }
 
   private arm(mode: Mode): void {
@@ -211,7 +218,10 @@ export class IslandState {
     if (ms === undefined || this.hovering) return;
     this.timerId = this.scheduler.setTimeout(() => {
       this.timerId = null;
-      if (this._mode === mode) this._mode = 'compact';
+      if (this._mode === mode) {
+        this._mode = 'compact';
+        this.onChange();
+      }
     }, ms);
   }
 

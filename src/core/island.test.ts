@@ -183,6 +183,30 @@ describe('IslandState', () => {
     const state = new IslandState(new FakeScheduler());
     expect(state.escape(false)).toBe('noop');
   });
+
+  it('onChange dispara em toda transição de mode/cardOpen, mas não em no-ops', () => {
+    const scheduler = new FakeScheduler();
+    let changes = 0;
+    const state = new IslandState(scheduler, { onChange: () => changes++ });
+
+    state.islandClick(); // abre cartão
+    expect(changes).toBe(1);
+
+    state.openFromTrigger('wifi'); // fecha cartão, muda modo
+    expect(changes).toBe(2);
+
+    expect(state.openAutomatic('music')).toBe(false); // bloqueado por modo fixo
+    expect(changes).toBe(2);
+
+    state.openFromTrigger('music'); // transitório
+    expect(changes).toBe(3);
+
+    scheduler.advance(4500); // timer expira, volta a compact
+    expect(changes).toBe(4);
+
+    expect(state.escape(false)).toBe('noop'); // já em compact
+    expect(changes).toBe(4);
+  });
 });
 
 describe('getSize', () => {
