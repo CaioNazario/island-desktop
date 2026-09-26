@@ -51,7 +51,7 @@ Só a linha de controles. Com a linha de energia aberta: 106px (spec 09). Abre p
 
 Linha de controles · linha de energia (opcional) · divisor · seção de redes (padding 0 12px):
 
-- **Cabeçalho** 26px: `ph ph-wifi-high` 14px `neutral-300`, "Redes Wi‑Fi" 13px/500, status 11px `neutral-500` ("Conectado a Casa" / "Conectando…" / "Desligado") e **switch** 32×18 raio 9 (ligado `accent-600`, desligado `neutral-700`, bolinha 14px `neutral-100`, 180ms) que liga/desliga o rádio.
+- **Cabeçalho** 26px: `ph ph-wifi-high` 14px `neutral-300`, "Redes Wi‑Fi" 13px/500, status 11px `neutral-500` ("Conectado a Casa" / "Conectando…" / "Desconectado" com rádio ligado e sem conexão / "Desligado") e **switch** 32×18 raio 9 (ligado `accent-600`, desligado `neutral-700`, bolinha 14px `neutral-100`, 180ms) que liga/desliga o rádio.
 - **Redes** (fonte `NM.Client`): APs visíveis deduplicados por SSID (fica o sinal mais forte), conectada primeiro e depois por sinal. Altura da ilha fixa: com mais de 5 redes, a lista rola.
 - Linha 36px raio 10, padding 0 8px, gap 10px, hover `neutral-900`: sinal (`ph-bold ph-wifi-high` ≥67%, `ph-wifi-medium` ≥34%, `ph-wifi-low` abaixo) 16px (`accent` se conectada, senão `neutral-300`) · SSID 12.5px · cadeado `ph-fill ph-lock-simple` 11px `neutral-500` se protegida · status 11px à direita ("Conectado" `accent-300`, "Conectando…" `neutral-400`). Conectada com fundo `accent-900`.
 - **Rádio desligado**: área de 150px com `ph ph-wifi-slash` 22px + "Wi‑Fi desligado" 12.5px `neutral-500`.
@@ -63,7 +63,9 @@ Linha de controles · linha de energia (opcional) · divisor · seção de redes
 | conectada ou conectando | nada |
 | aberta ou com perfil salvo | ativa; status "Conectando…" |
 | protegida (WPA/WPA2/WPA3 pessoal) sem perfil | abre o **painel de senha** abaixo dela; clicar de novo fecha |
-| WPA‑Enterprise (802.1X) ou captive portal | abre Configurações → Wi‑Fi (`gnome-control-center wifi`) |
+| WPA‑Enterprise (802.1X) sem perfil | abre Configurações → Wi‑Fi (`gnome-control-center wifi`) |
+
+Captive portal não é detectável antes de conectar: a rede aparece como aberta e ativa normalmente; depois de conectada, o portal fica com o helper nativo do Shell.
 
 ### Painel de senha
 
