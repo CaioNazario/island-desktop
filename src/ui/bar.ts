@@ -6,6 +6,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { isFixedMode, IslandState, type Scheduler } from '../core/island.js';
 import { SystemBrightness } from '../system/brightness.js';
+import { OsdRedirect } from '../system/osd.js';
 import { SystemVolume } from '../system/volume.js';
 import { Island, type IslandActor } from './island.js';
 import { Pill, type PillActor } from './pill.js';
@@ -150,14 +151,39 @@ export class BarManager {
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
   private grabbedIsland: IslandActor | null = null;
+  private readonly osdRedirect: OsdRedirect;
 
   constructor() {
     this.state = new IslandState(new GLibScheduler(), {
       onChange: () => this.render(),
     });
     this.system = { volume: new SystemVolume(), brightness: new SystemBrightness() };
+    this.osdRedirect = new OsdRedirect(
+      () => this.triggerVolumeKey(),
+      () => this.triggerBrightnessKey(),
+    );
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
+  }
+
+  /**
+   * Tecla de volume: monitor da janela focada (specs/02-barra.md). Com modo
+   * fixo ou cartão aberto, o valor já mudou no sistema; a ilha não se move
+   * (regra 4 da spec 03), então nem tenta trocar de monitor-alvo.
+   */
+  private triggerVolumeKey(): void {
+    if (this.state.cardOpen || isFixedMode(this.state.mode)) return;
+    this.targetMonitorIndex = this.focusedMonitorIndex();
+    this.state.volumeKey();
+    this.render();
+  }
+
+  /** Tecla de brilho: mesma regra da tecla de volume acima. */
+  private triggerBrightnessKey(): void {
+    if (this.state.cardOpen || isFixedMode(this.state.mode)) return;
+    this.targetMonitorIndex = this.focusedMonitorIndex();
+    this.state.brightnessKey();
+    this.render();
   }
 
   private handleEscape(): void {
@@ -238,5 +264,6 @@ export class BarManager {
     this.bars = [];
     this.system.volume.destroy();
     this.system.brightness.destroy();
+    this.osdRedirect.destroy();
   }
 }
