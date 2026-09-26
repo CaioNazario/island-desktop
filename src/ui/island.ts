@@ -4,33 +4,23 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import { formatClock, formatDay } from '../core/clock.js';
-import { getSize, IslandState, type Scheduler } from '../core/island.js';
+import { getSize, type IslandState } from '../core/island.js';
 import { effects } from './tokens.js';
-
-class GLibScheduler implements Scheduler {
-  setTimeout(callback: () => void, ms: number): number {
-    return GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
-      callback();
-      return GLib.SOURCE_REMOVE;
-    });
-  }
-
-  clearTimeout(id: number): void {
-    GLib.Source.remove(id);
-  }
-}
 
 const CLOCK_TICK_SECONDS = 15;
 
-// Ator da ilha central (specs/03-ilha.md). Modo `compact` mostra hora e dia;
-// os demais modos chegam com as specs 04+.
+// Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
+// entre monitores (specs/02-barra.md); esta view só renderiza o modo atual
+// quando `isTarget` é true, e fica em `compact` nos demais monitores.
 export const Island = GObject.registerClass(
   class Island extends St.Bin {
     private readonly state: IslandState;
+    private readonly onIslandClick: () => void;
     private readonly clockLabel: St.Label;
     private clockTimerId: number | null = null;
+    private isTargetMonitor = false;
 
-    constructor() {
+    constructor(state: IslandState, onIslandClick: () => void) {
       super({
         style_class: 'island',
         reactive: true,
@@ -38,9 +28,8 @@ export const Island = GObject.registerClass(
         style: 'background-color: #161826; border: 1px solid #3f424d;',
       });
 
-      this.state = new IslandState(new GLibScheduler(), {
-        onChange: () => this.syncMode(),
-      });
+      this.state = state;
+      this.onIslandClick = onIslandClick;
 
       this.clockLabel = new St.Label({
         style: `
@@ -60,16 +49,16 @@ export const Island = GObject.registerClass(
       this.connectObject(
         'button-press-event',
         () => {
-          this.state.islandClick();
+          this.onIslandClick();
           return Clutter.EVENT_STOP;
         },
         'enter-event',
         () => {
-          this.state.hoverStart();
+          if (this.isTargetMonitor) this.state.hoverStart();
         },
         'leave-event',
         () => {
-          this.state.hoverEnd();
+          if (this.isTargetMonitor) this.state.hoverEnd();
         },
         'destroy',
         () => this.onDestroy(),
@@ -86,18 +75,19 @@ export const Island = GObject.registerClass(
       );
     }
 
-    private updateClock(): void {
-      const now = new Date();
-      this.clockLabel.text = `${formatClock(now)} · ${formatDay(now)}`;
-    }
-
-    /** Re-sincroniza tamanho e conteúdo com `state.mode` (specs/03-ilha.md). */
-    private syncMode(): void {
-      const mode = this.state.mode;
+    /** Chamado pelo `BarManager` a cada mudança de modo ou de monitor-alvo. */
+    render(isTargetMonitor: boolean): void {
+      this.isTargetMonitor = isTargetMonitor;
+      const mode = isTargetMonitor ? this.state.mode : 'compact';
       this.applySize(getSize(mode), true);
       // Os demais modos ainda não têm conteúdo (specs 04+); por ora a ilha
       // fica vazia fora do compact em vez de mostrar o relógio no tamanho errado.
       this.clockLabel.visible = mode === 'compact';
+    }
+
+    private updateClock(): void {
+      const now = new Date();
+      this.clockLabel.text = `${formatClock(now)} · ${formatDay(now)}`;
     }
 
     private applySize(

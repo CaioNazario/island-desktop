@@ -1,11 +1,26 @@
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import { IslandState, type Scheduler } from '../core/island.js';
 import { Island, type IslandActor } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { layout } from './tokens.js';
+
+class GLibScheduler implements Scheduler {
+  setTimeout(callback: () => void, ms: number): number {
+    return GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+      callback();
+      return GLib.SOURCE_REMOVE;
+    });
+  }
+
+  clearTimeout(id: number): void {
+    GLib.Source.remove(id);
+  }
+}
 
 // Container das três pílulas (specs/02-barra.md): pílulas laterais dividem
 // igualmente o espaço que sobra da ilha; a ilha cresce para baixo sem mover
@@ -87,10 +102,15 @@ const StrutActor = GObject.registerClass(
 );
 
 class Bar {
+  readonly island: IslandActor;
   private readonly strut: InstanceType<typeof StrutActor>;
   private readonly chrome: InstanceType<typeof BarChrome>;
 
-  constructor(monitor: { index: number; x: number; y: number; width: number }) {
+  constructor(
+    monitor: { index: number; x: number; y: number; width: number },
+    state: IslandState,
+    onIslandClick: () => void,
+  ) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
     this.strut.set_size(monitor.width, layout.barHeight + layout.bottomGap);
@@ -100,7 +120,8 @@ class Bar {
     });
 
     const leftPill = new Pill();
-    const island = new Island();
+    const island = new Island(state, onIslandClick);
+    this.island = island;
     const rightPill = new Pill();
     this.chrome = new BarChrome(leftPill, island, rightPill);
     this.chrome.set_position(monitor.x, monitor.y);
@@ -116,17 +137,37 @@ class Bar {
   }
 }
 
+// Existe um único IslandState compartilhado entre monitores (specs/02-barra.md):
+// só a ilha do monitor-alvo mostra o modo atual, as outras ficam em `compact`.
 export class BarManager {
+  private readonly state: IslandState;
   private bars: Bar[] = [];
+  private targetMonitorIndex = 0;
 
   constructor() {
+    this.state = new IslandState(new GLibScheduler(), {
+      onChange: () => this.render(),
+    });
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
   }
 
+  private handleIslandClick(monitorIndex: number): void {
+    this.targetMonitorIndex = monitorIndex;
+    this.state.islandClick();
+    this.render();
+  }
+
   private rebuild(): void {
     this.bars.forEach((bar) => bar.destroy());
-    this.bars = Main.layoutManager.monitors.map((monitor) => new Bar(monitor));
+    this.bars = Main.layoutManager.monitors.map(
+      (monitor, index) => new Bar(monitor, this.state, () => this.handleIslandClick(index)),
+    );
+    this.render();
+  }
+
+  private render(): void {
+    this.bars.forEach((bar, index) => bar.island.render(index === this.targetMonitorIndex));
   }
 
   destroy(): void {
