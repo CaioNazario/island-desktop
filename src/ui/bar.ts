@@ -5,6 +5,8 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { isFixedMode, IslandState, type Scheduler } from '../core/island.js';
+import { SystemBrightness } from '../system/brightness.js';
+import { SystemVolume } from '../system/volume.js';
 import { Island, type IslandActor } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { layout } from './tokens.js';
@@ -109,6 +111,7 @@ class Bar {
   constructor(
     monitor: { index: number; x: number; y: number; width: number },
     state: IslandState,
+    system: { volume: SystemVolume; brightness: SystemBrightness },
     onIslandClick: () => void,
     onEscape: () => void,
   ) {
@@ -121,7 +124,7 @@ class Bar {
     });
 
     const leftPill = new Pill();
-    const island = new Island(state, onIslandClick, onEscape);
+    const island = new Island(state, system, onIslandClick, onEscape);
     this.island = island;
     const rightPill = new Pill();
     this.chrome = new BarChrome(leftPill, island, rightPill);
@@ -142,6 +145,7 @@ class Bar {
 // só a ilha do monitor-alvo mostra o modo atual, as outras ficam em `compact`.
 export class BarManager {
   private readonly state: IslandState;
+  private readonly system: { volume: SystemVolume; brightness: SystemBrightness };
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -151,6 +155,7 @@ export class BarManager {
     this.state = new IslandState(new GLibScheduler(), {
       onChange: () => this.render(),
     });
+    this.system = { volume: new SystemVolume(), brightness: new SystemBrightness() };
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
   }
@@ -190,6 +195,7 @@ export class BarManager {
         new Bar(
           monitor,
           this.state,
+          this.system,
           () => this.handleIslandClick(index),
           () => this.handleEscape(),
         ),
@@ -230,5 +236,7 @@ export class BarManager {
     }
     this.bars.forEach((bar) => bar.destroy());
     this.bars = [];
+    this.system.volume.destroy();
+    this.system.brightness.destroy();
   }
 }

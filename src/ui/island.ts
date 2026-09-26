@@ -4,10 +4,19 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import { formatClock, formatDay } from '../core/clock.js';
-import { getSize, type IslandState } from '../core/island.js';
+import { getSize, type IslandState, type Mode } from '../core/island.js';
+import type { SystemBrightness } from '../system/brightness.js';
+import type { SystemVolume } from '../system/volume.js';
+import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
+
+function volumeIconName(volume: SystemVolume): string {
+  if (volume.muted || volume.percent === 0) return 'audio-volume-muted-symbolic';
+  if (volume.percent < 40) return 'audio-volume-low-symbolic';
+  return 'audio-volume-high-symbolic';
+}
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
 // entre monitores (specs/02-barra.md); esta view só renderiza o modo atual
@@ -18,10 +27,18 @@ export const Island = GObject.registerClass(
     private readonly onIslandClick: () => void;
     private readonly onEscape: () => void;
     private readonly clockLabel: St.Label;
+    private readonly volumeRow: SliderRowActor;
+    private readonly brightnessRow: SliderRowActor;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
+    private contentMode: Mode = 'compact';
 
-    constructor(state: IslandState, onIslandClick: () => void, onEscape: () => void) {
+    constructor(
+      state: IslandState,
+      system: { volume: SystemVolume; brightness: SystemBrightness },
+      onIslandClick: () => void,
+      onEscape: () => void,
+    ) {
       super({
         style_class: 'island',
         reactive: true,
@@ -44,6 +61,17 @@ export const Island = GObject.registerClass(
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.CENTER,
       });
+      this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 7, system.volume, {
+        start: () => this.state.dragStart(),
+        end: () => this.state.dragEnd(),
+      });
+      this.brightnessRow = new SliderRow(
+        () => 'display-brightness-symbolic',
+        6,
+        system.brightness,
+        { start: () => this.state.dragStart(), end: () => this.state.dragEnd() },
+      );
+
       this.set_child(this.clockLabel);
 
       this.applySize(getSize('compact'), false);
@@ -91,9 +119,26 @@ export const Island = GObject.registerClass(
       this.isTargetMonitor = isTargetMonitor;
       const mode = isTargetMonitor ? this.state.mode : 'compact';
       this.applySize(getSize(mode), true);
-      // Os demais modos ainda não têm conteúdo (specs 04+); por ora a ilha
-      // fica vazia fora do compact em vez de mostrar o relógio no tamanho errado.
-      this.clockLabel.visible = mode === 'compact';
+      this.showContentFor(mode);
+    }
+
+    private showContentFor(mode: Mode): void {
+      if (mode === this.contentMode) return;
+      this.contentMode = mode;
+      switch (mode) {
+        case 'compact':
+          this.set_child(this.clockLabel);
+          break;
+        case 'volume':
+          this.set_child(this.volumeRow);
+          break;
+        case 'brightness':
+          this.set_child(this.brightnessRow);
+          break;
+        // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
+        default:
+          this.set_child(null);
+      }
     }
 
     private updateClock(): void {
