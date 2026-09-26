@@ -220,6 +220,13 @@ export const Island = GObject.registerClass(
       this.showContentFor(mode);
       this.applySize(getSize(mode, this.sizeContext()), true);
       this.syncExpanded(mode !== 'compact' || (isTargetMonitor && this.state.cardOpen));
+      // "Cursor de mão só em `compact` e `notif`" (specs/03-ilha.md): nos
+      // outros modos, cliques são do conteúdo.
+      this.set_cursor_type(
+        mode === 'compact' || mode === 'notif'
+          ? Clutter.CursorType.POINTER
+          : Clutter.CursorType.DEFAULT,
+      );
     }
 
     // "opacidade 1 quando a ilha não está em `compact` ou o cartão central está
