@@ -198,7 +198,8 @@ export class BarManager {
   }
 
   private handleEscape(): void {
-    // Sem campo de senha ainda (specs 08): Esc sempre fecha tudo (regra 9).
+    // O painel de senha do `wifi` já foi tratado pela ilha (regra 9): aqui
+    // o Esc fecha tudo.
     this.state.escape(false);
   }
 

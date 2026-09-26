@@ -109,6 +109,9 @@ export const Island = GObject.registerClass(
         'key-press-event',
         (_actor: St.Bin, event: Clutter.Event) => {
           if (event.get_key_symbol() === Clutter.KEY_Escape) {
+            // Regra 9 da spec 03: com o painel de senha aberto, Esc fecha só ele.
+            if (this.contentMode === 'wifi' && this.wifiView.closePasswordIfOpen())
+              return Clutter.EVENT_STOP;
             this.onEscape();
             return Clutter.EVENT_STOP;
           }
