@@ -295,7 +295,9 @@ export const WifiView = GObject.registerClass(
       let passwordNetworkShown = false;
       for (const network of wifi.networks) {
         this.listBox.add_child(this.networkRow(network));
-        if (network.ssid === this.passwordFor && clickAction(network) === 'password') {
+        // Só pelo SSID: ao reabrir com "Senha incorreta", o perfil recusado
+        // ainda pode estar sendo apagado e a rede ainda aparece "Conectando…".
+        if (network.ssid === this.passwordFor) {
           this.listBox.add_child(this.passwordPanel);
           passwordNetworkShown = true;
         }
@@ -448,7 +450,7 @@ export const WifiView = GObject.registerClass(
       `;
 
       if (opening || ssid === null) this.rebuild();
-      if (ssid !== null) this.passwordEntry.grab_key_focus();
+      if (this.passwordFor !== null) this.passwordEntry.grab_key_focus();
       if (this.passwordField !== before) this.callbacks.onSizeChanged();
     }
 
