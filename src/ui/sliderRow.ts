@@ -16,15 +16,18 @@ export interface DragHooks {
   end(): void;
 }
 
-// Linha ícone + slider + valor, usada pelos modos `volume` e `brightness`
-// (specs/08-controles-rapidos.md). O ícone usa nomes simbólicos do sistema
-// como substituto temporário do ícone Phosphor até a spec 01 ganhar um pipeline
-// de fonte de ícones.
+export type SliderRowVariant = 'popup' | 'pill';
+
+// Linha ícone + slider (+ valor no variant `popup`), usada pelos modos
+// `volume`/`brightness` (`popup`, 320×50) e pela linha de controles de
+// `quick`/`wifi`/`bt` (`pill`, specs/08-controles-rapidos.md). O ícone usa
+// nomes simbólicos do sistema como substituto temporário do ícone Phosphor
+// até a spec 01 ganhar um pipeline de fonte de ícones.
 export const SliderRow = GObject.registerClass(
   class SliderRow extends St.BoxLayout {
     private readonly source: PercentSource;
     private readonly slider: InstanceType<typeof Slider>;
-    private readonly valueLabel: St.Label;
+    private readonly valueLabel: St.Label | null;
     private readonly unsubscribe: () => void;
     private updatingFromSource = false;
 
@@ -36,9 +39,14 @@ export const SliderRow = GObject.registerClass(
       thumbRadiusPx: number,
       source: PercentSource,
       drag: DragHooks,
+      variant: SliderRowVariant = 'popup',
     ) {
+      const isPill = variant === 'pill';
       super({
-        style: 'padding: 0 18px; spacing: 14px;',
+        style_class: isPill ? 'island-control-pill' : undefined,
+        style: isPill
+          ? `padding: 0 12px; spacing: 8px; height: 38px; border-radius: 19px; background-color: ${colors.neutral900};`
+          : 'padding: 0 18px; spacing: 14px;',
         y_align: Clutter.ActorAlign.CENTER,
         x_expand: true,
       });
@@ -47,7 +55,7 @@ export const SliderRow = GObject.registerClass(
       this.iconName = iconName;
 
       this.icon = new St.Icon({
-        icon_size: 18,
+        icon_size: isPill ? 16 : 18,
         style: `color: ${colors.neutral300};`,
       });
       this.add_child(this.icon);
@@ -63,11 +71,15 @@ export const SliderRow = GObject.registerClass(
       `;
       this.add_child(this.slider);
 
-      this.valueLabel = new St.Label({
-        style: `color: ${colors.neutral300}; font-size: 12px; width: 34px; text-align: right;`,
-        y_align: Clutter.ActorAlign.CENTER,
-      });
-      this.add_child(this.valueLabel);
+      if (isPill) {
+        this.valueLabel = null;
+      } else {
+        this.valueLabel = new St.Label({
+          style: `color: ${colors.neutral300}; font-size: 12px; width: 34px; text-align: right;`,
+          y_align: Clutter.ActorAlign.CENTER,
+        });
+        this.add_child(this.valueLabel);
+      }
 
       this.slider.connectObject(
         'notify::value',
@@ -95,7 +107,7 @@ export const SliderRow = GObject.registerClass(
       this.updatingFromSource = true;
       this.slider.value = percent / 100;
       this.updatingFromSource = false;
-      this.valueLabel.text = `${percent}%`;
+      if (this.valueLabel) this.valueLabel.text = `${percent}%`;
       this.icon.icon_name = this.iconName();
     }
   },

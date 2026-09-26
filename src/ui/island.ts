@@ -6,16 +6,20 @@ import St from 'gi://St';
 import { formatClock, formatDay } from '../core/clock.js';
 import { getSize, type IslandState, type Mode } from '../core/island.js';
 import type { SystemBrightness } from '../system/brightness.js';
+import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
+import { ControlsRow, type ControlsRowActor } from './controlsRow.js';
+import { brightnessIconName, volumeIconName } from './icons.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
 
-function volumeIconName(volume: SystemVolume): string {
-  if (volume.muted || volume.percent === 0) return 'audio-volume-muted-symbolic';
-  if (volume.percent < 40) return 'audio-volume-low-symbolic';
-  return 'audio-volume-high-symbolic';
+export interface IslandSystem {
+  volume: SystemVolume;
+  brightness: SystemBrightness;
+  nightLight: GSettingsToggle;
+  dnd: GSettingsToggle;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
@@ -29,13 +33,14 @@ export const Island = GObject.registerClass(
     private readonly clockLabel: St.Label;
     private readonly volumeRow: SliderRowActor;
     private readonly brightnessRow: SliderRowActor;
+    private readonly quickRow: ControlsRowActor;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
     private contentMode: Mode = 'compact';
 
     constructor(
       state: IslandState,
-      system: { volume: SystemVolume; brightness: SystemBrightness },
+      system: IslandSystem,
       onIslandClick: () => void,
       onEscape: () => void,
     ) {
@@ -61,15 +66,16 @@ export const Island = GObject.registerClass(
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.CENTER,
       });
-      this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 7, system.volume, {
-        start: () => this.state.dragStart(),
-        end: () => this.state.dragEnd(),
-      });
-      this.brightnessRow = new SliderRow(
-        () => 'display-brightness-symbolic',
-        6,
-        system.brightness,
-        { start: () => this.state.dragStart(), end: () => this.state.dragEnd() },
+      const drag = { start: () => this.state.dragStart(), end: () => this.state.dragEnd() };
+      this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 7, system.volume, drag);
+      this.brightnessRow = new SliderRow(brightnessIconName, 6, system.brightness, drag);
+      this.quickRow = new ControlsRow(
+        system,
+        drag,
+        // "abre wifi; em wifi, volta a quick" (specs/08) — não é a regra 2 da
+        // spec 03 (gatilho fecha a ilha): o tile vive dentro de quick/wifi/bt.
+        () => this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi'),
+        () => this.state.openFromTrigger(this.state.mode === 'bt' ? 'quick' : 'bt'),
       );
 
       this.set_child(this.clockLabel);
@@ -134,6 +140,9 @@ export const Island = GObject.registerClass(
           break;
         case 'brightness':
           this.set_child(this.brightnessRow);
+          break;
+        case 'quick':
+          this.set_child(this.quickRow);
           break;
         // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
         default:

@@ -1,0 +1,84 @@
+import Clutter from 'gi://Clutter';
+import GObject from 'gi://GObject';
+import St from 'gi://St';
+
+import type { SystemBrightness } from '../system/brightness.js';
+import { brightnessIconName, volumeIconName } from './icons.js';
+import type { IslandSystem } from './island.js';
+import { SliderRow, type DragHooks, type SliderRowActor } from './sliderRow.js';
+import { Tile, type TileSource } from './tile.js';
+import { colors } from './tokens.js';
+
+// Wi-Fi e Bluetooth ainda não têm estado de rádio de verdade (specs 08 fica
+// bloqueada por spikes S2/S3): o tile só abre/fecha o modo, sempre "desligado"
+// visualmente até a spec 08 ganhar `NM.Client`/`GnomeBluetooth.Client`.
+const NO_RADIO_STATE: TileSource = { on: false, onChange: () => () => {} };
+
+function divider(): St.Widget {
+  return new St.Widget({
+    style: `width: 1px; height: 22px; background-color: ${colors.neutral800}; margin: 0 2px;`,
+  });
+}
+
+// Linha de controles comum a `quick`/`wifi`/`bt` (specs/08-controles-rapidos.md):
+// brilho, volume, e os quatro tiles. Configurações/Energia ficam pra spec 09.
+export const ControlsRow = GObject.registerClass(
+  class ControlsRow extends St.BoxLayout {
+    private readonly brightnessPill: SliderRowActor;
+    private readonly brightness: SystemBrightness;
+    private readonly unsubscribeBrightness: () => void;
+
+    constructor(
+      system: IslandSystem,
+      drag: DragHooks,
+      onWifiClick: () => void,
+      onBtClick: () => void,
+    ) {
+      super({
+        style: 'height: 58px; padding: 0 10px; spacing: 8px;',
+        y_align: Clutter.ActorAlign.CENTER,
+        x_expand: true,
+      });
+
+      this.brightness = system.brightness;
+      this.brightnessPill = new SliderRow(brightnessIconName, 6, system.brightness, drag, 'pill');
+      this.add_child(this.brightnessPill);
+
+      const volumePill = new SliderRow(
+        () => volumeIconName(system.volume),
+        6,
+        system.volume,
+        drag,
+        'pill',
+      );
+      this.add_child(volumePill);
+
+      this.add_child(new Tile('network-wireless-symbolic', NO_RADIO_STATE, onWifiClick));
+      this.add_child(new Tile('bluetooth-active-symbolic', NO_RADIO_STATE, onBtClick));
+      this.add_child(
+        new Tile('weather-clear-night-symbolic', system.nightLight, () =>
+          system.nightLight.toggle(),
+        ),
+      );
+      this.add_child(
+        new Tile('notifications-disabled-symbolic', system.dnd, () => system.dnd.toggle()),
+      );
+
+      this.add_child(divider());
+
+      this.unsubscribeBrightness = system.brightness.onChange(() =>
+        this.syncBrightnessVisibility(),
+      );
+      this.syncBrightnessVisibility();
+
+      this.connectObject('destroy', () => this.unsubscribeBrightness(), this);
+    }
+
+    private syncBrightnessVisibility(): void {
+      // "Some se não houver backlight controlável (o volume ocupa o espaço)".
+      this.brightnessPill.visible = this.brightness.available;
+    }
+  },
+);
+
+export type ControlsRowActor = InstanceType<typeof ControlsRow>;

@@ -7,8 +7,9 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { isFixedMode, IslandState, type Scheduler } from '../core/island.js';
 import { SystemBrightness } from '../system/brightness.js';
 import { OsdRedirect } from '../system/osd.js';
+import { GSettingsToggle } from '../system/toggleSetting.js';
 import { SystemVolume } from '../system/volume.js';
-import { Island, type IslandActor } from './island.js';
+import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { layout } from './tokens.js';
 
@@ -112,7 +113,7 @@ class Bar {
   constructor(
     monitor: { index: number; x: number; y: number; width: number },
     state: IslandState,
-    system: { volume: SystemVolume; brightness: SystemBrightness },
+    system: IslandSystem,
     onIslandClick: () => void,
     onEscape: () => void,
   ) {
@@ -146,7 +147,7 @@ class Bar {
 // só a ilha do monitor-alvo mostra o modo atual, as outras ficam em `compact`.
 export class BarManager {
   private readonly state: IslandState;
-  private readonly system: { volume: SystemVolume; brightness: SystemBrightness };
+  private readonly system: IslandSystem;
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -157,7 +158,15 @@ export class BarManager {
     this.state = new IslandState(new GLibScheduler(), {
       onChange: () => this.render(),
     });
-    this.system = { volume: new SystemVolume(), brightness: new SystemBrightness() };
+    this.system = {
+      volume: new SystemVolume(),
+      brightness: new SystemBrightness(),
+      nightLight: new GSettingsToggle(
+        'org.gnome.settings-daemon.plugins.color',
+        'night-light-enabled',
+      ),
+      dnd: new GSettingsToggle('org.gnome.desktop.notifications', 'show-banners', true),
+    };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
       () => this.triggerBrightnessKey(),
@@ -264,6 +273,8 @@ export class BarManager {
     this.bars = [];
     this.system.volume.destroy();
     this.system.brightness.destroy();
+    this.system.nightLight.destroy();
+    this.system.dnd.destroy();
     this.osdRedirect.destroy();
   }
 }
