@@ -77,6 +77,7 @@ export const iconFallback = {
 
 export const layout = {
   barHeight: 30,
+  bottomGap: 3,
   sideMargin: 12,
   pillGap: 6,
   pillRadius: 15,

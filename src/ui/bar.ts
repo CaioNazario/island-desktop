@@ -93,7 +93,7 @@ class Bar {
   constructor(monitor: { index: number; x: number; y: number; width: number }) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
-    this.strut.set_size(monitor.width, layout.barHeight);
+    this.strut.set_size(monitor.width, layout.barHeight + layout.bottomGap);
     Main.layoutManager.addChrome(this.strut, {
       affectsStruts: true,
       trackFullscreen: true,
