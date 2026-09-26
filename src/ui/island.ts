@@ -199,6 +199,18 @@ export const Island = GObject.registerClass(
         GLib.Source.remove(this.clockTimerId);
         this.clockTimerId = null;
       }
+      // Só o conteúdo do modo atual é filho da ilha e morre junto com ela;
+      // os demais precisam ser destruídos à mão.
+      const contents = [
+        this.clockLabel,
+        this.volumeRow,
+        this.brightnessRow,
+        this.quickRow,
+        this.wifiView,
+      ];
+      for (const content of contents) {
+        if (content.get_parent() === null) content.destroy();
+      }
     }
   },
 );
