@@ -89,6 +89,10 @@ export const effects = {
   islandSpring: { durationMs: 460, easing: 'EASE_OUT_BACK' },
   islandRadius: { durationMs: 460, easing: 'EASE' },
   islandChrome: { durationMs: 300, easing: 'EASE' }, // linha de acento e sombra
+  islandShadow: {
+    drop: '0 18px 44px rgba(0,0,0,0.6)',
+    glow: `0 0 28px ${derivedColors.islandExpandedGlow}`,
+  },
   cardSpring: { durationMs: 400, easing: 'EASE_OUT_BACK' },
   contentCrossfade: { durationMs: 220, delayMs: 80, easing: 'EASE' },
   contentScale: {

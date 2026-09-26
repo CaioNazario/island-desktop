@@ -75,6 +75,10 @@ export const Island = GObject.registerClass(
   class Island extends St.Widget {
     private readonly surface: St.Widget;
     private readonly accentLine: St.Widget;
+    // O St só compõe um `box-shadow` por ator: a sombra e o brilho da ilha
+    // expandida são irmãos atrás da `surface` (specs/03-ilha.md).
+    private readonly dropShadow: St.Widget;
+    private readonly glow: St.Widget;
     private readonly state: IslandState;
     private readonly onIslandClick: () => void;
     private readonly onEscape: () => void;
@@ -109,6 +113,10 @@ export const Island = GObject.registerClass(
         x_expand: true,
         y_expand: true,
       });
+      this.glow = new St.Widget({ opacity: 0, x_expand: true, y_expand: true });
+      this.add_child(this.glow);
+      this.dropShadow = new St.Widget({ opacity: 0, x_expand: true, y_expand: true });
+      this.add_child(this.dropShadow);
       this.add_child(this.surface);
 
       this.accentLine = new St.Widget({
@@ -217,11 +225,13 @@ export const Island = GObject.registerClass(
     // "opacidade 1 quando a ilha não está em `compact` ou o cartão central está
     // aberto (300ms)" (specs/03-ilha.md).
     private syncExpanded(expanded: boolean): void {
-      this.accentLine.ease({
-        opacity: expanded ? 255 : 0,
-        duration: effects.islandChrome.durationMs,
-        mode: Clutter.AnimationMode.EASE,
-      });
+      for (const actor of [this.accentLine, this.dropShadow, this.glow]) {
+        actor.ease({
+          opacity: expanded ? 255 : 0,
+          duration: effects.islandChrome.durationMs,
+          mode: Clutter.AnimationMode.EASE,
+        });
+      }
     }
 
     /** O conteúdo do modo atual mudou de altura (ex.: painel de senha do `wifi`). */
@@ -314,7 +324,10 @@ export const Island = GObject.registerClass(
     set radius(radius: number) {
       if (this.radiusPx === radius) return;
       this.radiusPx = radius;
-      this.surface.style = `background-color: ${colors.bg}; border: 1px solid ${colors.neutral800}; border-radius: ${radius}px;`;
+      const shape = `background-color: ${colors.bg}; border-radius: ${radius}px;`;
+      this.surface.style = `${shape} border: 1px solid ${colors.neutral800};`;
+      this.dropShadow.style = `${shape} box-shadow: ${effects.islandShadow.drop};`;
+      this.glow.style = `${shape} box-shadow: ${effects.islandShadow.glow};`;
       this.notify('radius');
     }
 
