@@ -20,9 +20,14 @@ const CLOCK_TICK_SECONDS = 15;
 // Camada de um modo (specs/03-ilha.md "Cada modo é uma camada própria,
 // centrada no topo da ilha, com o tamanho do seu modo"): o conteúdo mantém o
 // layout final enquanto a ilha anima, e a `surface` corta o que sobra.
+//
+// O `BinLayout` só respeita `x_align`/`y_align` de filho com `*_expand`; sem
+// isso, centraliza.
 function modeLayer(content: Clutter.Actor): St.Widget {
   const layer = new St.Widget({
     layout_manager: new Clutter.BinLayout(),
+    x_expand: true,
+    y_expand: true,
     x_align: Clutter.ActorAlign.CENTER,
     y_align: Clutter.ActorAlign.START,
   });
@@ -124,6 +129,8 @@ export const Island = GObject.registerClass(
         width: 36,
         height: 2,
         opacity: 0,
+        x_expand: true,
+        y_expand: true,
         x_align: Clutter.ActorAlign.CENTER,
         y_align: Clutter.ActorAlign.START,
       });
