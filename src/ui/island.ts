@@ -173,12 +173,14 @@ export const Island = GObject.registerClass(
       this.applySize(getSize('compact'), false);
       this.updateClock();
 
+      // Gesto, não `button-press-event`: um ator que devolve EVENT_STOP no
+      // press cancela os gestos da cadeia, inclusive o `ClickGesture` dos
+      // `St.Button` do conteúdo (tiles, switch).
+      const clickGesture = new Clutter.ClickGesture();
+      clickGesture.connectObject('recognize', () => this.onIslandClick(), this);
+      this.add_action(clickGesture);
+
       this.connectObject(
-        'button-press-event',
-        () => {
-          this.onIslandClick();
-          return Clutter.EVENT_STOP;
-        },
         'enter-event',
         () => {
           if (this.isTargetMonitor) this.state.hoverStart();
