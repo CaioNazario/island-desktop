@@ -152,6 +152,18 @@ export class BarManager {
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
   }
 
+  /** `Super+S`: alterna `quick` na ilha do monitor da janela focada (specs/03-ilha.md). */
+  toggleQuickFromShortcut(): void {
+    this.targetMonitorIndex = this.focusedMonitorIndex();
+    this.state.openFromTrigger('quick');
+    this.render();
+  }
+
+  private focusedMonitorIndex(): number {
+    const focusWindow = global.display.focus_window;
+    return focusWindow ? focusWindow.get_monitor() : Main.layoutManager.primaryIndex;
+  }
+
   private handleIslandClick(monitorIndex: number): void {
     this.targetMonitorIndex = monitorIndex;
     this.state.islandClick();
