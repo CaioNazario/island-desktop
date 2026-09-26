@@ -341,9 +341,15 @@ export class SystemWifi {
     this.listeners.forEach((callback) => callback());
   }
 
+  // Não usa `filter_connections`: a anotação de retorno dela quebra em
+  // bindings (gobject-introspection#305) e o GJS solta uma referência a mais
+  // de cada perfil, que o libnm libera enquanto ainda usa — segfault no Shell.
   private profilesFor(ap: NM.AccessPoint): NM.Connection[] {
-    if (!this.client || !this.device) return [];
-    return ap.filter_connections(this.device.filter_connections(this.client.get_connections()));
+    const device = this.device;
+    if (!this.client || !device) return [];
+    return this.client
+      .get_connections()
+      .filter((profile) => device.connection_valid(profile) && ap.connection_valid(profile));
   }
 
   // Perfil só do usuário atual: não pede senha de admin (polkit
