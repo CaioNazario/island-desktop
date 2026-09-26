@@ -1,0 +1,9 @@
+{
+  "uuid": "island@caionazario.dev",
+  "name": "Island",
+  "description": "Topbar com Dynamic Island para GNOME: ilha central com notificações, música, controles rápidos e uso de IA.",
+  "shell-version": ["50"],
+  "url": "https://github.com/caionazario/island-desktop",
+  "settings-schema": "org.gnome.shell.extensions.island",
+  "gettext-domain": "island@caionazario.dev"
+}

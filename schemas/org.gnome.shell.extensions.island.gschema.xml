@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="island@caionazario.dev">
+  <schema id="org.gnome.shell.extensions.island" path="/org/gnome/shell/extensions/island/">
+  </schema>
+</schemalist>
