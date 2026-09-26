@@ -17,6 +17,31 @@ import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
 
+// Camada de um modo (specs/03-ilha.md "Cada modo é uma camada própria,
+// centrada no topo da ilha, com o tamanho do seu modo"): o conteúdo mantém o
+// layout final enquanto a ilha anima, e a `surface` corta o que sobra.
+function modeLayer(content: Clutter.Actor): St.Widget {
+  const layer = new St.Widget({
+    layout_manager: new Clutter.BinLayout(),
+    x_align: Clutter.ActorAlign.CENTER,
+    y_align: Clutter.ActorAlign.START,
+  });
+  layer.set_pivot_point(0.5, 0.5);
+  layer.add_child(content);
+  return layer;
+}
+
+function hiddenTransform(mode: Mode): {
+  scaleX: number;
+  scaleY: number;
+  translationY: number;
+} {
+  const { hiddenScale, notifHiddenScale, notifHiddenOffsetY } = effects.contentScale;
+  return mode === 'notif'
+    ? { scaleX: notifHiddenScale, scaleY: notifHiddenScale, translationY: notifHiddenOffsetY }
+    : { scaleX: hiddenScale, scaleY: hiddenScale, translationY: 0 };
+}
+
 export interface IslandSystem {
   volume: SystemVolume;
   brightness: SystemBrightness;
@@ -57,6 +82,7 @@ export const Island = GObject.registerClass(
     private readonly brightnessRow: SliderRowActor;
     private readonly quickRow: ControlsRowActor;
     private readonly wifiView: WifiViewActor;
+    private readonly layers: ReadonlyMap<Mode, St.Widget>;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
     private contentMode: Mode = 'compact';
@@ -115,7 +141,15 @@ export const Island = GObject.registerClass(
         onLeave: () => this.state.closeAll(),
       });
 
-      this.setContent(this.clockLabel);
+      this.layers = new Map<Mode, St.Widget>([
+        ['compact', modeLayer(this.clockLabel)],
+        ['volume', modeLayer(this.volumeRow)],
+        ['brightness', modeLayer(this.brightnessRow)],
+        ['quick', modeLayer(this.quickRow)],
+        ['wifi', modeLayer(this.wifiView)],
+      ]);
+      this.syncLayerSize('compact');
+      this.surface.add_child(this.layers.get('compact')!);
 
       this.applySize(getSize('compact'), false);
       this.updateClock();
@@ -170,6 +204,7 @@ export const Island = GObject.registerClass(
 
     /** O conteúdo do modo atual mudou de altura (ex.: painel de senha do `wifi`). */
     private resize(): void {
+      this.syncLayerSize(this.contentMode);
       this.applySize(getSize(this.contentMode, this.sizeContext()), true);
     }
 
@@ -179,33 +214,70 @@ export const Island = GObject.registerClass(
 
     private showContentFor(mode: Mode): void {
       if (mode === this.contentMode) return;
+      const previous = this.contentMode;
       this.contentMode = mode;
-      switch (mode) {
-        case 'compact':
-          this.setContent(this.clockLabel);
-          break;
-        case 'volume':
-          this.setContent(this.volumeRow);
-          break;
-        case 'brightness':
-          this.setContent(this.brightnessRow);
-          break;
-        case 'quick':
-          this.setContent(this.quickRow);
-          break;
-        case 'wifi':
-          this.setContent(this.wifiView);
-          this.wifiView.onOpen();
-          break;
-        // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
-        default:
-          this.setContent(null);
+
+      // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
+      const outgoing = this.layers.get(previous);
+      if (outgoing) this.hideLayer(outgoing, previous);
+      const incoming = this.layers.get(mode);
+      if (incoming) {
+        this.syncLayerSize(mode);
+        this.showLayer(incoming, mode);
       }
+      if (mode === 'wifi') this.wifiView.onOpen();
     }
 
-    private setContent(content: Clutter.Actor | null): void {
-      this.surface.remove_all_children();
-      if (content) this.surface.add_child(content);
+    private syncLayerSize(mode: Mode): void {
+      const size = getSize(mode, this.sizeContext());
+      this.layers.get(mode)?.set_size(size.width, size.height);
+    }
+
+    // Crossfade (specs/03-ilha.md "Animação"): a camada que entra vai a
+    // opacidade 1 em 220ms com atraso de 80ms e escala 0.94→1 em 300ms; a que
+    // sai faz o inverso.
+    private showLayer(layer: St.Widget, mode: Mode): void {
+      layer.remove_all_transitions();
+      if (layer.get_parent() === null) {
+        this.surface.add_child(layer);
+        layer.opacity = 0;
+        Object.assign(layer, hiddenTransform(mode));
+      } else {
+        this.surface.set_child_above_sibling(layer, null);
+      }
+      layer.ease({
+        opacity: 255,
+        delay: effects.contentCrossfade.delayMs,
+        duration: effects.contentCrossfade.durationMs,
+        mode: Clutter.AnimationMode.EASE,
+      });
+      layer.ease({
+        scaleX: 1,
+        scaleY: 1,
+        translationY: 0,
+        duration: effects.contentScale.durationMs,
+        mode: Clutter.AnimationMode.EASE,
+      });
+    }
+
+    private hideLayer(layer: St.Widget, mode: Mode): void {
+      layer.remove_all_transitions();
+      layer.ease({
+        opacity: 0,
+        delay: effects.contentCrossfade.delayMs,
+        duration: effects.contentCrossfade.durationMs,
+        mode: Clutter.AnimationMode.EASE,
+        // Interrompida, a camada voltou a entrar (ou a ilha foi destruída):
+        // fica onde está.
+        onStopped: (isFinished: boolean) => {
+          if (isFinished) this.surface.remove_child(layer);
+        },
+      });
+      layer.ease({
+        ...hiddenTransform(mode),
+        duration: effects.contentScale.durationMs,
+        mode: Clutter.AnimationMode.EASE,
+      });
     }
 
     private updateClock(): void {
@@ -250,17 +322,10 @@ export const Island = GObject.registerClass(
         GLib.Source.remove(this.clockTimerId);
         this.clockTimerId = null;
       }
-      // Só o conteúdo do modo atual é filho da ilha e morre junto com ela;
-      // os demais precisam ser destruídos à mão.
-      const contents = [
-        this.clockLabel,
-        this.volumeRow,
-        this.brightnessRow,
-        this.quickRow,
-        this.wifiView,
-      ];
-      for (const content of contents) {
-        if (content.get_parent() === null) content.destroy();
+      // Só as camadas visíveis (a atual e a que ainda sai) são filhas da
+      // ilha e morrem junto com ela; as demais precisam ser destruídas à mão.
+      for (const layer of this.layers.values()) {
+        if (layer.get_parent() === null) layer.destroy();
       }
     }
   },
