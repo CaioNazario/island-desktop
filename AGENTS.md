@@ -65,6 +65,8 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 
 ## Regras de trabalho
 
+- **CI obrigatória**: todo push e PR roda `make lint`, `make test` (todos os testes) e `make build`. CI vermelha não entra na `main`.
+- **Arquivos de no máximo 400 linhas** (exceto os extraídos em `design/`). Antes de passar disso, divida o módulo.
 - **TDD** em `src/core`: teste vermelho primeiro, depois o código.
 - Mudou comportamento, atualize a spec correspondente no mesmo commit. Spec e código nunca divergem.
 - API de GJS/St/Mutter que você não confirmou no código-fonte do Shell ou em `gjs.guide`: diga "não sei" e verifique, em vez de chutar.
