@@ -1,0 +1,34 @@
+{
+  "$preview": {
+    "width": 1440,
+    "height": 900
+  },
+  "clickAction": {
+    "editor": "enum",
+    "options": [
+      "Calendário e música",
+      "Calendário compacto"
+    ],
+    "default": "Calendário e música",
+    "tsType": "string"
+  },
+  "battery": {
+    "editor": "range",
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "unit": "%",
+    "default": 78,
+    "tsType": "number"
+  },
+  "charging": {
+    "editor": "boolean",
+    "default": true,
+    "tsType": "boolean"
+  },
+  "autoHide": {
+    "editor": "boolean",
+    "default": false,
+    "tsType": "boolean"
+  }
+}
