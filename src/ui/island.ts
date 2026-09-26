@@ -38,7 +38,9 @@ export const Island = GObject.registerClass(
         style: 'background-color: #161826; border: 1px solid #3f424d;',
       });
 
-      this.state = new IslandState(new GLibScheduler());
+      this.state = new IslandState(new GLibScheduler(), {
+        onChange: () => this.syncMode(),
+      });
 
       this.clockLabel = new St.Label({
         style: `
@@ -87,6 +89,15 @@ export const Island = GObject.registerClass(
     private updateClock(): void {
       const now = new Date();
       this.clockLabel.text = `${formatClock(now)} · ${formatDay(now)}`;
+    }
+
+    /** Re-sincroniza tamanho e conteúdo com `state.mode` (specs/03-ilha.md). */
+    private syncMode(): void {
+      const mode = this.state.mode;
+      this.applySize(getSize(mode), true);
+      // Os demais modos ainda não têm conteúdo (specs 04+); por ora a ilha
+      // fica vazia fora do compact em vez de mostrar o relógio no tamanho errado.
+      this.clockLabel.visible = mode === 'compact';
     }
 
     private applySize(
