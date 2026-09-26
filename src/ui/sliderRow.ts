@@ -43,7 +43,7 @@ export const SliderRow = GObject.registerClass(
     ) {
       const isPill = variant === 'pill';
       super({
-        style_class: isPill ? 'island-control-pill' : undefined,
+        ...(isPill ? { style_class: 'island-control-pill' } : {}),
         style: isPill
           ? `padding: 0 12px; spacing: 8px; height: 38px; border-radius: 19px; background-color: ${colors.neutral900};`
           : 'padding: 0 18px; spacing: 14px;',
