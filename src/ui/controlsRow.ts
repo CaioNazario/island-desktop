@@ -6,12 +6,12 @@ import type { SystemBrightness } from '../system/brightness.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import type { IslandSystem } from './island.js';
 import { SliderRow, type DragHooks, type SliderRowActor } from './sliderRow.js';
-import { Tile, type TileSource } from './tile.js';
+import { Tile, type TileActor, type TileSource } from './tile.js';
 import { colors } from './tokens.js';
 
-// Wi-Fi e Bluetooth ainda não têm estado de rádio de verdade (specs 08 fica
-// bloqueada por spikes S2/S3): o tile só abre/fecha o modo, sempre "desligado"
-// visualmente até a spec 08 ganhar `NM.Client`/`GnomeBluetooth.Client`.
+// Bluetooth ainda não tem estado de rádio de verdade: o tile só abre/fecha o
+// modo, sempre "desligado" visualmente até a spec 08 ganhar
+// `GnomeBluetooth.Client`.
 const NO_RADIO_STATE: TileSource = { on: false, onChange: () => () => {} };
 
 function divider(): St.Widget {
@@ -26,7 +26,9 @@ export const ControlsRow = GObject.registerClass(
   class ControlsRow extends St.BoxLayout {
     private readonly brightnessPill: SliderRowActor;
     private readonly brightness: SystemBrightness;
+    private readonly wifiTile: TileActor;
     private readonly unsubscribeBrightness: () => void;
+    private readonly unsubscribeWifi: () => void;
 
     constructor(
       system: IslandSystem,
@@ -53,7 +55,16 @@ export const ControlsRow = GObject.registerClass(
       );
       this.add_child(volumePill);
 
-      this.add_child(new Tile('network-wireless-symbolic', NO_RADIO_STATE, onWifiClick));
+      // "Estado ligado dos tiles Wi-Fi/BT = rádio ligado. Tile de rádio sem hardware some."
+      const wifi = system.wifi;
+      const wifiRadio: TileSource = {
+        get on() {
+          return wifi.radioOn;
+        },
+        onChange: (callback) => wifi.onChange(callback),
+      };
+      this.wifiTile = new Tile('network-wireless-symbolic', wifiRadio, onWifiClick);
+      this.add_child(this.wifiTile);
       this.add_child(new Tile('bluetooth-active-symbolic', NO_RADIO_STATE, onBtClick));
       this.add_child(
         new Tile('weather-clear-night-symbolic', system.nightLight, () =>
@@ -71,7 +82,17 @@ export const ControlsRow = GObject.registerClass(
       );
       this.syncBrightnessVisibility();
 
-      this.connectObject('destroy', () => this.unsubscribeBrightness(), this);
+      this.unsubscribeWifi = wifi.onChange(() => (this.wifiTile.visible = wifi.available));
+      this.wifiTile.visible = wifi.available;
+
+      this.connectObject(
+        'destroy',
+        () => {
+          this.unsubscribeBrightness();
+          this.unsubscribeWifi();
+        },
+        this,
+      );
     }
 
     private syncBrightnessVisibility(): void {

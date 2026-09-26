@@ -8,6 +8,7 @@ import { getSize, type IslandState, type Mode } from '../core/island.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
+import type { SystemWifi } from '../system/wifi.js';
 import { ControlsRow, type ControlsRowActor } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
@@ -20,6 +21,7 @@ export interface IslandSystem {
   brightness: SystemBrightness;
   nightLight: GSettingsToggle;
   dnd: GSettingsToggle;
+  wifi: SystemWifi;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado

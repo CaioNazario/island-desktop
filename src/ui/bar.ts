@@ -9,6 +9,7 @@ import { SystemBrightness } from '../system/brightness.js';
 import { OsdRedirect } from '../system/osd.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
 import { SystemVolume } from '../system/volume.js';
+import { SystemWifi } from '../system/wifi.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { layout } from './tokens.js';
@@ -166,6 +167,7 @@ export class BarManager {
         'night-light-enabled',
       ),
       dnd: new GSettingsToggle('org.gnome.desktop.notifications', 'show-banners', true),
+      wifi: new SystemWifi(),
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -275,6 +277,7 @@ export class BarManager {
     this.system.brightness.destroy();
     this.system.nightLight.destroy();
     this.system.dnd.destroy();
+    this.system.wifi.destroy();
     this.osdRedirect.destroy();
   }
 }
