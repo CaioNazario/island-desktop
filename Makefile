@@ -12,7 +12,7 @@ lint:
 	npx tsc --noEmit
 
 build: clean
-	npx tsc
+	npx tsc -p tsconfig.build.json
 	mkdir -p dist/schemas
 	glib-compile-schemas schemas --targetdir=dist/schemas
 	cp metadata.json dist/
