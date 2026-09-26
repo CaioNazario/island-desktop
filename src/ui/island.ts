@@ -33,6 +33,20 @@ export interface IslandSystem {
 // (`overflow: hidden` no design) ficam na `surface`, para que sombra e brilho
 // possam ser atores irmãos fora da área cortada.
 export const Island = GObject.registerClass(
+  {
+    Properties: {
+      // Animável com `ease_property` (specs/03-ilha.md: "raio: 460ms ease").
+      radius: GObject.ParamSpec.double(
+        'radius',
+        null,
+        null,
+        GObject.ParamFlags.READWRITE,
+        0,
+        Number.MAX_SAFE_INTEGER,
+        0,
+      ),
+    },
+  },
   class Island extends St.Widget {
     private readonly surface: St.Widget;
     private readonly state: IslandState;
@@ -46,6 +60,7 @@ export const Island = GObject.registerClass(
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
     private contentMode: Mode = 'compact';
+    private radiusPx = 0;
 
     constructor(
       state: IslandState,
@@ -198,13 +213,24 @@ export const Island = GObject.registerClass(
       this.clockLabel.text = `${formatClock(now)} · ${formatDay(now)}`;
     }
 
+    get radius(): number {
+      return this.radiusPx;
+    }
+
+    set radius(radius: number) {
+      if (this.radiusPx === radius) return;
+      this.radiusPx = radius;
+      this.surface.style = `background-color: ${colors.bg}; border: 1px solid ${colors.neutral800}; border-radius: ${radius}px;`;
+      this.notify('radius');
+    }
+
     private applySize(
       size: { width: number; height: number; radius: number },
       animate: boolean,
     ): void {
       if (!animate) {
         this.set_size(size.width, size.height);
-        this.surface.style = `background-color: ${colors.bg}; border: 1px solid ${colors.neutral800}; border-radius: ${size.radius}px;`;
+        this.radius = size.radius;
         return;
       }
       this.ease({
@@ -212,6 +238,10 @@ export const Island = GObject.registerClass(
         height: size.height,
         duration: effects.islandSpring.durationMs,
         mode: Clutter.AnimationMode.EASE_OUT_BACK,
+      });
+      this.ease_property('radius', size.radius, {
+        duration: effects.islandRadius.durationMs,
+        mode: Clutter.AnimationMode.EASE,
       });
     }
 

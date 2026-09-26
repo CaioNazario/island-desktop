@@ -87,6 +87,7 @@ export const layout = {
 
 export const effects = {
   islandSpring: { durationMs: 460, easing: 'EASE_OUT_BACK' },
+  islandRadius: { durationMs: 460, easing: 'EASE' },
   cardSpring: { durationMs: 400, easing: 'EASE_OUT_BACK' },
   contentCrossfade: { durationMs: 220, delayMs: 80, easing: 'LINEAR' },
   autoHide: { durationMs: 320, easing: 'EASE_OUT_CUBIC' },
