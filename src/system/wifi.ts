@@ -10,6 +10,7 @@ import {
   type WifiSecurity,
 } from '../core/wifi.js';
 import { launchSettingsPanel } from './settingsPanel.js';
+import { WifiSecretInterceptor } from './wifiSecrets.js';
 
 export type ConnectResult = 'connected' | 'wrong-password' | 'failed';
 
@@ -100,6 +101,7 @@ export class SystemWifi {
   private networkList: WifiNetwork[] = [];
   private attempt: PasswordAttempt | null = null;
   private destroyed = false;
+  private readonly secretInterceptor: WifiSecretInterceptor;
   private readonly listeners = new Set<() => void>();
 
   constructor() {
@@ -107,6 +109,7 @@ export class SystemWifi {
     Gio._promisify(NM.Client.prototype, 'add_and_activate_connection_async');
     Gio._promisify(NM.RemoteConnection.prototype, 'delete_async');
     Gio._promisify(NM.DeviceWifi.prototype, 'request_scan_async');
+    this.secretInterceptor = new WifiSecretInterceptor((uuid) => this.onSecretsRequested(uuid));
     void this.init();
   }
 
@@ -239,6 +242,7 @@ export class SystemWifi {
 
   destroy(): void {
     this.destroyed = true;
+    this.secretInterceptor.destroy();
     // Não apaga o perfil de uma tentativa em andamento: `disable()` roda a
     // cada bloqueio de tela e a senha pode estar certa.
     if (this.attempt) {
@@ -352,6 +356,14 @@ export class SystemWifi {
     setting.add_permission('user', GLib.get_user_name(), null);
     connection.add_setting(setting);
     return connection;
+  }
+
+  // O perfil foi criado com a PSK: qualquer pedido de segredo pra ele é o NM
+  // dizendo que a senha foi recusada.
+  private onSecretsRequested(uuid: string): boolean {
+    if (this.attempt?.uuid !== uuid) return false;
+    this.finishAttempt('wrong-password');
+    return true;
   }
 
   private syncAttempt(): void {
