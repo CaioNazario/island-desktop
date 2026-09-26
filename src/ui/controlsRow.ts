@@ -17,6 +17,7 @@ const NO_RADIO_STATE: TileSource = { on: false, onChange: () => () => {} };
 function divider(): St.Widget {
   return new St.Widget({
     style: `width: 1px; height: 22px; background-color: ${colors.neutral800}; margin: 0 2px;`,
+    y_align: Clutter.ActorAlign.CENTER,
   });
 }
 
