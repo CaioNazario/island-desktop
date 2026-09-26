@@ -1,6 +1,7 @@
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
+import Shell from 'gi://Shell';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
@@ -260,7 +261,9 @@ export class BarManager {
       this.grabbedIsland = null;
     }
     if (wantedIsland) {
-      this.grab = Main.pushModal(wantedIsland);
+      // POPUP, como os menus do Shell: o padrão (NONE) filtra todos os
+      // atalhos globais, e aí `Super+S` não fecharia a ilha.
+      this.grab = Main.pushModal(wantedIsland, { actionMode: Shell.ActionMode.POPUP });
       this.grabbedIsland = wantedIsland;
     }
   }
