@@ -4,7 +4,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import { formatClock, formatDay } from '../core/clock.js';
-import { getSize, type IslandState, type Mode } from '../core/island.js';
+import { getSize, type IslandState, type Mode, type SizeContext } from '../core/island.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
@@ -12,6 +12,7 @@ import type { SystemWifi } from '../system/wifi.js';
 import { ControlsRow, type ControlsRowActor } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
+import { WifiView, type WifiViewActor } from './wifiView.js';
 import { effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
@@ -36,6 +37,7 @@ export const Island = GObject.registerClass(
     private readonly volumeRow: SliderRowActor;
     private readonly brightnessRow: SliderRowActor;
     private readonly quickRow: ControlsRowActor;
+    private readonly wifiView: WifiViewActor;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
     private contentMode: Mode = 'compact';
@@ -71,14 +73,19 @@ export const Island = GObject.registerClass(
       const drag = { start: () => this.state.dragStart(), end: () => this.state.dragEnd() };
       this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 7, system.volume, drag);
       this.brightnessRow = new SliderRow(brightnessIconName, 6, system.brightness, drag);
-      this.quickRow = new ControlsRow(
-        system,
-        drag,
-        // "abre wifi; em wifi, volta a quick" (specs/08) — não é a regra 2 da
-        // spec 03 (gatilho fecha a ilha): o tile vive dentro de quick/wifi/bt.
-        () => this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi'),
-        () => this.state.openFromTrigger(this.state.mode === 'bt' ? 'quick' : 'bt'),
-      );
+      // "abre wifi; em wifi, volta a quick" (specs/08) — não é a regra 2 da
+      // spec 03 (gatilho fecha a ilha): o tile vive dentro de quick/wifi/bt.
+      const onWifiTileClick = (): void =>
+        this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi');
+      const onBtTileClick = (): void =>
+        this.state.openFromTrigger(this.state.mode === 'bt' ? 'quick' : 'bt');
+      this.quickRow = new ControlsRow(system, drag, onWifiTileClick, onBtTileClick);
+      this.wifiView = new WifiView(system, drag, {
+        onWifiTileClick,
+        onBtTileClick,
+        onSizeChanged: () => this.resize(),
+        onLeave: () => this.state.closeAll(),
+      });
 
       this.set_child(this.clockLabel);
 
@@ -126,8 +133,17 @@ export const Island = GObject.registerClass(
     render(isTargetMonitor: boolean): void {
       this.isTargetMonitor = isTargetMonitor;
       const mode = isTargetMonitor ? this.state.mode : 'compact';
-      this.applySize(getSize(mode), true);
       this.showContentFor(mode);
+      this.applySize(getSize(mode, this.sizeContext()), true);
+    }
+
+    /** O conteúdo do modo atual mudou de altura (ex.: painel de senha do `wifi`). */
+    private resize(): void {
+      this.applySize(getSize(this.contentMode, this.sizeContext()), true);
+    }
+
+    private sizeContext(): SizeContext {
+      return { wifiPasswordField: this.wifiView.passwordField };
     }
 
     private showContentFor(mode: Mode): void {
@@ -145,6 +161,10 @@ export const Island = GObject.registerClass(
           break;
         case 'quick':
           this.set_child(this.quickRow);
+          break;
+        case 'wifi':
+          this.set_child(this.wifiView);
+          this.wifiView.onOpen();
           break;
         // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
         default:
