@@ -27,7 +27,7 @@ Regra pura em `src/core/battery.ts`:
 | ≤20 | `#f75d59` | `#f75d59` |
 | entre | `neutral-300` | `text` |
 
-"Carregando" = estado UPower `Charging` ou `FullyCharged` na tomada. As cores seguem o nível também carregando.
+"Carregando" = estado UPower `Charging`, `FullyCharged` ou `PendingCharge` (na tomada, parado pelo limite de carga). As cores seguem o nível também carregando.
 
 ## Critérios de aceite
 
