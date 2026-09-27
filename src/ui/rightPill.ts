@@ -4,8 +4,14 @@ import St from 'gi://St';
 
 import { batteryDisplay, type BatteryTone } from '../core/battery.js';
 import type { BatterySource } from '../system/battery.js';
+import type { NotificationFeed } from '../system/notifications.js';
 import { BarButton, type BarButtonActor } from './barButton.js';
-import { batteryLevelIconName, caretIconName, phosphor } from './icons.js';
+import {
+  batteryLevelIconName,
+  caretIconName,
+  notificationFallbackIconName,
+  phosphor,
+} from './icons.js';
 import { Pill } from './pill.js';
 import { colors, derivedColors } from './tokens.js';
 
@@ -41,11 +47,61 @@ function batteryButton(battery: BatterySource, onClick: () => void): BarButtonAc
   return button;
 }
 
+// Ponto de não lido 7×7 `accent` com anel 2px `bg`, em `top: 5px; right: 8px`
+// do botão 30×24. O anel é borda: 11×11 a partir de (13, 3).
+const UNREAD_DOT = { size: 11, x: 13, y: 3 };
+
+// Sino (specs/02-barra.md, item 2): abre `stack`.
+function bellButton(feed: NotificationFeed, onClick: () => void): BarButtonActor {
+  const content = new St.Widget({ layout_manager: new Clutter.BinLayout(), x_expand: true });
+  content.add_child(
+    new St.Icon({
+      gicon: phosphor(notificationFallbackIconName),
+      icon_size: 16,
+      style: `color: ${colors.text};`,
+      x_expand: true,
+      y_expand: true,
+      x_align: Clutter.ActorAlign.CENTER,
+      y_align: Clutter.ActorAlign.CENTER,
+    }),
+  );
+  const dot = new St.Widget({
+    style: `
+      width: ${UNREAD_DOT.size}px;
+      height: ${UNREAD_DOT.size}px;
+      border-radius: ${UNREAD_DOT.size / 2}px;
+      background-color: ${colors.accent};
+      border: 2px solid ${colors.bg};
+    `,
+    x_expand: true,
+    y_expand: true,
+    x_align: Clutter.ActorAlign.START,
+    y_align: Clutter.ActorAlign.START,
+    translation_x: UNREAD_DOT.x,
+    translation_y: UNREAD_DOT.y,
+  });
+  content.add_child(dot);
+  const button = new BarButton(content, onClick);
+
+  const sync = (): void => {
+    dot.visible = feed.hasUnread;
+  };
+  sync();
+  const unsubscribe = feed.onChange(sync);
+  button.connectObject('destroy', () => unsubscribe(), button);
+  return button;
+}
+
 // Pílula direita (specs/02-barra.md): os botões ficam à direita, com gap 2px;
 // o espaço à esquerda é do grupo de hardware (spec 10).
 export const RightPill = GObject.registerClass(
   class RightPill extends Pill {
-    constructor(battery: BatterySource, onOpenQuick: () => void) {
+    constructor(
+      battery: BatterySource,
+      feed: NotificationFeed,
+      onOpenQuick: () => void,
+      onOpenStack: () => void,
+    ) {
       super();
       this.add_child(new St.Widget({ x_expand: true }));
 
@@ -53,6 +109,7 @@ export const RightPill = GObject.registerClass(
         style: 'spacing: 2px;',
         y_align: Clutter.ActorAlign.CENTER,
       });
+      buttons.add_child(bellButton(feed, onOpenStack));
       buttons.add_child(batteryButton(battery, onOpenQuick));
       buttons.add_child(
         new BarButton(

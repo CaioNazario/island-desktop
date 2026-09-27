@@ -163,7 +163,12 @@ class Bar {
       this.banner.handlePressUnderGrab(target),
     );
     this.island = island;
-    const rightPill = new RightPill(battery, () => onTrigger('quick'));
+    const rightPill = new RightPill(
+      battery,
+      system.notifications,
+      () => onTrigger('quick'),
+      () => onTrigger('stack'),
+    );
     this.chrome = new BarChrome(leftPill, island, rightPill, this.banner);
     this.chrome.set_position(monitor.x, monitor.y);
     this.chrome.set_width(monitor.width);
@@ -300,6 +305,8 @@ export class BarManager {
   private handleBarTrigger(monitorIndex: number, mode: Mode): void {
     this.targetMonitorIndex = monitorIndex;
     this.state.openFromTrigger(mode);
+    // Abrir a lista pelo sino marca tudo como lido (specs/04-notificacoes.md).
+    if (this.state.mode === 'stack') this.notifications.markAllRead();
     this.render();
   }
 
