@@ -16,13 +16,6 @@ Pontos que ninguém verificou ainda. Cada spike se resolve **antes** de implemen
 - **Como**: injeção com `InjectionManager` no handler de pedido de segredo, filtrando pelo UUID da conexão recém-criada. Testar senha certa, senha errada, cancelamento e rede Enterprise.
 - **Pronto quando**: senha errada volta ao painel inline com "Senha incorreta" e nenhum diálogo aparece; ou fica provado que não dá, e a spec 08 passa a aceitar o diálogo nativo nesse caso.
 
-## S3 · Parear Bluetooth sem agente de UI
-
-- **Bloqueia**: spec 08 (Disponíveis → Parear).
-- **Pergunta**: com o `GnomeBluetooth.Client` (ou BlueZ direto), dá pra parear dispositivos "Just Works" (mouse, fone, caixa) a partir do Shell sem o app Configurações aberto? Como detectar que o dispositivo pediu PIN/código, para redirecionar às Configurações?
-- **Como**: parear mouse, fone e um celular (que pede código) com o adaptador da máquina de referência.
-- **Pronto quando**: o caminho de pareamento e o sinal de "pediu PIN" estão escritos na spec 08.
-
 ## S4 · Publicação no extensions.gnome.org (futuro, fora da v1)
 
 - **Pergunta**: o review do EGO aceita uma extensão que lê credenciais de CLIs de terceiros e chama endpoints não documentados com User-Agent de outro cliente?

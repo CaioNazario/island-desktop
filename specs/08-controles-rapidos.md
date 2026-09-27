@@ -86,7 +86,7 @@ Linha de controles · linha de energia (opcional) · divisor · seção (padding
 - **Cabeçalho** 26px: `ph-bold ph-bluetooth` 14px, "Bluetooth" 13px/500, status ("2 conectados" / "Desligado") e switch (mesmo estilo do Wi‑Fi) que liga/desliga o rádio.
 - Fonte: `GnomeBluetooth.Client`, o mesmo que o Shell usa.
 - **Meus dispositivos** (pareados, conectados primeiro) e **Disponíveis** (não pareados, com `ph ph-circle-notch` 11px girando 1.2s): rótulos 10.5px maiúsculos, `letter-spacing .06em`, `neutral-500`.
-- A busca (discovery) roda **só enquanto `bt` está aberto**.
+- A busca (discovery) roda **só enquanto `bt` está aberto**: `client.default_adapter_setup_mode = true` ao abrir, `false` ao fechar.
 - Linha 38px raio 10, padding 0 8px, gap 10px: ícone `ph-fill` 17px (`accent` se conectado, senão `neutral-300`) · nome 12.5px · bateria (`ph-fill ph-battery-medium` 13px + `72%` 11px `neutral-400`, só conectado e com nível conhecido) · status 11px à direita. Conectado com fundo `accent-900`. Alturas fixas; listas longas rolam.
 - Ícone pelo tipo do dispositivo: fone/headset → `ph-headphones`, mouse → `ph-mouse`, teclado → `ph-keyboard`, caixa de som → `ph-speaker-hifi`, celular → `ph-device-mobile`, computador → `ph-laptop`, controle → `ph-game-controller`, outro → `ph-bluetooth`.
 
@@ -94,9 +94,19 @@ Linha de controles · linha de energia (opcional) · divisor · seção (padding
 |---|---|---|
 | pareado conectado | "Conectado" `accent-300` | desconecta ("Desconectando…") |
 | pareado desconectado | "Desconectado" `neutral-500` | conecta ("Conectando…") |
-| não pareado | "Parear" `accent-300` | pareia e conecta; se o dispositivo pedir PIN/código, abre Configurações → Bluetooth (spike S3) |
+| não pareado | "Parear" `accent-300` | pareia e conecta ("Pareando…"); se o dispositivo pedir PIN/código, abre Configurações → Bluetooth (`gnome-control-center bluetooth`) |
 
 Só uma operação por vez; cliques durante uma operação são ignorados.
+
+**Parear** (sem agente BlueZ registrado; o `GnomeBluetooth.Client` não tem método de parear):
+
+1. `Pair()` no `org.bluez.Device1` do dispositivo, pelo `device.proxy`.
+2. Sucesso: `Trusted = true` pelo `org.freedesktop.DBus.Properties.Set` e depois `client.connect_service(path, true)`.
+3. Erro `org.bluez.Error.AuthenticationFailed`, `AuthenticationRejected` ou `AuthenticationCanceled`: o dispositivo pediu PIN/código → abre Configurações → Bluetooth. Não testado com dispositivo real.
+4. Sem resposta em 30s: `CancelPairing()` e a linha volta a "Parear". Com o dispositivo fora do modo de pareamento, o `Pair()` não falha, fica pendente.
+5. Qualquer outro erro: a linha volta a "Parear".
+
+Pareamento "Just Works" (fone) sem agente: validado no GNOME 50.4 / BlueZ 5.87 / gnome-bluetooth 47.2, pareia e conecta em ~3s.
 
 - **Rádio desligado**: área de 190px com `ph ph-bluetooth-slash` 22px + "Bluetooth desligado".
 
