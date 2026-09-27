@@ -10,6 +10,7 @@ import { routeNotification, type IncomingNotification } from '../core/notificati
 import { SystemBattery, type BatterySource } from '../system/battery.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
+import { SystemMpris } from '../system/mpris.js';
 import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
 import { OsdRedirect } from '../system/osd.js';
 import { SystemSession } from '../system/session.js';
@@ -190,6 +191,7 @@ export class BarManager {
   private readonly system: IslandSystem;
   private readonly battery = new SystemBattery();
   private readonly notifications = new SystemNotifications();
+  private readonly music = new SystemMpris();
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -198,6 +200,7 @@ export class BarManager {
   private readonly unsubscribeWifi: () => void;
   private readonly unsubscribeBt: () => void;
   private readonly unsubscribeArrival: () => void;
+  private readonly unsubscribeTrack: () => void;
 
   constructor() {
     this.state = new IslandState(new GLibScheduler(), {
@@ -215,6 +218,7 @@ export class BarManager {
       bluetooth: new SystemBluetooth(),
       session: new SystemSession(),
       notifications: this.notifications,
+      music: this.music,
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -231,6 +235,7 @@ export class BarManager {
     this.unsubscribeArrival = this.notifications.onArrival((entry, incoming) =>
       this.handleNotificationArrival(entry, incoming),
     );
+    this.unsubscribeTrack = this.music.onTrackChange(() => this.handleTrackChange());
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
   }
@@ -272,6 +277,16 @@ export class BarManager {
     if (this.state.mode === 'compact') this.targetMonitorIndex = this.focusedMonitorIndex();
     this.bars.forEach((bar) => bar.island.setNotification(entry));
     this.state.openNotification(incoming.critical);
+  }
+
+  /** Troca de faixa: abre `music` pela regra 3 da spec 03 (specs/05-musica.md). */
+  private handleTrackChange(): void {
+    // Transitório: monitor da janela focada (specs/02-barra.md), como o `notif`.
+    const index =
+      this.state.mode === 'compact' ? this.focusedMonitorIndex() : this.targetMonitorIndex;
+    if (!this.state.openAutomatic('music')) return;
+    this.targetMonitorIndex = index;
+    this.render();
   }
 
   /** Clique no banner: abre `stack` naquela barra e marca tudo como lido. */
@@ -372,6 +387,7 @@ export class BarManager {
     this.unsubscribeWifi();
     this.unsubscribeBt();
     this.unsubscribeArrival();
+    this.unsubscribeTrack();
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;
@@ -388,6 +404,7 @@ export class BarManager {
     this.system.session.destroy();
     this.battery.destroy();
     this.notifications.destroy();
+    this.music.destroy();
     this.osdRedirect.destroy();
   }
 }

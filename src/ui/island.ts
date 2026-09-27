@@ -8,6 +8,7 @@ import { getSize, type IslandState, type Mode, type SizeContext } from '../core/
 import type { SystemBluetooth } from '../system/bluetooth.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
 import type { SystemBrightness } from '../system/brightness.js';
+import type { MusicSource } from '../system/mpris.js';
 import type { SystemSession } from '../system/session.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
@@ -16,6 +17,7 @@ import { BtView, type BtViewActor } from './btView.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
+import { MusicModeRow } from './musicView.js';
 import { notifContent, type NotificationRowActor } from './notificationRow.js';
 import { IslandPowerToggle, quickContent } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
@@ -34,6 +36,7 @@ export interface IslandSystem {
   bluetooth: SystemBluetooth;
   session: SystemSession;
   notifications: NotificationFeed;
+  music: MusicSource;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
@@ -187,6 +190,7 @@ export const Island = GObject.registerClass(
         ['compact', modeLayer(this.clockLabel)],
         ['notif', modeLayer(notif.content)],
         ['stack', modeLayer(this.stackView)],
+        ['music', modeLayer(new MusicModeRow(system.music, () => this.state.keepAlive()))],
         ['volume', modeLayer(this.volumeRow)],
         ['brightness', modeLayer(this.brightnessRow)],
         ['quick', modeLayer(quickContent(this.quickRow, system.session, controls))],

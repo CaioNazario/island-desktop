@@ -8,7 +8,7 @@ Origem: `design/markup.html` 73–91 (modo `music`) e 338–383 (cartão central
 - **Player atual**: o último que entrou em `Playing`. Pausado continua atual até outro tocar ou ele sair do barramento. `Stopped` ou sem título não é atual (o Brave fica no barramento em `Stopped` com metadados vazios quando o vídeo acaba) e volta a valer se tocar de novo. Na primeira leitura (o `enable()` roda a cada desbloqueio), os que já tocam têm prioridade sobre os pausados.
 - Dados: `xesam:artist` (array, junto com ", "), `xesam:title`, `mpris:length`, `mpris:artUrl`, `Position`, `PlaybackStatus`, `CanGoPrevious`/`CanGoNext`.
 - `Position` não gera sinal: ler ao abrir e avançar localmente a cada 1s enquanto tocando; ressincronizar em `Seeked` e em troca de faixa.
-- Capa: `file://` direto; `http(s)://` baixada de forma assíncrona para cache em `$XDG_CACHE_HOME/island/`. Sem capa: bloco `accent-900` com `ph-fill ph-music-note` 24px `accent-300`.
+- Capa: `file://` (o que Brave, Chrome e Firefox mandam) vira fundo recortado no raio; `http(s)://` (Spotify nativo) carrega como no Shell (`Gio.FileIcon` na URI, o GVfs baixa), sem cache próprio e sem o raio. Sem capa: bloco `accent-900` com `ph-fill ph-music-note` 24px `accent-300`.
 - Artista vazio: mostra o nome do player (`Identity`).
 
 ### Ícone da fonte
