@@ -94,6 +94,7 @@ export interface CalendarEvent {
 /** Tokens da ilha para o ponto do evento, um por calendário de origem. */
 export type EventDot = 'accent500' | 'accent300' | 'neutral400';
 const EVENT_DOTS: readonly EventDot[] = ['accent500', 'accent300', 'neutral400'];
+const MAX_TODAY_EVENTS = 10;
 
 export interface TodayEvent {
   name: string;
@@ -122,7 +123,10 @@ function sourceOf(event: CalendarEvent): string {
   return event.id.slice(0, event.id.indexOf('\n'));
 }
 
-/** Eventos que tocam hoje, por início; a cor gira pela ordem em que cada calendário aparece. */
+/**
+ * Eventos que tocam hoje, por início, no máximo 10; a cor gira pela ordem em
+ * que cada calendário aparece.
+ */
 export function todayEvents(events: readonly CalendarEvent[], today: Date): TodayEvent[] {
   const dayBegin = startOfDay(today);
   const dayEnd = new Date(dayBegin.getFullYear(), dayBegin.getMonth(), dayBegin.getDate() + 1);
@@ -131,6 +135,7 @@ export function todayEvents(events: readonly CalendarEvent[], today: Date): Toda
   return events
     .filter((event) => overlaps(event, dayBegin, dayEnd))
     .sort((a, b) => a.start.getTime() - b.start.getTime() || a.end.getTime() - b.end.getTime())
+    .slice(0, MAX_TODAY_EVENTS)
     .map((event) => {
       const source = sourceOf(event);
       let dot = sources.get(source);

@@ -176,6 +176,24 @@ describe('todayEvents', () => {
     expect(todayEvents(events, TODAY)).toEqual([]);
   });
 
+  it('mostra no máximo os 10 primeiros, por início', () => {
+    const events = Array.from({ length: 12 }, (_, i) =>
+      event('local', `E${11 - i}`, at(25, 11 - i), at(25, 12 - i)),
+    );
+    expect(todayEvents(events, TODAY).map((e) => e.name)).toEqual([
+      'E0',
+      'E1',
+      'E2',
+      'E3',
+      'E4',
+      'E5',
+      'E6',
+      'E7',
+      'E8',
+      'E9',
+    ]);
+  });
+
   it('dá uma cor da ilha por calendário, na ordem em que aparecem', () => {
     const events = [
       event('google', 'A', at(25, 8), at(25, 9)),
