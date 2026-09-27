@@ -207,6 +207,48 @@ describe('IslandState', () => {
     expect(state.escape(false)).toBe('noop'); // já em compact
     expect(changes).toBe(4);
   });
+
+  it('spec 09: Energia alterna a linha em quick, wifi e bt', () => {
+    let changes = 0;
+    const state = new IslandState(new FakeScheduler(), { onChange: () => changes++ });
+    for (const mode of ['quick', 'wifi', 'bt'] as const) {
+      state.openFromTrigger(mode);
+      changes = 0;
+      state.togglePower();
+      expect(state.powerOpen).toBe(true);
+      state.togglePower();
+      expect(state.powerOpen).toBe(false);
+      expect(changes).toBe(2);
+    }
+  });
+
+  it('spec 09: Energia não abre fora de quick, wifi e bt', () => {
+    let changes = 0;
+    const state = new IslandState(new FakeScheduler(), { onChange: () => changes++ });
+    state.togglePower(); // compact
+    state.openFromTrigger('calendar');
+    changes = 0;
+    state.togglePower();
+    expect(state.powerOpen).toBe(false);
+    expect(changes).toBe(0);
+  });
+
+  it('spec 09: trocar de modo, Esc ou fechar a ilha fecham a linha de energia', () => {
+    const state = new IslandState(new FakeScheduler());
+    state.openFromTrigger('quick');
+    state.togglePower();
+    state.openFromTrigger('wifi');
+    expect(state.powerOpen).toBe(false);
+
+    state.togglePower();
+    state.escape(false);
+    expect(state.powerOpen).toBe(false);
+
+    state.openFromTrigger('bt');
+    state.togglePower();
+    state.closeAll();
+    expect(state.powerOpen).toBe(false);
+  });
 });
 
 describe('isFixedMode', () => {

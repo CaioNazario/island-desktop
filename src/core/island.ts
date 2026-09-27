@@ -22,6 +22,9 @@ const TRANSIENT_MS: Partial<Record<Mode, number>> = {
   brightness: 2600,
 };
 
+/** Modos com a linha de controles, onde fica o botão Energia (specs/09-sessao-energia.md). */
+const POWER_MODES: ReadonlySet<Mode> = new Set<Mode>(['quick', 'wifi', 'bt']);
+
 function isTransient(mode: Mode): boolean {
   return mode in TRANSIENT_MS;
 }
@@ -108,6 +111,7 @@ export class IslandState {
   private readonly onChange: () => void;
   private _mode: Mode = 'compact';
   private _cardOpen = false;
+  private _powerOpen = false;
   private hovering = false;
   private timerId: number | null = null;
 
@@ -123,6 +127,18 @@ export class IslandState {
 
   get cardOpen(): boolean {
     return this._cardOpen;
+  }
+
+  /** Linha de energia aberta abaixo da linha de controles (specs/09-sessao-energia.md). */
+  get powerOpen(): boolean {
+    return this._powerOpen;
+  }
+
+  /** Botão Energia: só existe na linha de controles de `quick`/`wifi`/`bt`. */
+  togglePower(): void {
+    if (!POWER_MODES.has(this._mode)) return;
+    this._powerOpen = !this._powerOpen;
+    this.onChange();
   }
 
   /** Gatilho do usuário (clique na barra, `Super+S`): regras 1 e 2. */
@@ -206,6 +222,7 @@ export class IslandState {
     this.clearTimer();
     this._mode = 'compact';
     this._cardOpen = false;
+    this._powerOpen = false;
     this.onChange();
   }
 
@@ -213,6 +230,7 @@ export class IslandState {
     this.clearTimer();
     this._mode = mode;
     this._cardOpen = false;
+    this._powerOpen = false;
     this.arm(mode);
     this.onChange();
   }
