@@ -156,6 +156,7 @@ export class BarManager {
   private grab: Clutter.Grab | null = null;
   private grabbedIsland: IslandActor | null = null;
   private readonly osdRedirect: OsdRedirect;
+  private readonly unsubscribeBt: () => void;
 
   constructor() {
     this.state = new IslandState(new GLibScheduler(), {
@@ -176,6 +177,11 @@ export class BarManager {
       () => this.triggerVolumeKey(),
       () => this.triggerBrightnessKey(),
     );
+    // "Sem adaptador, o tile e o modo somem": o adaptador pode sumir com o
+    // `bt` aberto (ex.: `btusb` reiniciando após suspender).
+    this.unsubscribeBt = this.system.bluetooth.onChange(() => {
+      if (this.state.mode === 'bt' && !this.system.bluetooth.available) this.state.closeAll();
+    });
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
   }
@@ -273,6 +279,7 @@ export class BarManager {
 
   destroy(): void {
     Main.layoutManager.disconnectObject(this);
+    this.unsubscribeBt();
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;
