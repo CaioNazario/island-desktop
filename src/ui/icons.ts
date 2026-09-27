@@ -1,5 +1,6 @@
 import Gio from 'gi://Gio';
 
+import type { BatteryIcon } from '../core/battery.js';
 import type { DeviceKind } from '../core/bluetooth.js';
 import type { SignalLevel } from '../core/wifi.js';
 import type { SystemVolume } from '../system/volume.js';
@@ -55,6 +56,10 @@ export const settingsIconName = 'gear-six';
 export const powerIconName = 'power-bold';
 export const dndIconName = 'bell-slash-fill';
 export const caretIconName = 'caret-down';
+
+export function batteryLevelIconName(icon: BatteryIcon): string {
+  return `battery-${icon}-fill`;
+}
 
 export function btDeviceIconName(kind: DeviceKind): string {
   switch (kind) {

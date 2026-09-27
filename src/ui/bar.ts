@@ -6,6 +6,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { isFixedMode, IslandState, type Mode, type Scheduler } from '../core/island.js';
+import { SystemBattery, type BatterySource } from '../system/battery.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
 import { OsdRedirect } from '../system/osd.js';
@@ -119,6 +120,7 @@ class Bar {
     monitor: { index: number; x: number; y: number; width: number },
     state: IslandState,
     system: IslandSystem,
+    battery: BatterySource,
     onIslandClick: () => void,
     onEscape: () => void,
     onTrigger: (mode: Mode) => void,
@@ -134,7 +136,7 @@ class Bar {
     const leftPill = new Pill();
     const island = new Island(state, system, onIslandClick, onEscape);
     this.island = island;
-    const rightPill = new RightPill(() => onTrigger('quick'));
+    const rightPill = new RightPill(battery, () => onTrigger('quick'));
     this.chrome = new BarChrome(leftPill, island, rightPill);
     this.chrome.set_position(monitor.x, monitor.y);
     this.chrome.set_width(monitor.width);
@@ -154,6 +156,7 @@ class Bar {
 export class BarManager {
   private readonly state: IslandState;
   private readonly system: IslandSystem;
+  private readonly battery = new SystemBattery();
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -259,6 +262,7 @@ export class BarManager {
           monitor,
           this.state,
           this.system,
+          this.battery,
           () => this.handleIslandClick(index),
           () => this.handleEscape(),
           (mode) => this.handleBarTrigger(index, mode),
@@ -311,6 +315,7 @@ export class BarManager {
     this.system.wifi.destroy();
     this.system.bluetooth.destroy();
     this.system.session.destroy();
+    this.battery.destroy();
     this.osdRedirect.destroy();
   }
 }
