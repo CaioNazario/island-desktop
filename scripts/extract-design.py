@@ -17,8 +17,14 @@ OUT = ROOT / "design"
 ICONS = ROOT / "icons"
 
 # Usados pelo código mas ausentes do design (specs/08-controles-rapidos.md:
-# ícone pelo tipo do dispositivo Bluetooth).
-EXTRA_ICONS = {("fill", "laptop"), ("fill", "game-controller"), ("fill", "bluetooth")}
+# ícone pelo tipo do dispositivo Bluetooth; specs/04-notificacoes.md: tabela
+# de sites).
+EXTRA_ICONS = {
+    ("fill", "laptop"),
+    ("fill", "game-controller"),
+    ("fill", "bluetooth"),
+    ("fill", "whatsapp-logo"),
+}
 
 ICON_CLASS = re.compile(r"\bph(?:-(bold|fill))? ph-([a-z0-9-]+)")
 
