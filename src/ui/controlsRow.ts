@@ -3,7 +3,14 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import type { SystemBrightness } from '../system/brightness.js';
-import { brightnessIconName, volumeIconName } from './icons.js';
+import {
+  brightnessIconName,
+  btIconName,
+  dndIconName,
+  nightLightIconName,
+  volumeIconName,
+  wifiTileIconName,
+} from './icons.js';
 import type { IslandSystem } from './island.js';
 import { SliderRow, type DragHooks, type SliderRowActor } from './sliderRow.js';
 import { Tile, type TileActor, type TileSource } from './tile.js';
@@ -61,7 +68,7 @@ export const ControlsRow = GObject.registerClass(
         },
         onChange: (callback) => wifi.onChange(callback),
       };
-      this.wifiTile = new Tile('network-wireless-symbolic', wifiRadio, onWifiClick);
+      this.wifiTile = new Tile(wifiTileIconName, wifiRadio, onWifiClick);
       this.add_child(this.wifiTile);
       const bt = system.bluetooth;
       const btRadio: TileSource = {
@@ -70,16 +77,12 @@ export const ControlsRow = GObject.registerClass(
         },
         onChange: (callback) => bt.onChange(callback),
       };
-      this.btTile = new Tile('bluetooth-active-symbolic', btRadio, onBtClick);
+      this.btTile = new Tile(btIconName, btRadio, onBtClick);
       this.add_child(this.btTile);
       this.add_child(
-        new Tile('weather-clear-night-symbolic', system.nightLight, () =>
-          system.nightLight.toggle(),
-        ),
+        new Tile(nightLightIconName, system.nightLight, () => system.nightLight.toggle()),
       );
-      this.add_child(
-        new Tile('notifications-disabled-symbolic', system.dnd, () => system.dnd.toggle()),
-      );
+      this.add_child(new Tile(dndIconName, system.dnd, () => system.dnd.toggle()));
 
       this.add_child(divider());
 

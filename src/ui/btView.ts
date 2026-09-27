@@ -15,6 +15,7 @@ import {
   btDeviceIconName,
   btIconName,
   btOffIconName,
+  phosphor,
   spinnerIconName,
 } from './icons.js';
 import type { IslandSystem } from './island.js';
@@ -84,7 +85,7 @@ function deviceRowContent(device: BtDevice): St.BoxLayout {
 
 function deviceIcon(device: BtDevice): St.Icon {
   return new St.Icon({
-    icon_name: btDeviceIconName(device.kind),
+    gicon: phosphor(btDeviceIconName(device.kind)),
     icon_size: 17,
     style: `color: ${device.connected ? colors.accent : colors.neutral300};`,
     y_align: Clutter.ActorAlign.CENTER,
@@ -96,7 +97,7 @@ function batteryBadge(percent: number): St.BoxLayout {
     style: `spacing: 4px; font-size: 11px; color: ${colors.neutral400};`,
     y_align: Clutter.ActorAlign.CENTER,
   });
-  badge.add_child(new St.Icon({ icon_name: batteryIconName, icon_size: 13 }));
+  badge.add_child(new St.Icon({ gicon: phosphor(batteryIconName), icon_size: 13 }));
   badge.add_child(new St.Label({ text: `${percent}%`, y_align: Clutter.ActorAlign.CENTER }));
   return badge;
 }
@@ -170,7 +171,7 @@ export const BtView = GObject.registerClass(
       this.pairedLabel = groupLabel('Meus dispositivos', '4px 8px 2px');
       this.nearbyLabel = groupLabel('Disponíveis', '8px 8px 2px');
       this.spinner = new St.Icon({
-        icon_name: spinnerIconName,
+        gicon: phosphor(spinnerIconName),
         icon_size: 11,
         y_align: Clutter.ActorAlign.CENTER,
       });

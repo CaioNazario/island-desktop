@@ -2,6 +2,7 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
+import { phosphor } from './icons.js';
 import { colors } from './tokens.js';
 
 export interface TileSource {
@@ -42,7 +43,7 @@ export const Tile = GObject.registerClass(
 
       this.source = source;
 
-      this.icon = new St.Icon({ icon_name: iconName, icon_size: 18 });
+      this.icon = new St.Icon({ gicon: phosphor(iconName), icon_size: 17 });
       this.set_child(this.icon);
 
       this.connectObject(

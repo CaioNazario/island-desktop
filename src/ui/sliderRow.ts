@@ -3,6 +3,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import { Slider } from 'resource:///org/gnome/shell/ui/slider.js';
 
+import { phosphor } from './icons.js';
 import { colors } from './tokens.js';
 
 export interface PercentSource {
@@ -108,7 +109,7 @@ export const SliderRow = GObject.registerClass(
       this.slider.value = percent / 100;
       this.updatingFromSource = false;
       if (this.valueLabel) this.valueLabel.text = `${percent}%`;
-      this.icon.icon_name = this.iconName();
+      this.icon.gicon = phosphor(this.iconName());
     }
   },
 );

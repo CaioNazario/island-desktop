@@ -1,59 +1,75 @@
+import Gio from 'gi://Gio';
+
 import type { DeviceKind } from '../core/bluetooth.js';
 import type { SignalLevel } from '../core/wifi.js';
 import type { SystemVolume } from '../system/volume.js';
 
-// Nomes simbólicos do sistema como substituto temporário do ícone Phosphor
-// (specs/08-controles-rapidos.md), até a spec 01 ganhar um pipeline de fonte
-// de ícones.
-export function volumeIconName(volume: SystemVolume): string {
-  if (volume.muted || volume.percent === 0) return 'audio-volume-muted-symbolic';
-  if (volume.percent < 40) return 'audio-volume-low-symbolic';
-  return 'audio-volume-high-symbolic';
+// Ícones Phosphor do design (specs/01-design-tokens.md "Ícones"), extraídos
+// por `scripts/extract-design.py` para `icons/<glifo>-symbolic.svg`. O nome
+// do glifo segue a classe do design: `ph ph-sun` → `sun`, `ph-bold ph-power`
+// → `power-bold`, `ph-fill ph-moon` → `moon-fill`.
+export function phosphor(glyph: string): Gio.Icon {
+  // `dist/ui/icons.js` → `dist/icons/`.
+  const iconsDir = Gio.File.new_for_uri(import.meta.url)
+    .get_parent()!
+    .get_parent()!
+    .get_child('icons');
+  return new Gio.FileIcon({ file: iconsDir.get_child(`${glyph}-symbolic.svg`) });
 }
 
-export const brightnessIconName = (): string => 'display-brightness-symbolic';
+export function volumeIconName(volume: SystemVolume): string {
+  if (volume.muted || volume.percent === 0) return 'speaker-x-fill';
+  if (volume.percent < 40) return 'speaker-low-fill';
+  return 'speaker-high-fill';
+}
+
+export const brightnessIconName = (): string => 'sun';
 
 export function wifiSignalIconName(level: SignalLevel): string {
   switch (level) {
     case 'high':
-      return 'network-wireless-signal-excellent-symbolic';
+      return 'wifi-high-bold';
     case 'medium':
-      return 'network-wireless-signal-ok-symbolic';
+      return 'wifi-medium-bold';
     case 'low':
-      return 'network-wireless-signal-weak-symbolic';
+      return 'wifi-low-bold';
   }
 }
 
-export const wifiIconName = 'network-wireless-symbolic';
-export const wifiOffIconName = 'network-wireless-disabled-symbolic';
-export const lockIconName = 'changes-prevent-symbolic';
-export const keyIconName = 'dialog-password-symbolic';
-export const warningIconName = 'dialog-warning-symbolic';
-export const revealIconName = 'view-reveal-symbolic';
-export const concealIconName = 'view-conceal-symbolic';
+export const wifiTileIconName = 'wifi-high-bold';
+export const wifiIconName = 'wifi-high';
+export const wifiOffIconName = 'wifi-slash';
+export const lockIconName = 'lock-simple-fill';
+export const keyIconName = 'key';
+export const warningIconName = 'warning-circle';
+export const revealIconName = 'eye';
+export const concealIconName = 'eye-slash';
 
-export const btIconName = 'bluetooth-active-symbolic';
-export const btOffIconName = 'bluetooth-disabled-symbolic';
-export const spinnerIconName = 'view-refresh-symbolic';
-export const batteryIconName = 'battery-level-50-symbolic';
+export const btIconName = 'bluetooth-bold';
+export const btOffIconName = 'bluetooth-slash';
+export const spinnerIconName = 'circle-notch';
+export const batteryIconName = 'battery-medium-fill';
+
+export const nightLightIconName = 'moon-fill';
+export const dndIconName = 'bell-slash-fill';
 
 export function btDeviceIconName(kind: DeviceKind): string {
   switch (kind) {
     case 'headphones':
-      return 'audio-headphones-symbolic';
+      return 'headphones-fill';
     case 'mouse':
-      return 'input-mouse-symbolic';
+      return 'mouse-fill';
     case 'keyboard':
-      return 'input-keyboard-symbolic';
+      return 'keyboard-fill';
     case 'speaker':
-      return 'audio-speakers-symbolic';
+      return 'speaker-hifi-fill';
     case 'phone':
-      return 'phone-symbolic';
+      return 'device-mobile-fill';
     case 'computer':
-      return 'computer-symbolic';
+      return 'laptop-fill';
     case 'gamepad':
-      return 'input-gaming-symbolic';
+      return 'game-controller-fill';
     case 'other':
-      return btIconName;
+      return 'bluetooth-fill';
   }
 }

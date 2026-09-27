@@ -14,6 +14,7 @@ import { ControlsRow } from './controlsRow.js';
 import {
   concealIconName,
   keyIconName,
+  phosphor,
   lockIconName,
   revealIconName,
   warningIconName,
@@ -148,7 +149,7 @@ export const WifiView = GObject.registerClass(
         this,
       );
 
-      this.revealIcon = new St.Icon({ icon_name: revealIconName, icon_size: 14 });
+      this.revealIcon = new St.Icon({ gicon: phosphor(revealIconName), icon_size: 14 });
       const revealButton = new St.Button({
         child: this.revealIcon,
         style: `width: 22px; height: 22px; border-radius: 11px; color: ${colors.neutral400};`,
@@ -169,7 +170,7 @@ export const WifiView = GObject.registerClass(
       });
       field.add_child(
         new St.Icon({
-          icon_name: keyIconName,
+          gicon: phosphor(keyIconName),
           icon_size: 14,
           style: `color: ${colors.neutral400};`,
           y_align: Clutter.ActorAlign.CENTER,
@@ -194,7 +195,7 @@ export const WifiView = GObject.registerClass(
       });
       this.errorRow.add_child(
         new St.Icon({
-          icon_name: warningIconName,
+          gicon: phosphor(warningIconName),
           icon_size: 13,
           y_align: Clutter.ActorAlign.CENTER,
         }),
@@ -262,7 +263,7 @@ export const WifiView = GObject.registerClass(
       });
       content.add_child(
         new St.Icon({
-          icon_name: wifiSignalIconName(signalLevel(network.strength)),
+          gicon: phosphor(wifiSignalIconName(signalLevel(network.strength))),
           icon_size: 16,
           style: `color: ${connected ? colors.accent : colors.neutral300};`,
           y_align: Clutter.ActorAlign.CENTER,
@@ -278,7 +279,7 @@ export const WifiView = GObject.registerClass(
       if (network.security !== 'open') {
         content.add_child(
           new St.Icon({
-            icon_name: lockIconName,
+            gicon: phosphor(lockIconName),
             icon_size: 11,
             style: `color: ${colors.neutral500};`,
             y_align: Clutter.ActorAlign.CENTER,
@@ -356,7 +357,7 @@ export const WifiView = GObject.registerClass(
     private togglePasswordVisible(): void {
       this.passwordVisible = !this.passwordVisible;
       this.passwordEntry.clutter_text.set_password_char(this.passwordVisible ? '' : PASSWORD_CHAR);
-      this.revealIcon.icon_name = this.passwordVisible ? concealIconName : revealIconName;
+      this.revealIcon.gicon = phosphor(this.passwordVisible ? concealIconName : revealIconName);
     }
 
     private setPassword(ssid: string | null, error: PasswordError | null): void {

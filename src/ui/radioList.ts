@@ -1,6 +1,7 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
+import { phosphor } from './icons.js';
 import { Switch } from './switch.js';
 import { colors } from './tokens.js';
 
@@ -34,7 +35,7 @@ export function radioHeader(options: { icon: string; title: string; radio: Radio
   });
   header.add_child(
     new St.Icon({
-      icon_name: options.icon,
+      gicon: phosphor(options.icon),
       icon_size: 14,
       style: `color: ${colors.neutral300};`,
       y_align: Clutter.ActorAlign.CENTER,
@@ -87,7 +88,7 @@ export function radioOffArea(options: {
   });
   area.add_child(
     new St.Icon({
-      icon_name: options.icon,
+      gicon: phosphor(options.icon),
       icon_size: 22,
       x_align: Clutter.ActorAlign.CENTER,
       y_expand: true,
