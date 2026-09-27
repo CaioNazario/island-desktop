@@ -34,7 +34,7 @@ Quando o design mudar, rode `python3 scripts/extract-design.py` e atualize as sp
 ```
 src/
   core/         lógica pura: estados da ilha, roteamento de notificação, limiares, formatação, tamanhos
-  services/     fontes de dados (D-Bus, MPRIS, NM, BlueZ, UPower, /proc, /sys, GWeather, HTTP de IA), cada uma atrás de uma interface
+  system/       fontes de dados (D-Bus, MPRIS, NM, BlueZ, UPower, /proc, /sys, GWeather, HTTP de IA), cada uma atrás de uma interface
   ui/           atores St: barra, pílulas, ilha, modos, cartão central
   extension.ts  enable()/disable()
   prefs.ts      preferências (GTK4/Adw, outro processo, fala só via GSettings)

@@ -4,7 +4,7 @@ Origem: `design/markup.html` 73–91 (modo `music`) e 338–383 (cartão central
 
 ## Fonte: MPRIS
 
-- Serviço em `src/services/mpris.ts`: acompanha nomes `org.mpris.MediaPlayer2.*` no barramento de sessão (entrada, saída, `PropertiesChanged`, `Seeked`).
+- Serviço em `src/system/mpris.ts`: acompanha nomes `org.mpris.MediaPlayer2.*` no barramento de sessão (entrada, saída, `PropertiesChanged`, `Seeked`).
 - **Player atual**: o último que entrou em `Playing`. Pausado continua atual até outro tocar ou ele sair do barramento.
 - Dados: `xesam:artist` (array, junto com ", "), `xesam:title`, `mpris:length`, `mpris:artUrl`, `Position`, `PlaybackStatus`, `CanGoPrevious`/`CanGoNext`.
 - `Position` não gera sinal: ler ao abrir e avançar localmente a cada 1s enquanto tocando; ressincronizar em `Seeked` e em troca de faixa.

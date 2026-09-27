@@ -19,7 +19,7 @@ Cinco blocos de duas linhas, gap 2px, sem entrelinha:
 | TEMP | `54°` | `#f75d59` se ≥70°, senão `text` | `Temperatura 54°C` |
 | NET | `↓1.2` (MB/s, 1 casa; ≥100 sem casa) | `text` | `Rede ↓1.2 MB/s ↑86 KB/s` |
 
-Os limiares, a formatação e os cálculos por delta ficam em `src/core/hardware.ts`. Leitura de arquivos em `src/services/hardware.ts`, sempre assíncrona.
+Os limiares, a formatação e os cálculos por delta ficam em `src/core/hardware.ts`. Leitura de arquivos em `src/system/hardware.ts`, sempre assíncrona.
 
 ## Fontes
 
