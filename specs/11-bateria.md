@@ -31,6 +31,6 @@ Regra pura em `src/core/battery.ts`:
 
 ## Critérios de aceite
 
-- [ ] Testes de `battery.ts` cobrem todas as faixas de ícone e cor e o estado carregando.
-- [ ] Ligar/desligar o carregador troca o ícone em até 2s.
+- [x] Testes de `battery.ts` cobrem todas as faixas de ícone e cor e o estado carregando.
+- [x] Ligar/desligar o carregador troca o ícone em até 2s.
 - [ ] Em máquina sem bateria o botão não aparece e a seta continua abrindo `quick`.
