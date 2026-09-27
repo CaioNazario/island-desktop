@@ -101,6 +101,5 @@ export const effects = {
     notifHiddenOffsetY: -18,
   },
   autoHide: { durationMs: 320, easing: 'EASE_OUT_CUBIC' },
-  cardBlurRadius: 20,
   focusRingWidthPx: 2,
 } as const;
