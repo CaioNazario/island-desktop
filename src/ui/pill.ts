@@ -2,9 +2,9 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-import { derivedColors, layout } from './tokens.js';
+import { colors, layout } from './tokens.js';
 
-// Pílula flutuante (specs/02-barra.md): fundo translúcido + anel 1px, sem blur:
+// Pílula flutuante (specs/02-barra.md): fundo `bg` + anel 1px, sem blur:
 // o `Shell.BlurEffect` não segue o `border-radius` e deixa as quinas quadradas.
 export const Pill = GObject.registerClass(
   class Pill extends St.BoxLayout {
@@ -15,7 +15,7 @@ export const Pill = GObject.registerClass(
         x_expand: false,
         y_align: Clutter.ActorAlign.CENTER,
         style: `
-          background-color: ${derivedColors.sidePillBg};
+          background-color: ${colors.bg};
           border-radius: ${layout.pillRadius}px;
           border: ${layout.pillRingWidth}px solid #3f424d;
           padding: 0 ${layout.pillPaddingH}px;

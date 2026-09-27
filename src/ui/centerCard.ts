@@ -22,7 +22,7 @@ import {
 } from './calendarView.js';
 import { phosphor } from './icons.js';
 import { MusicControls, MusicCover, MusicProgressBar } from './musicView.js';
-import { colors, derivedColors, effects } from './tokens.js';
+import { colors, effects } from './tokens.js';
 
 export const CENTER_CARD_WIDTH = 420;
 /** `top: 38px` no design: distância do topo da barra. */
@@ -331,7 +331,7 @@ export const CenterCard = GObject.registerClass(
         style: `
           padding: ${CARD_PADDING}px 0;
           border-radius: ${CARD_RADIUS}px;
-          background-color: ${derivedColors.centralCardBg};
+          background-color: ${colors.bg};
           border: 1px solid ${colors.neutral800};
         `,
       });

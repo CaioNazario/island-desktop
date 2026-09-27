@@ -37,8 +37,6 @@ export const derivedColors = {
   powerOffText: '#ff958d', // texto "Desligar"
   passwordErrorBorder: '#bd413f', // borda do campo de senha com erro
 
-  sidePillBg: 'rgba(22,24,38,0.92)', // bg 92%
-  centralCardBg: 'rgba(22,24,38,0.92)', // bg 92%
   volumeThumbGlow: 'rgba(145,132,217,0.60)', // accent 60%
 
   btnPrimaryHover: 'rgba(145,132,217,0.12)',
