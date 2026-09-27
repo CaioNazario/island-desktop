@@ -83,11 +83,11 @@ Captive portal não é detectável antes de conectar: a rede aparece como aberta
 
 Linha de controles · linha de energia (opcional) · divisor · seção (padding 0 12px):
 
-- **Cabeçalho** 26px: `ph-bold ph-bluetooth` 14px, "Bluetooth" 13px/500, status ("2 conectados" / "Desligado") e switch (mesmo estilo do Wi‑Fi) que liga/desliga o rádio.
+- **Cabeçalho** 26px: `ph-bold ph-bluetooth` 14px, "Bluetooth" 13px/500, status ("2 conectados" / "1 conectado" / "0 conectados" / "Desligado") e switch (mesmo estilo do Wi‑Fi) que liga/desliga o rádio.
 - Fonte: `GnomeBluetooth.Client`, o mesmo que o Shell usa.
-- **Meus dispositivos** (pareados, conectados primeiro) e **Disponíveis** (não pareados, com `ph ph-circle-notch` 11px girando 1.2s): rótulos 10.5px maiúsculos, `letter-spacing .06em`, `neutral-500`.
+- **Meus dispositivos** (pareados, conectados primeiro) e **Disponíveis** (não pareados e com nome anunciado, com `ph ph-circle-notch` 11px girando 1.2s; sem nome, a busca só teria o endereço e o dispositivo não aparece): rótulos 10.5px maiúsculos, `letter-spacing .06em`, `neutral-500`.
 - A busca (discovery) roda **só enquanto `bt` está aberto**: `client.default_adapter_setup_mode = true` ao abrir, `false` ao fechar.
-- Linha 38px raio 10, padding 0 8px, gap 10px: ícone `ph-fill` 17px (`accent` se conectado, senão `neutral-300`) · nome 12.5px · bateria (`ph-fill ph-battery-medium` 13px + `72%` 11px `neutral-400`, só conectado e com nível conhecido) · status 11px à direita. Conectado com fundo `accent-900`. Alturas fixas; listas longas rolam.
+- Linha 38px raio 10, padding 0 8px, gap 10px: ícone `ph-fill` 17px (`accent` se conectado, senão `neutral-300`) · nome 12.5px · bateria (`ph-fill ph-battery-medium` 13px + `72%` 11px `neutral-400`, só conectado e com nível em porcentagem; o nível aproximado do `battery_type` `COARSE` não aparece) · status 11px à direita. Conectado com fundo `accent-900`. Alturas fixas; listas longas rolam.
 - Ícone pelo tipo do dispositivo: fone/headset → `ph-headphones`, mouse → `ph-mouse`, teclado → `ph-keyboard`, caixa de som → `ph-speaker-hifi`, celular → `ph-device-mobile`, computador → `ph-laptop`, controle → `ph-game-controller`, outro → `ph-bluetooth`.
 
 | Dispositivo | Status | Clique |

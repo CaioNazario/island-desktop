@@ -10,6 +10,7 @@ import type { SystemBrightness } from '../system/brightness.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
+import { BtView, type BtViewActor } from './btView.js';
 import { ControlsRow, type ControlsRowActor } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
@@ -65,6 +66,7 @@ export const Island = GObject.registerClass(
     private readonly brightnessRow: SliderRowActor;
     private readonly quickRow: ControlsRowActor;
     private readonly wifiView: WifiViewActor;
+    private readonly btView: BtViewActor;
     private readonly layers: ReadonlyMap<Mode, St.Widget>;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
@@ -139,6 +141,12 @@ export const Island = GObject.registerClass(
         onSizeChanged: () => this.resize(),
         onLeave: () => this.state.closeAll(),
       });
+      this.btView = new BtView(system, drag, {
+        onWifiTileClick,
+        onBtTileClick,
+        onSizeChanged: () => this.resize(),
+        onLeave: () => this.state.closeAll(),
+      });
 
       this.layers = new Map<Mode, St.Widget>([
         ['compact', modeLayer(this.clockLabel)],
@@ -146,6 +154,7 @@ export const Island = GObject.registerClass(
         ['brightness', modeLayer(this.brightnessRow)],
         ['quick', modeLayer(this.quickRow)],
         ['wifi', modeLayer(this.wifiView)],
+        ['bt', modeLayer(this.btView)],
       ]);
       this.syncLayerSize('compact');
       this.surface.add_child(this.layers.get('compact')!);
@@ -236,14 +245,17 @@ export const Island = GObject.registerClass(
       }
     }
 
-    /** O conteúdo do modo atual mudou de altura (ex.: painel de senha do `wifi`). */
+    /** O conteúdo do modo atual mudou de altura (painel de senha do `wifi`, rádio do `bt`). */
     private resize(): void {
       this.syncLayerSize(this.contentMode);
       this.applySize(getSize(this.contentMode, this.sizeContext()), true);
     }
 
     private sizeContext(): SizeContext {
-      return { wifiPasswordField: this.wifiView.passwordField };
+      return {
+        wifiPasswordField: this.wifiView.passwordField,
+        btOn: this.btView.radioIsOn,
+      };
     }
 
     private showContentFor(mode: Mode): void {
@@ -259,7 +271,9 @@ export const Island = GObject.registerClass(
         this.syncLayerSize(mode);
         showLayer(this.surface, incoming, mode);
       }
+      if (previous === 'bt') this.btView.onClose();
       if (mode === 'wifi') this.wifiView.onOpen();
+      if (mode === 'bt') this.btView.onOpen();
     }
 
     private syncLayerSize(mode: Mode): void {
