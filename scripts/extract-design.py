@@ -25,6 +25,7 @@ EXTRA_ICONS = {
     ("fill", "bluetooth"),
     ("fill", "whatsapp-logo"),
     ("fill", "google-chrome-logo"),
+    ("fill", "music-note"),
 }
 
 ICON_CLASS = re.compile(r"\bph(?:-(bold|fill))? ph-([a-z0-9-]+)")
