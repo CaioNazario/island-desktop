@@ -8,10 +8,12 @@ import {
   btIconName,
   dndIconName,
   nightLightIconName,
+  settingsIconName,
   volumeIconName,
   wifiTileIconName,
 } from './icons.js';
 import type { IslandSystem } from './island.js';
+import { RoundButton } from './roundButton.js';
 import { SliderRow, type DragHooks, type SliderRowActor } from './sliderRow.js';
 import { Tile, type TileActor, type TileSource } from './tile.js';
 import { colors } from './tokens.js';
@@ -26,10 +28,13 @@ function divider(): St.Widget {
 export interface ControlsRowOptions {
   onWifiTileClick(): void;
   onBtTileClick(): void;
+  /** Configurações: a ilha fecha e o app abre (specs/09-sessao-energia.md). */
+  onSettingsClick(): void;
 }
 
 // Linha de controles comum a `quick`/`wifi`/`bt` (specs/08-controles-rapidos.md):
-// brilho, volume, e os quatro tiles. Configurações/Energia ficam pra spec 09.
+// brilho, volume, os quatro tiles e, depois do divisor, Configurações
+// (specs/09-sessao-energia.md).
 export const ControlsRow = GObject.registerClass(
   class ControlsRow extends St.BoxLayout {
     private readonly brightnessPill: SliderRowActor;
@@ -39,6 +44,7 @@ export const ControlsRow = GObject.registerClass(
     private readonly unsubscribeBrightness: () => void;
     private readonly unsubscribeWifi: () => void;
     private readonly unsubscribeBt: () => void;
+    private readonly unsubscribeSession: () => void;
 
     constructor(system: IslandSystem, drag: DragHooks, options: ControlsRowOptions) {
       super({
@@ -85,6 +91,7 @@ export const ControlsRow = GObject.registerClass(
       this.add_child(new Tile(dndIconName, system.dnd, () => system.dnd.toggle()));
 
       this.add_child(divider());
+      this.unsubscribeSession = this.addSettingsButton(system, options);
 
       this.unsubscribeBrightness = system.brightness.onChange(() =>
         this.syncBrightnessVisibility(),
@@ -103,9 +110,18 @@ export const ControlsRow = GObject.registerClass(
           this.unsubscribeBrightness();
           this.unsubscribeWifi();
           this.unsubscribeBt();
+          this.unsubscribeSession();
         },
         this,
       );
+    }
+
+    private addSettingsButton(system: IslandSystem, options: ControlsRowOptions): () => void {
+      const session = system.session;
+      const button = new RoundButton(settingsIconName, () => options.onSettingsClick());
+      this.add_child(button);
+      button.visible = session.settingsAvailable;
+      return session.onChange(() => (button.visible = session.settingsAvailable));
     }
 
     private syncBrightnessVisibility(): void {

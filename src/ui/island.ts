@@ -12,7 +12,7 @@ import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BtView, type BtViewActor } from './btView.js';
-import { ControlsRow, type ControlsRowActor } from './controlsRow.js';
+import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
@@ -132,20 +132,24 @@ export const Island = GObject.registerClass(
       this.brightnessRow = new SliderRow(brightnessIconName, 6, system.brightness, drag);
       // "abre wifi; em wifi, volta a quick" (specs/08) — não é a regra 2 da
       // spec 03 (gatilho fecha a ilha): o tile vive dentro de quick/wifi/bt.
-      const onWifiTileClick = (): void =>
-        this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi');
-      const onBtTileClick = (): void =>
-        this.state.openFromTrigger(this.state.mode === 'bt' ? 'quick' : 'bt');
-      this.quickRow = new ControlsRow(system, drag, { onWifiTileClick, onBtTileClick });
+      const controls: ControlsRowOptions = {
+        onWifiTileClick: () =>
+          this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi'),
+        onBtTileClick: () => this.state.openFromTrigger(this.state.mode === 'bt' ? 'quick' : 'bt'),
+        // Fecha antes de abrir: sem o grab, a janela do app recebe o foco.
+        onSettingsClick: () => {
+          this.state.closeAll();
+          system.session.openSettings();
+        },
+      };
+      this.quickRow = new ControlsRow(system, drag, controls);
       this.wifiView = new WifiView(system, drag, {
-        onWifiTileClick,
-        onBtTileClick,
+        ...controls,
         onSizeChanged: () => this.resize(),
         onLeave: () => this.state.closeAll(),
       });
       this.btView = new BtView(system, drag, {
-        onWifiTileClick,
-        onBtTileClick,
+        ...controls,
         onSizeChanged: () => this.resize(),
         onLeave: () => this.state.closeAll(),
       });
