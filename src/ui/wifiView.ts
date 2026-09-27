@@ -22,8 +22,15 @@ import {
   wifiSignalIconName,
 } from './icons.js';
 import type { IslandSystem } from './island.js';
+import {
+  listRow,
+  radioHeader,
+  radioOffArea,
+  scrollList,
+  sectionDivider,
+  vertical,
+} from './radioList.js';
 import type { DragHooks } from './sliderRow.js';
-import { Switch, type SwitchSource } from './switch.js';
 import { colors, derivedColors } from './tokens.js';
 
 export type PasswordField = 'none' | 'normal' | 'error';
@@ -46,10 +53,6 @@ export interface WifiViewCallbacks {
   onSizeChanged(): void;
   /** Abriu as Configurações: a ilha fecha pra janela não ficar atrás do grab. */
   onLeave(): void;
-}
-
-function vertical(params: Partial<St.BoxLayout.ConstructorProps> = {}): St.BoxLayout {
-  return new St.BoxLayout({ orientation: Clutter.Orientation.VERTICAL, ...params });
 }
 
 function textButton(label: string, style: string, onClick: () => void): St.Button {
@@ -99,81 +102,26 @@ export const WifiView = GObject.registerClass(
       this.add_child(
         new ControlsRow(system, drag, callbacks.onWifiTileClick, callbacks.onBtTileClick),
       );
-      this.add_child(
-        new St.Widget({
-          style: `height: 1px; margin-bottom: 8px; background-color: ${colors.neutral800};`,
-        }),
-      );
+      this.add_child(sectionDivider());
 
       const section = vertical({ style: 'padding: 0 12px;', y_expand: true });
       this.add_child(section);
 
       const wifi = system.wifi;
-      const header = new St.BoxLayout({
-        style: 'height: 26px; padding: 0 6px; margin-bottom: 4px; spacing: 8px;',
+      const { header, statusLabel } = radioHeader({
+        icon: wifiIconName,
+        title: 'Redes Wi‑Fi',
+        radio: wifi,
       });
-      header.add_child(
-        new St.Icon({
-          icon_name: wifiIconName,
-          icon_size: 14,
-          style: `color: ${colors.neutral300};`,
-          y_align: Clutter.ActorAlign.CENTER,
-        }),
-      );
-      header.add_child(
-        new St.Label({
-          text: 'Redes Wi‑Fi',
-          style: `font-size: 13px; font-weight: 500; color: ${colors.text};`,
-          y_align: Clutter.ActorAlign.CENTER,
-        }),
-      );
-      this.statusLabel = new St.Label({
-        style: `font-size: 11px; color: ${colors.neutral500};`,
-        x_expand: true,
-        x_align: Clutter.ActorAlign.END,
-        y_align: Clutter.ActorAlign.CENTER,
-      });
-      header.add_child(this.statusLabel);
-      const radio: SwitchSource = {
-        get on() {
-          return wifi.radioOn;
-        },
-        onChange: (callback) => wifi.onChange(callback),
-      };
-      header.add_child(new Switch(radio, () => wifi.setRadio(!wifi.radioOn)));
+      this.statusLabel = statusLabel;
       section.add_child(header);
 
-      this.listBox = vertical();
-      this.scroll = new St.ScrollView({
-        hscrollbar_policy: St.PolicyType.NEVER,
-        vscrollbar_policy: St.PolicyType.AUTOMATIC,
-        y_expand: true,
-      });
-      this.scroll.set_child(this.listBox);
+      const { scroll, list } = scrollList();
+      this.scroll = scroll;
+      this.listBox = list;
       section.add_child(this.scroll);
 
-      this.offArea = vertical({
-        style: `height: 150px; spacing: 8px; color: ${colors.neutral500};`,
-        y_align: Clutter.ActorAlign.CENTER,
-      });
-      this.offArea.add_child(
-        new St.Icon({
-          icon_name: wifiOffIconName,
-          icon_size: 22,
-          x_align: Clutter.ActorAlign.CENTER,
-          y_expand: true,
-          y_align: Clutter.ActorAlign.END,
-        }),
-      );
-      this.offArea.add_child(
-        new St.Label({
-          text: 'Wi‑Fi desligado',
-          style: 'font-size: 12.5px;',
-          x_align: Clutter.ActorAlign.CENTER,
-          y_expand: true,
-          y_align: Clutter.ActorAlign.START,
-        }),
-      );
+      this.offArea = radioOffArea({ icon: wifiOffIconName, text: 'Wi‑Fi desligado', height: 150 });
       section.add_child(this.offArea);
 
       // Painel persistente: a lista é recriada a cada scan, e o painel só é
@@ -307,7 +255,6 @@ export const WifiView = GObject.registerClass(
 
     private networkRow(network: WifiNetwork): St.Button {
       const connected = network.status === 'connected';
-      const baseBg = connected ? colors.accent900 : 'transparent';
 
       const content = new St.BoxLayout({
         style: 'height: 36px; padding: 0 8px; spacing: 10px;',
@@ -356,20 +303,7 @@ export const WifiView = GObject.registerClass(
         );
       }
 
-      const row = new St.Button({ child: content, track_hover: true, x_expand: true });
-      const syncStyle = (): void => {
-        const bg = row.hover && !connected ? colors.neutral900 : baseBg;
-        row.style = `border-radius: 10px; background-color: ${bg};`;
-      };
-      syncStyle();
-      row.connectObject(
-        'notify::hover',
-        syncStyle,
-        'clicked',
-        () => this.onNetworkClicked(network),
-        row,
-      );
-      return row;
+      return listRow({ content, active: connected, onClick: () => this.onNetworkClicked(network) });
     }
 
     private onNetworkClicked(network: WifiNetwork): void {
