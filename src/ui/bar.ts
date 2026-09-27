@@ -156,6 +156,7 @@ export class BarManager {
   private grab: Clutter.Grab | null = null;
   private grabbedIsland: IslandActor | null = null;
   private readonly osdRedirect: OsdRedirect;
+  private readonly unsubscribeWifi: () => void;
   private readonly unsubscribeBt: () => void;
 
   constructor() {
@@ -178,7 +179,10 @@ export class BarManager {
       () => this.triggerBrightnessKey(),
     );
     // "Sem adaptador, o tile e o modo somem": o adaptador pode sumir com o
-    // `bt` aberto (ex.: `btusb` reiniciando após suspender).
+    // `wifi`/`bt` aberto (ex.: driver reiniciando após suspender).
+    this.unsubscribeWifi = this.system.wifi.onChange(() => {
+      if (this.state.mode === 'wifi' && !this.system.wifi.available) this.state.closeAll();
+    });
     this.unsubscribeBt = this.system.bluetooth.onChange(() => {
       if (this.state.mode === 'bt' && !this.system.bluetooth.available) this.state.closeAll();
     });
@@ -279,6 +283,7 @@ export class BarManager {
 
   destroy(): void {
     Main.layoutManager.disconnectObject(this);
+    this.unsubscribeWifi();
     this.unsubscribeBt();
     if (this.grab) {
       Main.popModal(this.grab);
