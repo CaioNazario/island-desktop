@@ -6,6 +6,7 @@ import St from 'gi://St';
 import { formatClock, formatDay } from '../core/clock.js';
 import { getSize, type IslandState, type Mode, type SizeContext } from '../core/island.js';
 import type { SystemBluetooth } from '../system/bluetooth.js';
+import type { NotificationEntry } from '../system/notifications.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { SystemSession } from '../system/session.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
@@ -15,12 +16,18 @@ import { BtView, type BtViewActor } from './btView.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
+import { NotificationRow, type NotificationRowActor } from './notificationRow.js';
 import { IslandPowerToggle, PowerRow } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
+
+// `notif` (specs/04-notificacoes.md): 400×62, padding 0 12px, gap 12px.
+function notifContent(row: NotificationRowActor): St.Bin {
+  return new St.Bin({ child: row, style: 'padding: 0 12px;', x_expand: true, y_expand: true });
+}
 
 // `quick`: linha de controles com a linha de energia abaixo (specs/09-sessao-energia.md).
 function quickContent(
@@ -82,6 +89,7 @@ export const Island = GObject.registerClass(
     private readonly quickRow: ControlsRowActor;
     private readonly wifiView: WifiViewActor;
     private readonly btView: BtViewActor;
+    private readonly notifRow: NotificationRowActor;
     private readonly layers: ReadonlyMap<Mode, St.Widget>;
     private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
@@ -174,8 +182,23 @@ export const Island = GObject.registerClass(
         onLeave: () => this.state.closeAll(),
       });
 
+      // × fecha a ilha; a notificação continua na lista.
+      this.notifRow = new NotificationRow(
+        {
+          blockSize: 36,
+          blockRadius: 10,
+          iconSize: 20,
+          closeSize: 26,
+          closeIconSize: 12,
+          closeFilled: true,
+          gap: 12,
+        },
+        () => this.state.closeAll(),
+      );
+
       this.layers = new Map<Mode, St.Widget>([
         ['compact', modeLayer(this.clockLabel)],
+        ['notif', modeLayer(notifContent(this.notifRow))],
         ['volume', modeLayer(this.volumeRow)],
         ['brightness', modeLayer(this.brightnessRow)],
         ['quick', modeLayer(quickContent(this.quickRow, system, controls))],
@@ -238,9 +261,15 @@ export const Island = GObject.registerClass(
         CLOCK_TICK_SECONDS,
         () => {
           this.updateClock();
+          this.notifRow.refreshTime();
           return GLib.SOURCE_CONTINUE;
         },
       );
+    }
+
+    /** Conteúdo do `notif`; o `BarManager` chama antes de abrir o modo. */
+    setNotification(entry: NotificationEntry): void {
+      this.notifRow.setEntry(entry);
     }
 
     /** Chamado pelo `BarManager` a cada mudança de modo ou de monitor-alvo. */

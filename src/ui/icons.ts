@@ -56,6 +56,21 @@ export const settingsIconName = 'gear-six';
 export const powerIconName = 'power-bold';
 export const dndIconName = 'bell-slash-fill';
 export const caretIconName = 'caret-down';
+export const closeIconName = 'x';
+export const notificationFallbackIconName = 'bell-fill';
+
+/**
+ * Ícone de notificação de app nativo (specs/04-notificacoes.md): o simbólico
+ * do app (`<ícone>-symbolic`), tingido pela UI. Sem nome de tema (ex.:
+ * `FileIcon`), vai direto ao sino; nome sem simbólico no tema cai no
+ * `fallback_gicon` do `St.Icon`.
+ */
+export function notificationAppIcon(appIcon: Gio.Icon | null): Gio.Icon {
+  if (!(appIcon instanceof Gio.ThemedIcon)) return phosphor(notificationFallbackIconName);
+  const name = appIcon.get_names()[0];
+  if (!name) return phosphor(notificationFallbackIconName);
+  return new Gio.ThemedIcon({ name: name.endsWith('-symbolic') ? name : `${name}-symbolic` });
+}
 
 export function batteryLevelIconName(icon: BatteryIcon): string {
   return `battery-${icon}-fill`;

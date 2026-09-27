@@ -6,9 +6,11 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { isFixedMode, IslandState, type Mode, type Scheduler } from '../core/island.js';
+import { routeNotification, type IncomingNotification } from '../core/notifications.js';
 import { SystemBattery, type BatterySource } from '../system/battery.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
+import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
 import { OsdRedirect } from '../system/osd.js';
 import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
@@ -157,6 +159,7 @@ export class BarManager {
   private readonly state: IslandState;
   private readonly system: IslandSystem;
   private readonly battery = new SystemBattery();
+  private readonly notifications = new SystemNotifications();
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -164,6 +167,7 @@ export class BarManager {
   private readonly osdRedirect: OsdRedirect;
   private readonly unsubscribeWifi: () => void;
   private readonly unsubscribeBt: () => void;
+  private readonly unsubscribeArrival: () => void;
 
   constructor() {
     this.state = new IslandState(new GLibScheduler(), {
@@ -193,6 +197,9 @@ export class BarManager {
     this.unsubscribeBt = this.system.bluetooth.onChange(() => {
       if (this.state.mode === 'bt' && !this.system.bluetooth.available) this.state.closeAll();
     });
+    this.unsubscribeArrival = this.notifications.onArrival((entry, incoming) =>
+      this.handleNotificationArrival(entry, incoming),
+    );
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
   }
@@ -215,6 +222,23 @@ export class BarManager {
     this.targetMonitorIndex = this.focusedMonitorIndex();
     this.state.brightnessKey();
     this.render();
+  }
+
+  /** Roteamento de notificação nova (specs/04-notificacoes.md). */
+  private handleNotificationArrival(
+    entry: NotificationEntry,
+    incoming: IncomingNotification,
+  ): void {
+    const route = routeNotification(incoming, {
+      mode: this.state.mode,
+      cardOpen: this.state.cardOpen,
+    });
+    if (route !== 'notif') return;
+    // Transitório: monitor da janela focada (specs/02-barra.md). Com `notif`
+    // já aberto, a troca de conteúdo fica onde está.
+    if (this.state.mode === 'compact') this.targetMonitorIndex = this.focusedMonitorIndex();
+    this.bars.forEach((bar) => bar.island.setNotification(entry));
+    this.state.openNotification(incoming.critical);
   }
 
   private handleEscape(): void {
@@ -245,7 +269,8 @@ export class BarManager {
   private handleIslandClick(monitorIndex: number): void {
     if (this.state.mode === 'compact') return;
     this.targetMonitorIndex = monitorIndex;
-    this.state.islandClick();
+    // Abrir a lista pelo `notif` marca tudo como lido (specs/04-notificacoes.md).
+    if (this.state.islandClick() === 'opened-stack') this.notifications.markAllRead();
     this.render();
   }
 
@@ -301,6 +326,7 @@ export class BarManager {
     Main.layoutManager.disconnectObject(this);
     this.unsubscribeWifi();
     this.unsubscribeBt();
+    this.unsubscribeArrival();
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;
@@ -316,6 +342,7 @@ export class BarManager {
     this.system.bluetooth.destroy();
     this.system.session.destroy();
     this.battery.destroy();
+    this.notifications.destroy();
     this.osdRedirect.destroy();
   }
 }
