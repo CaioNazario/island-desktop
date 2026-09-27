@@ -73,6 +73,11 @@ function infoOf(device: GnomeBluetooth.Device): BtDeviceInfo {
   };
 }
 
+function cancelPairing(proxy: Gio.DBusProxy): void {
+  // Sem pareamento em andamento, o BlueZ responde `DoesNotExist`: nada a fazer.
+  proxy.call('CancelPairing', null, Gio.DBusCallFlags.NONE, -1, null).catch(() => {});
+}
+
 // Bluetooth via `GnomeBluetooth.Client` (specs/08-controles-rapidos.md, modo
 // `bt`). Um cliente próprio, igual ao indicador do Shell: o dele é privado.
 export class SystemBluetooth {
@@ -179,9 +184,8 @@ export class SystemBluetooth {
     if (this.discovering) this.client.default_adapter_setup_mode = false;
     // Um `Pair()` sem resposta fica pendente no BlueZ.
     if (this.operation?.kind === 'pairing') {
-      this.deviceAt(this.operation.path)
-        ?.proxy.call('CancelPairing', null, Gio.DBusCallFlags.NONE, -1, null)
-        .catch(() => {});
+      const proxy = this.deviceAt(this.operation.path)?.proxy;
+      if (proxy) cancelPairing(proxy);
     }
     this.cancellable.cancel();
     this.devices.forEach((device) => device.disconnectObject(this));
@@ -223,19 +227,31 @@ export class SystemBluetooth {
     const proxy = this.deviceAt(path)?.proxy;
     if (!proxy) return 'failed';
 
+    const failure = await this.requestPair(proxy);
+    if (failure) return failure;
+    await this.trust(proxy, path);
+    await this.connectService(path, true);
+    return 'paired';
+  }
+
+  /** null quando pareou; senão, por que não. */
+  private async requestPair(proxy: Gio.DBusProxy): Promise<Exclude<PairResult, 'paired'> | null> {
     try {
       await proxy.call('Pair', null, Gio.DBusCallFlags.NONE, PAIR_TIMEOUT_MS, this.cancellable);
+      return null;
     } catch (error) {
       if (!(error instanceof GLib.Error)) throw error;
       // Fora do modo de pareamento o `Pair()` não falha, fica pendente.
       if (error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.TIMED_OUT)) {
-        proxy.call('CancelPairing', null, Gio.DBusCallFlags.NONE, -1, null).catch(() => {});
+        cancelPairing(proxy);
         return 'failed';
       }
       if (PIN_ERRORS.has(Gio.DBusError.get_remote_error(error) ?? '')) return 'needs-pin';
       throw error;
     }
+  }
 
+  private async trust(proxy: Gio.DBusProxy, path: string): Promise<void> {
     await proxy
       .get_connection()
       .call(
@@ -249,8 +265,6 @@ export class SystemBluetooth {
         -1,
         this.cancellable,
       );
-    await this.connectService(path, true);
-    return 'paired';
   }
 
   private deviceAt(path: string): GnomeBluetooth.Device | null {
