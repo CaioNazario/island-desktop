@@ -44,8 +44,8 @@ Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entr
 
 ## Critérios de aceite
 
-- [ ] Com Brave tocando um vídeo, o cartão mostra título, artista e capa do MPRIS e o ícone `ph-music-note`.
-- [ ] Pular faixa pelo teclado de mídia abre `music` com a faixa nova; com `ai` aberto, não abre.
-- [ ] Barra de progresso avança a cada segundo e corrige após seek no player.
-- [ ] Fechar o player remove a seção de música do cartão.
-- [ ] Dois players: o último a tocar é o exibido.
+- [x] Com Brave tocando um vídeo, o cartão mostra título, artista e capa do MPRIS e o ícone `ph-music-note`.
+- [x] Trocar de faixa no player abre `music` com a faixa nova; com um modo fixo aberto (ex.: calendário), não abre.
+- [x] Barra de progresso avança a cada segundo e corrige após seek no player.
+- [x] Fechar o player remove a seção de música do cartão.
+- [x] Dois players: o último a tocar é o exibido.
