@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { identifySource } from './notificationSource.js';
 
-// Payload real do Brave 1.x no GNOME 50 (spike S1, specs/14-spikes.md):
-// `new Notification("teste wpp", {body: "oi"})` em web.whatsapp.com, visto
-// pelo `dbus-monitor`: app_name "Brave", summary = título, body com o
-// domínio na primeira linha e uma linha em branco antes do corpo.
+// Payloads reais no GNOME 50 (spike S1): `new Notification(título, {body:
+// "oi"})` em web.whatsapp.com, vistos pelo `dbus-monitor`. `appName` é o
+// título da fonte no Shell, o `Name=` do `.desktop` do `desktop-entry`.
+// Chromium: domínio na primeira linha do corpo e uma linha em branco.
 const BRAVE_WHATSAPP = { appName: 'Brave', body: 'web.whatsapp.com\n\noi' };
+const CHROME_WHATSAPP = { appName: 'Google Chrome', body: 'web.whatsapp.com\n\noi' };
+// Firefox: só o corpo, sem a origem em nenhum campo nem hint.
+const FIREFOX_WHATSAPP = { appName: 'Firefox', body: 'oi' };
 
 const fromBrave = (domain: string, text = 'oi') => identifySource('Brave', `${domain}\n\n${text}`);
 
@@ -64,8 +67,16 @@ describe('identifySource', () => {
     expect(identifySource('Brave', body)).toMatchObject({ name: 'WhatsApp', body: 'oi' });
   });
 
-  it.each(['Google Chrome', 'Chromium'])('%s usa a mesma regra do Brave', (appName) => {
-    expect(identifySource(appName, 'web.whatsapp.com\n\noi').name).toBe('WhatsApp');
+  it('Chrome usa a mesma regra do Brave', () => {
+    expect(identifySource(CHROME_WHATSAPP.appName, CHROME_WHATSAPP.body)).toEqual({
+      name: 'WhatsApp',
+      glyph: 'whatsapp-logo-fill',
+      body: 'oi',
+    });
+  });
+
+  it('Chromium usa a mesma regra do Brave', () => {
+    expect(identifySource('Chromium', 'web.whatsapp.com\n\noi').name).toBe('WhatsApp');
   });
 
   it('navegador sem domínio na primeira linha fica como app', () => {
@@ -84,7 +95,11 @@ describe('identifySource', () => {
     });
   });
 
-  it('Firefox fica como app até o S1 ter o formato dele', () => {
-    expect(identifySource('Firefox', 'web.whatsapp.com\n\noi').name).toBe('Firefox');
+  it('Firefox fica como app: não manda a origem', () => {
+    expect(identifySource(FIREFOX_WHATSAPP.appName, FIREFOX_WHATSAPP.body)).toEqual({
+      name: 'Firefox',
+      glyph: null,
+      body: 'oi',
+    });
   });
 });

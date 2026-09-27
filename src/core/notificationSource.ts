@@ -26,8 +26,8 @@ const WEB_SERVICES: Readonly<Record<string, WebService>> = {
 const UNKNOWN_SITE_GLYPH = 'globe';
 
 // Chromium e derivados põem o domínio na primeira linha do corpo, seguido de
-// uma linha em branco (spike S1, payload do Brave). O Firefox fica como app
-// até o S1 ter o formato dele.
+// uma linha em branco (spike S1, payloads do Brave e do Chrome). O Firefox
+// não manda a origem em nenhum campo, então fica como app.
 const CHROMIUM_BROWSERS: ReadonlySet<string> = new Set(['Brave', 'Google Chrome', 'Chromium']);
 
 // Sem a Public Suffix List inteira: só os sufixos de segundo nível comuns, o

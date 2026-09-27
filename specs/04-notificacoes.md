@@ -11,7 +11,7 @@ Origem: `design/logic.js` `pushNotif` (~136), `stack`/`latest`/`unreadDot`/`open
 
 Regra pura em `src/core/notificationSource.ts`, com a tabela como constante no mesmo módulo. Mudar a tabela exige reinstalar, mas no Wayland qualquer mudança na extensão já exige logout, então um JSON lido em runtime não pouparia nada.
 
-1. **Notificação de navegador** (app Brave, Google Chrome, Chromium): o Chromium põe o domínio de origem na primeira linha do corpo, seguido de uma linha em branco (`"web.whatsapp.com\n\noi"`, payload do Brave no spike S1). Com `body-markup`, o domínio pode vir dentro de um `<a>`. Se a primeira linha não for um domínio (com porta opcional), a notificação fica como app nativo. O Firefox fica como app nativo até o S1 ter o formato dele.
+1. **Notificação de navegador** (app Brave, Google Chrome, Chromium): o Chromium põe o domínio de origem na primeira linha do corpo, seguido de uma linha em branco (`"web.whatsapp.com\n\noi"`, payloads reais do Brave e do Chrome, fixtures nos testes). O Chromium foi assumido pelo mesmo código, sem payload colhido. Com `body-markup`, o domínio pode vir dentro de um `<a>`. Se a primeira linha não for um domínio (com porta opcional), a notificação fica como app nativo. O **Firefox** não manda a origem em nenhum campo nem hint (só `app_name` "Firefox", título e corpo), então a notificação web dele fica como app nativo.
 2. Domínio na tabela → nome + ícone da tabela:
 
    | Domínio | Nome | Ícone |
