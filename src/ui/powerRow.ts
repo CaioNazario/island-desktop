@@ -61,7 +61,12 @@ function powerButton(label: string, glyph: string, color: string, onClick: () =>
   );
   content.add_child(new St.Label({ text: label, y_align: Clutter.ActorAlign.CENTER }));
 
-  const button = new St.Button({ child: content, track_hover: true, x_expand: true });
+  const button = new St.Button({
+    child: content,
+    track_hover: true,
+    x_expand: true,
+    y_align: Clutter.ActorAlign.CENTER,
+  });
   const syncStyle = (): void => {
     const bg = button.hover ? colors.neutral800 : colors.neutral900;
     button.style = `height: 36px; border-radius: 12px; background-color: ${bg};`;
@@ -81,7 +86,7 @@ export const PowerRow = GObject.registerClass(
       power: PowerToggle,
       onAction: (action: PowerAction) => void,
     ) {
-      super({ style: 'height: 48px; padding: 0 10px 8px; spacing: 6px;', x_expand: true });
+      super({ style: 'height: 40px; padding: 0 10px 8px; spacing: 6px;', x_expand: true });
       (this.layout_manager as Clutter.BoxLayout).homogeneous = true;
 
       const buttons = POWER_BUTTONS.map(({ action, label, glyph }) => {
