@@ -17,7 +17,7 @@ Regra pura em `src/core/calendar.ts`:
 
 - Fonte: `CalendarServer` do Shell (Evolution Data Server, ou seja, contas online do GNOME), a mesma que o menu de data nativo usa.
 - Mostra os eventos de **hoje** em ordem de início: ponto 8px colorido + nome + intervalo `HH:MM – HH:MM` (dia inteiro: "Dia inteiro").
-- Cor do ponto: a cor do calendário de origem, reduzida à paleta `accent-500`, `accent-300`, `neutral-400` em rotação quando a origem não tiver cor.
+- Cor do ponto: da paleta da ilha, não a do calendário de origem. Cada calendário ganha `accent-500`, `accent-300`, `neutral-400` em rotação, na ordem em que aparece na lista.
 - Sem eventos: a coluna de eventos mostra só o título "Hoje, …".
 - Clicar em evento não faz nada na v1.
 

@@ -1,6 +1,9 @@
-// Grade do calendário (specs/06-calendario.md, "Grade"): semana começando na
-// segunda, mês completo em semanas inteiras.
+// Grade e eventos de hoje do calendário (specs/06-calendario.md; design/logic.js
+// `calendar`, `calWeeks`, `todayLabel`, `events`).
 
+import { formatClock, formatDay } from './clock.js';
+
+// Semana começando na segunda, mês completo em semanas inteiras.
 export const WEEKDAY_HEADERS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 const MONTHS = [
@@ -75,4 +78,72 @@ export function monthGrid(today: Date, offset: number): MonthGrid {
 
 export function visibleWeeks(grid: MonthGrid, view: CalendarView): CalendarDay[][] {
   return view === 'month' ? grid.weeks : grid.weeks.slice(grid.weekIndex, grid.weekIndex + 1);
+}
+
+// Eventos de hoje (specs/06-calendario.md, "Eventos").
+
+/** Evento como o `DBusEventSource` do Shell entrega. */
+export interface CalendarEvent {
+  /** `<uid do calendário>\n<uid do evento>\n<recorrência>` (gnome-shell-calendar-server). */
+  id: string;
+  summary: string;
+  start: Date;
+  end: Date;
+}
+
+/** Tokens da ilha para o ponto do evento, um por calendário de origem. */
+export type EventDot = 'accent500' | 'accent300' | 'neutral400';
+const EVENT_DOTS: readonly EventDot[] = ['accent500', 'accent300', 'neutral400'];
+
+export interface TodayEvent {
+  name: string;
+  time: string;
+  dot: EventDot;
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+// Mesma regra do Shell (`_eventOverlapsInterval`): inclui eventos de duração zero.
+function overlaps(event: CalendarEvent, begin: Date, end: Date): boolean {
+  if (event.start >= begin && event.end < end) return true;
+  return event.end > begin && event.start < end;
+}
+
+function eventTime(event: CalendarEvent, dayBegin: Date, dayEnd: Date): string {
+  if (event.start <= dayBegin && event.end >= dayEnd) return 'Dia inteiro';
+  const start = formatClock(event.start);
+  if (event.start.getTime() === event.end.getTime()) return start;
+  return `${start} – ${formatClock(event.end)}`;
+}
+
+function sourceOf(event: CalendarEvent): string {
+  return event.id.slice(0, event.id.indexOf('\n'));
+}
+
+/** Eventos que tocam hoje, por início; a cor gira pela ordem em que cada calendário aparece. */
+export function todayEvents(events: readonly CalendarEvent[], today: Date): TodayEvent[] {
+  const dayBegin = startOfDay(today);
+  const dayEnd = new Date(dayBegin.getFullYear(), dayBegin.getMonth(), dayBegin.getDate() + 1);
+  const sources = new Map<string, EventDot>();
+
+  return events
+    .filter((event) => overlaps(event, dayBegin, dayEnd))
+    .sort((a, b) => a.start.getTime() - b.start.getTime() || a.end.getTime() - b.end.getTime())
+    .map((event) => {
+      const source = sourceOf(event);
+      let dot = sources.get(source);
+      if (!dot) {
+        dot = EVENT_DOTS[sources.size % EVENT_DOTS.length]!;
+        sources.set(source, dot);
+      }
+      return { name: event.summary, time: eventTime(event, dayBegin, dayEnd), dot };
+    });
+}
+
+/** `Hoje, sex, 25`: dia da semana minúsculo, como no design. */
+export function todayTitle(today: Date): string {
+  const day = formatDay(today);
+  return `Hoje, ${day.charAt(0).toLowerCase()}${day.slice(1)}`;
 }

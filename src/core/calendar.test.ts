@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { monthGrid, visibleWeeks, WEEKDAY_HEADERS, type CalendarDay } from './calendar.js';
+import {
+  monthGrid,
+  todayEvents,
+  todayTitle,
+  visibleWeeks,
+  WEEKDAY_HEADERS,
+  type CalendarDay,
+  type CalendarEvent,
+} from './calendar.js';
 
 // 2026-09-25 é uma sexta-feira.
 const TODAY = new Date(2026, 8, 25, 14, 30);
@@ -116,5 +124,79 @@ describe('visibleWeeks', () => {
 
   it('em Mês mostra todas as linhas', () => {
     expect(visibleWeeks(monthGrid(TODAY, 0), 'month')).toHaveLength(5);
+  });
+});
+
+const at = (day: number, hour: number, minute = 0) => new Date(2026, 8, day, hour, minute);
+const event = (source: string, summary: string, start: Date, end: Date): CalendarEvent => ({
+  id: `${source}\n${summary}\n`,
+  summary,
+  start,
+  end,
+});
+
+describe('todayEvents', () => {
+  it('lista só os eventos de hoje, por início, com o intervalo HH:MM – HH:MM', () => {
+    const events = [
+      event('google', 'Academia', at(25, 18), at(25, 19)),
+      event('google', 'Ontem', at(24, 9), at(24, 10)),
+      event('google', 'Reunião de equipe', at(25, 9), at(25, 10)),
+      event('google', 'Amanhã', at(26, 9), at(26, 10)),
+      event('google', 'Estudo Java', at(25, 14), at(25, 16, 30)),
+    ];
+    expect(todayEvents(events, TODAY).map(({ name, time }) => [name, time])).toEqual([
+      ['Reunião de equipe', '09:00 – 10:00'],
+      ['Estudo Java', '14:00 – 16:30'],
+      ['Academia', '18:00 – 19:00'],
+    ]);
+  });
+
+  it('mostra "Dia inteiro" para evento que cobre o dia todo', () => {
+    const events = [
+      event('local', 'Feriado', at(25, 0), at(26, 0)),
+      event('local', 'Viagem', at(23, 0), at(28, 0)),
+    ];
+    expect(todayEvents(events, TODAY).map((e) => e.time)).toEqual(['Dia inteiro', 'Dia inteiro']);
+  });
+
+  it('mostra o horário de um evento que atravessa a meia-noite', () => {
+    const events = [event('local', 'Plantão', at(24, 22), at(25, 2))];
+    expect(todayEvents(events, TODAY)[0]?.time).toBe('22:00 – 02:00');
+  });
+
+  it('inclui evento de duração zero e mostra só o início', () => {
+    const events = [event('local', 'Lembrete', at(25, 8, 15), at(25, 8, 15))];
+    expect(todayEvents(events, TODAY)).toEqual([
+      { name: 'Lembrete', time: '08:15', dot: 'accent500' },
+    ]);
+  });
+
+  it('não inclui evento que termina à meia-noite de hoje', () => {
+    const events = [event('local', 'Ontem à noite', at(24, 21), at(25, 0))];
+    expect(todayEvents(events, TODAY)).toEqual([]);
+  });
+
+  it('dá uma cor da ilha por calendário, na ordem em que aparecem', () => {
+    const events = [
+      event('google', 'A', at(25, 8), at(25, 9)),
+      event('trabalho', 'B', at(25, 10), at(25, 11)),
+      event('google', 'C', at(25, 12), at(25, 13)),
+      event('aniversarios', 'D', at(25, 14), at(25, 15)),
+      event('nextcloud', 'E', at(25, 16), at(25, 17)),
+    ];
+    expect(todayEvents(events, TODAY).map((e) => e.dot)).toEqual([
+      'accent500',
+      'accent300',
+      'accent500',
+      'neutral400',
+      'accent500',
+    ]);
+  });
+});
+
+describe('todayTitle', () => {
+  it('usa o dia da semana minúsculo', () => {
+    expect(todayTitle(TODAY)).toBe('Hoje, sex, 25');
+    expect(todayTitle(new Date(2026, 8, 27))).toBe('Hoje, dom, 27');
   });
 });
