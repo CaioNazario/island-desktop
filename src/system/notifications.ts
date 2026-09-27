@@ -2,6 +2,7 @@ import type Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
+import { identifySource } from '../core/notificationSource.js';
 import { notificationText, type IncomingNotification } from '../core/notifications.js';
 
 /** Quantas a lista mostra (specs/04-notificacoes.md "Modo `stack`"). */
@@ -10,8 +11,11 @@ const SHOWN_LIMIT = 8;
 export interface NotificationEntry {
   /** Identidade estável entre leituras de `entries` (a notificação do Shell). */
   readonly key: object;
+  /** Nome do site, na notificação web, ou do app (specs/04-notificacoes.md). */
   readonly appName: string;
   readonly text: string;
+  /** Glifo Phosphor do site; `null` usa `appIcon`. */
+  readonly siteGlyph: string | null;
   readonly appIcon: Gio.Icon | null;
   readonly receivedAtMs: number;
   /** Ação padrão (abre/foca o app ou site) e sai da lista. */
@@ -41,16 +45,17 @@ interface MessageTrayQueue {
 
 function toEntry(notification: MessageTray.Notification): NotificationEntry {
   const source = notification.source;
-  const appName = source?.title ?? '';
+  const origin = identifySource(source?.title ?? '', notification.body ?? '');
   return {
     key: notification,
-    appName,
+    appName: origin.name,
     text: notificationText(
-      appName,
+      origin.name,
       notification.title ?? '',
-      notification.body ?? '',
+      origin.body,
       notification.useBodyMarkup,
     ),
+    siteGlyph: origin.glyph,
     appIcon: source?.icon ?? null,
     receivedAtMs: notification.datetime.to_unix() * 1000,
     activate: () => {

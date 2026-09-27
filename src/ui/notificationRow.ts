@@ -111,7 +111,9 @@ export const NotificationRow = GObject.registerClass(
     }
 
     setEntry(entry: NotificationEntry): void {
-      this.icon.gicon = notificationAppIcon(entry.appIcon);
+      this.icon.gicon = entry.siteGlyph
+        ? phosphor(entry.siteGlyph)
+        : notificationAppIcon(entry.appIcon);
       this.appLabel.text = entry.appName;
       this.textLabel.text = entry.text;
       this.receivedAtMs = entry.receivedAtMs;

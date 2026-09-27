@@ -9,9 +9,9 @@ Origem: `design/logic.js` `pushNotif` (~136), `stack`/`latest`/`unreadDot`/`open
 
 ## Identificação da origem
 
-Regra pura em `src/core/notification-source.ts`, com a tabela em `data/web-services.json` (editável, sem recompilar):
+Regra pura em `src/core/notificationSource.ts`, com a tabela como constante no mesmo módulo. Mudar a tabela exige reinstalar, mas no Wayland qualquer mudança na extensão já exige logout, então um JSON lido em runtime não pouparia nada.
 
-1. **Notificação de navegador** (app Brave, Google Chrome, Chromium, Firefox): extrair o domínio de origem do corpo. O formato exato por navegador é o spike S1 (spec 14).
+1. **Notificação de navegador** (app Brave, Google Chrome, Chromium): o Chromium põe o domínio de origem na primeira linha do corpo, seguido de uma linha em branco (`"web.whatsapp.com\n\noi"`, payload do Brave no spike S1). Com `body-markup`, o domínio pode vir dentro de um `<a>`. Se a primeira linha não for um domínio (com porta opcional), a notificação fica como app nativo. O Firefox fica como app nativo até o S1 ter o formato dele.
 2. Domínio na tabela → nome + ícone da tabela:
 
    | Domínio | Nome | Ícone |
@@ -22,7 +22,7 @@ Regra pura em `src/core/notification-source.ts`, com a tabela em `data/web-servi
    | `web.whatsapp.com` | WhatsApp | `ph-fill ph-whatsapp-logo` |
 
    A comparação ignora `www.` e casa o subdomínio mais específico primeiro.
-3. Domínio fora da tabela → nome = rótulo principal do domínio registrável, capitalizado (`twitch.tv` → "Twitch", `www.github.com` → "Github"); ícone `ph ph-globe`.
+3. Domínio fora da tabela → nome = rótulo principal do domínio registrável, capitalizado (`twitch.tv` → "Twitch", `www.github.com` → "Github"); ícone `ph ph-globe`. Sem a Public Suffix List: uma lista curta de sufixos de segundo nível (`com.br`, `co.uk`…) evita que `globo.com.br` vire "Com".
 4. A linha do domínio é removida do texto exibido. Nunca mostrar "Brave" nem `www.youtube.com`.
 5. **App nativo**: nome do app; ícone simbólico do app (`<ícone>-symbolic`) tingido de `accent-300`, ou `ph-fill ph-bell` se não houver simbólico.
 
@@ -72,7 +72,7 @@ Padding 0 12px, gap 12px:
 
 ## Critérios de aceite
 
-- [ ] Testes de `notification-source.ts` cobrem cada linha da tabela, domínio desconhecido, `www.`, subdomínio mais específico e app nativo.
+- [x] Testes de `notificationSource.ts` cobrem cada linha da tabela, domínio desconhecido, `www.`, subdomínio mais específico e app nativo.
 - [ ] Testes do roteamento cobrem os quatro estados da tabela e o DND com e sem urgência crítica.
 - [ ] Notificação do YouTube no Brave aparece como "YouTube" com o ícone do YouTube, sem a linha do domínio.
 - [ ] Com `wifi` aberto, uma notificação vira banner e o modo `wifi` continua intacto.
