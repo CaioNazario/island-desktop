@@ -46,19 +46,19 @@ const BarChrome = GObject.registerClass(
       this.add_child(leftPill);
       this.add_child(island);
       this.add_child(rightPill);
-
-      island.connectObject(
-        'notify::width',
-        () => this.queue_relayout(),
-        'notify::height',
-        () => this.reflowHeight(),
-        this,
-      );
-      this.reflowHeight();
     }
 
-    private reflowHeight(): void {
-      this.set_height(Math.max(layout.barHeight, this.island.height));
+    // Altura via preferred size, sem ouvir notify::width/height da ilha: esses
+    // notifies também saem de dentro do nosso vfunc_allocate (quando a ilha é
+    // alocada), e reagir com queue_relayout/set_height ali deixa o chrome sujo
+    // no fim do layout ("Can't update stage views ... needs an allocation").
+    // O set_width/set_height da ilha já propaga o relayout até aqui
+    // (clutter_actor_real_queue_relayout em clutter-actor.c, mutter 50.4), e o
+    // uiGroup usa ClutterFixedLayout, que aloca no tamanho preferido.
+    override vfunc_get_preferred_height(_forWidth: number): [number, number] {
+      const [, islandHeight] = this.island.get_preferred_height(-1);
+      const height = Math.max(layout.barHeight, islandHeight);
+      return [height, height];
     }
 
     override vfunc_allocate(box: Clutter.ActorBox): void {
