@@ -48,37 +48,39 @@ function batteryButton(battery: BatterySource, onClick: () => void): BarButtonAc
 }
 
 // Ponto de não lido 7×7 `accent` com anel 2px `bg`, em `top: 5px; right: 8px`
-// do botão 30×24. O anel é borda: 11×11 a partir de (13, 3).
-const UNREAD_DOT = { size: 11, x: 13, y: 3 };
+// do botão 30×24. O anel é borda: 11×11 a partir de (13, 3). No St, `width`
+// é a caixa de conteúdo e a borda soma por fora (st-theme-node.c, 50.0).
+const UNREAD_DOT = { size: 7, ring: 2, x: 13, y: 3 };
 
 // Sino (specs/02-barra.md, item 2): abre `stack`.
 function bellButton(feed: NotificationFeed, onClick: () => void): BarButtonActor {
-  const content = new St.Widget({ layout_manager: new Clutter.BinLayout(), x_expand: true });
+  // Sem `x_expand`/`y_expand`: o expand sobe pelo botão e ele estica na
+  // pílula. Sem expand, o BinLayout (do `St.Bin` do botão e deste conteúdo)
+  // centraliza no tamanho natural e respeita a posição fixa
+  // (clutter-bin-layout.c, mutter 50.0); por isso o conteúdo tem o tamanho
+  // do botão, senão o ponto fica espremido na largura do ícone.
+  const content = new St.Widget({
+    layout_manager: new Clutter.BinLayout(),
+    style: 'width: 30px; height: 24px;',
+  });
   content.add_child(
     new St.Icon({
       gicon: phosphor(notificationFallbackIconName),
       icon_size: 16,
       style: `color: ${colors.text};`,
-      x_expand: true,
-      y_expand: true,
-      x_align: Clutter.ActorAlign.CENTER,
-      y_align: Clutter.ActorAlign.CENTER,
     }),
   );
+  const ringSize = UNREAD_DOT.size + 2 * UNREAD_DOT.ring;
   const dot = new St.Widget({
     style: `
       width: ${UNREAD_DOT.size}px;
       height: ${UNREAD_DOT.size}px;
-      border-radius: ${UNREAD_DOT.size / 2}px;
+      border-radius: ${ringSize / 2}px;
       background-color: ${colors.accent};
-      border: 2px solid ${colors.bg};
+      border: ${UNREAD_DOT.ring}px solid ${colors.bg};
     `,
-    x_expand: true,
-    y_expand: true,
-    x_align: Clutter.ActorAlign.START,
-    y_align: Clutter.ActorAlign.START,
-    translation_x: UNREAD_DOT.x,
-    translation_y: UNREAD_DOT.y,
+    x: UNREAD_DOT.x,
+    y: UNREAD_DOT.y,
   });
   content.add_child(dot);
   const button = new BarButton(content, onClick);
