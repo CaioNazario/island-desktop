@@ -73,8 +73,8 @@ Padding 0 12px, gap 12px:
 ## Critérios de aceite
 
 - [x] Testes de `notificationSource.ts` cobrem cada linha da tabela, domínio desconhecido, `www.`, subdomínio mais específico e app nativo.
-- [ ] Testes do roteamento cobrem os quatro estados da tabela e o DND com e sem urgência crítica.
-- [ ] Notificação de qualquer site no Brave aparece com o nome do site, sem a linha do domínio: site da tabela com o ícone dele, os outros com o globo (testado com o WhatsApp).
-- [ ] Com `wifi` aberto, uma notificação vira banner e o modo `wifi` continua intacto.
-- [ ] Nenhum banner nativo do GNOME aparece com a extensão ativa; ao desabilitar, voltam.
-- [ ] Lock/unlock mantém a lista de notificações.
+- [x] Testes do roteamento cobrem os quatro estados da tabela e o DND com e sem urgência crítica.
+- [x] Notificação de qualquer site no Brave aparece com o nome do site, sem a linha do domínio: site da tabela com o ícone dele, os outros com o globo (testado com o WhatsApp).
+- [x] Com `wifi` aberto, uma notificação vira banner e o modo `wifi` continua intacto.
+- [x] Nenhum banner nativo do GNOME aparece com a extensão ativa; ao desabilitar, voltam.
+- [x] Lock/unlock mantém a lista de notificações.
