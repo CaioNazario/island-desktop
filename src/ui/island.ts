@@ -16,30 +16,13 @@ import { BtView, type BtViewActor } from './btView.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
-import { NotificationRow, type NotificationRowActor } from './notificationRow.js';
-import { IslandPowerToggle, PowerRow } from './powerRow.js';
+import { notifContent, type NotificationRowActor } from './notificationRow.js';
+import { IslandPowerToggle, quickContent } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
-
-// `notif` (specs/04-notificacoes.md): 400×62, padding 0 12px, gap 12px.
-function notifContent(row: NotificationRowActor): St.Bin {
-  return new St.Bin({ child: row, style: 'padding: 0 12px;', x_expand: true, y_expand: true });
-}
-
-// `quick`: linha de controles com a linha de energia abaixo (specs/09-sessao-energia.md).
-function quickContent(
-  row: ControlsRowActor,
-  system: IslandSystem,
-  controls: ControlsRowOptions,
-): St.BoxLayout {
-  const content = new St.BoxLayout({ orientation: Clutter.Orientation.VERTICAL, x_expand: true });
-  content.add_child(row);
-  content.add_child(new PowerRow(system.session, controls.power, controls.onPowerAction));
-  return content;
-}
 
 export interface IslandSystem {
   volume: SystemVolume;
@@ -183,25 +166,15 @@ export const Island = GObject.registerClass(
       });
 
       // × fecha a ilha; a notificação continua na lista.
-      this.notifRow = new NotificationRow(
-        {
-          blockSize: 36,
-          blockRadius: 10,
-          iconSize: 20,
-          closeSize: 26,
-          closeIconSize: 12,
-          closeFilled: true,
-          gap: 12,
-        },
-        () => this.state.closeAll(),
-      );
+      const notif = notifContent(() => this.state.closeAll());
+      this.notifRow = notif.row;
 
       this.layers = new Map<Mode, St.Widget>([
         ['compact', modeLayer(this.clockLabel)],
-        ['notif', modeLayer(notifContent(this.notifRow))],
+        ['notif', modeLayer(notif.content)],
         ['volume', modeLayer(this.volumeRow)],
         ['brightness', modeLayer(this.brightnessRow)],
-        ['quick', modeLayer(quickContent(this.quickRow, system, controls))],
+        ['quick', modeLayer(quickContent(this.quickRow, system.session, controls))],
         ['wifi', modeLayer(this.wifiView)],
         ['bt', modeLayer(this.btView)],
       ]);

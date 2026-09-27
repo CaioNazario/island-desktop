@@ -4,6 +4,7 @@ import St from 'gi://St';
 
 import type { IslandState } from '../core/island.js';
 import type { PowerAction, SystemSession } from '../system/session.js';
+import type { ControlsRowActor, ControlsRowOptions } from './controlsRow.js';
 import { phosphor } from './icons.js';
 import { colors, derivedColors } from './tokens.js';
 
@@ -116,3 +117,15 @@ export const PowerRow = GObject.registerClass(
     }
   },
 );
+
+// `quick`: linha de controles com a linha de energia abaixo (specs/09-sessao-energia.md).
+export function quickContent(
+  row: ControlsRowActor,
+  session: SystemSession,
+  controls: ControlsRowOptions,
+): St.BoxLayout {
+  const content = new St.BoxLayout({ orientation: Clutter.Orientation.VERTICAL, x_expand: true });
+  content.add_child(row);
+  content.add_child(new PowerRow(session, controls.power, controls.onPowerAction));
+  return content;
+}
