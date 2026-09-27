@@ -81,7 +81,8 @@ export class SystemBluetooth {
   private readonly cancellable = new Gio.Cancellable();
   private lists: BtDeviceLists = { paired: [], nearby: [] };
   private operation: BtOperation | null = null;
-  private discoveryWanted = false;
+  private discoveryHolds = 0;
+  private discovering = false;
   private readonly listeners = new Set<() => void>();
 
   constructor() {
@@ -130,10 +131,20 @@ export class SystemBluetooth {
     if (this.available) this.client.default_adapter_powered = on;
   }
 
-  /** A busca roda só enquanto `bt` está aberto. */
-  setDiscovery(on: boolean): void {
-    this.discoveryWanted = on;
-    if (this.radioOn || !on) this.client.default_adapter_setup_mode = on;
+  /**
+   * A busca roda só enquanto `bt` está aberto. Contada: na troca de monitor,
+   * a ilha nova pode abrir `bt` antes de a antiga fechar.
+   */
+  holdDiscovery(): () => void {
+    this.discoveryHolds++;
+    this.syncDiscovery();
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.discoveryHolds--;
+      this.syncDiscovery();
+    };
   }
 
   connect(path: string): void {
@@ -165,7 +176,7 @@ export class SystemBluetooth {
 
   destroy(): void {
     // `disable()` roda a cada bloqueio de tela: a busca não pode ficar ligada.
-    if (this.discoveryWanted) this.client.default_adapter_setup_mode = false;
+    if (this.discovering) this.client.default_adapter_setup_mode = false;
     // Um `Pair()` sem resposta fica pendente no BlueZ.
     if (this.operation?.kind === 'pairing') {
       this.deviceAt(this.operation.path)
@@ -248,9 +259,17 @@ export class SystemBluetooth {
   }
 
   private syncAdapter(): void {
-    // Rádio ligado com `bt` aberto (pelo switch ou por fora): a busca volta.
-    if (this.discoveryWanted && this.radioOn) this.client.default_adapter_setup_mode = true;
+    this.syncDiscovery();
     this.rebuild();
+  }
+
+  // Só escreve quando o estado desejado muda: não desliga uma busca que as
+  // Configurações ligaram. Rádio religado com `bt` aberto: a busca volta.
+  private syncDiscovery(): void {
+    const on = this.discoveryHolds > 0 && this.radioOn;
+    if (on === this.discovering) return;
+    this.discovering = on;
+    this.client.default_adapter_setup_mode = on;
   }
 
   private syncDevices(): void {
