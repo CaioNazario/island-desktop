@@ -32,7 +32,7 @@ Mesmas chamadas que o menu de sistema nativo do Shell usa (`SystemActions` na 50
 
 ## Critérios de aceite
 
-- [ ] Configurações abre o `gnome-control-center` e fecha a ilha.
-- [ ] Energia alterna a linha, com a altura animando 58 ↔ 106 em `quick`.
-- [ ] Desligar, Reiniciar e Sair abrem o diálogo nativo e dá pra cancelar; Suspender e Bloquear agem direto.
-- [ ] Com um documento não salvo aberto, Desligar mostra o aviso do app no diálogo.
+- [x] Configurações abre o `gnome-control-center` e fecha a ilha.
+- [x] Energia alterna a linha, com a altura animando 58 ↔ 106 em `quick`.
+- [x] Desligar, Reiniciar e Sair abrem o diálogo nativo e dá pra cancelar; Suspender e Bloquear agem direto.
+- [x] Com um documento não salvo aberto, Desligar mostra o aviso do app no diálogo.
