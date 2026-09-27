@@ -217,6 +217,7 @@ export class BarManager {
   }
 
   private handleIslandClick(monitorIndex: number): void {
+    if (this.state.mode === 'compact') return;
     this.targetMonitorIndex = monitorIndex;
     this.state.islandClick();
     this.render();
