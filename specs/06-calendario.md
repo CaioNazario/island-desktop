@@ -38,6 +38,6 @@ Aberto quando "Clique na ilha abre" = **Calendário compacto**.
 
 ## Critérios de aceite
 
-- [ ] Testes de `calendar.ts`: meses começando em cada dia da semana, fevereiro bissexto, semana de hoje, navegação entre anos.
-- [ ] Evento criado no GNOME Calendar aparece na lista de hoje sem reiniciar a extensão.
-- [ ] Alternar Mês/Semana no modo `calendar` anima a altura 150 ↔ 214.
+- [x] Testes de `calendar.ts`: meses começando em cada dia da semana, fevereiro bissexto, semana de hoje, navegação entre anos.
+- [x] Evento criado no GNOME Calendar aparece na lista de hoje sem reiniciar a extensão.
+- [x] Alternar Mês/Semana no modo `calendar` anima a altura 150 ↔ 214.
