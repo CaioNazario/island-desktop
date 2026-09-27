@@ -5,6 +5,7 @@ import St from 'gi://St';
 
 import { formatClock, formatDay } from '../core/clock.js';
 import { getSize, type IslandState, type Mode, type SizeContext } from '../core/island.js';
+import type { SystemBluetooth } from '../system/bluetooth.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
@@ -53,6 +54,7 @@ export interface IslandSystem {
   nightLight: GSettingsToggle;
   dnd: GSettingsToggle;
   wifi: SystemWifi;
+  bluetooth: SystemBluetooth;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado

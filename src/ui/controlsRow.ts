@@ -9,11 +9,6 @@ import { SliderRow, type DragHooks, type SliderRowActor } from './sliderRow.js';
 import { Tile, type TileActor, type TileSource } from './tile.js';
 import { colors } from './tokens.js';
 
-// Bluetooth ainda não tem estado de rádio de verdade: o tile só abre/fecha o
-// modo, sempre "desligado" visualmente até a spec 08 ganhar
-// `GnomeBluetooth.Client`.
-const NO_RADIO_STATE: TileSource = { on: false, onChange: () => () => {} };
-
 function divider(): St.Widget {
   return new St.Widget({
     style: `width: 1px; height: 22px; background-color: ${colors.neutral800}; margin: 0 2px;`,
@@ -28,8 +23,10 @@ export const ControlsRow = GObject.registerClass(
     private readonly brightnessPill: SliderRowActor;
     private readonly brightness: SystemBrightness;
     private readonly wifiTile: TileActor;
+    private readonly btTile: TileActor;
     private readonly unsubscribeBrightness: () => void;
     private readonly unsubscribeWifi: () => void;
+    private readonly unsubscribeBt: () => void;
 
     constructor(
       system: IslandSystem,
@@ -66,7 +63,15 @@ export const ControlsRow = GObject.registerClass(
       };
       this.wifiTile = new Tile('network-wireless-symbolic', wifiRadio, onWifiClick);
       this.add_child(this.wifiTile);
-      this.add_child(new Tile('bluetooth-active-symbolic', NO_RADIO_STATE, onBtClick));
+      const bt = system.bluetooth;
+      const btRadio: TileSource = {
+        get on() {
+          return bt.radioOn;
+        },
+        onChange: (callback) => bt.onChange(callback),
+      };
+      this.btTile = new Tile('bluetooth-active-symbolic', btRadio, onBtClick);
+      this.add_child(this.btTile);
       this.add_child(
         new Tile('weather-clear-night-symbolic', system.nightLight, () =>
           system.nightLight.toggle(),
@@ -86,11 +91,15 @@ export const ControlsRow = GObject.registerClass(
       this.unsubscribeWifi = wifi.onChange(() => (this.wifiTile.visible = wifi.available));
       this.wifiTile.visible = wifi.available;
 
+      this.unsubscribeBt = bt.onChange(() => (this.btTile.visible = bt.available));
+      this.btTile.visible = bt.available;
+
       this.connectObject(
         'destroy',
         () => {
           this.unsubscribeBrightness();
           this.unsubscribeWifi();
+          this.unsubscribeBt();
         },
         this,
       );
