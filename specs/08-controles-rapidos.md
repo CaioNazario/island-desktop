@@ -102,11 +102,11 @@ Só uma operação por vez; cliques durante uma operação são ignorados.
 
 ## Critérios de aceite
 
-- [ ] Arrastar os sliders de brilho/volume em `quick` muda o sistema em tempo real, e o valor volta certo após reabrir.
-- [ ] Tecla de volume com a ilha compacta abre `volume`; com `quick` aberto só move o slider; o OSD nativo nunca aparece.
-- [ ] Tiles de modo noturno e não perturbe refletem mudanças feitas pelo app Configurações.
-- [ ] Conectar numa rede WPA2 nova pela ilha funciona sem abrir diálogo nativo; senha errada mostra "Senha incorreta" inline.
-- [ ] Senha de 7 caracteres mostra o erro local sem tentativa de conexão.
+- [x] Arrastar os sliders de brilho/volume em `quick` muda o sistema em tempo real, e o valor volta certo após reabrir.
+- [x] Tecla de volume com a ilha compacta abre `volume`; com `quick` aberto só move o slider; o OSD nativo nunca aparece.
+- [x] Tiles de modo noturno e não perturbe refletem mudanças feitas pelo app Configurações.
+- [x] Conectar numa rede WPA2 nova pela ilha funciona sem abrir diálogo nativo; senha errada mostra "Senha incorreta" inline.
+- [x] Senha de 7 caracteres mostra o erro local sem tentativa de conexão.
 - [ ] Rede 802.1X abre Configurações → Wi‑Fi.
 - [ ] Parear um mouse Bluetooth sem PIN pela ilha funciona; a busca para ao fechar `bt`.
 - [ ] Sem adaptador Bluetooth, o tile de BT não aparece.
