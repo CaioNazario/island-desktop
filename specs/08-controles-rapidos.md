@@ -77,7 +77,7 @@ Captive portal não é detectável antes de conectar: a rede aparece como aberta
   - senha rejeitada pelo NM: "Senha incorreta"
   - sem ativação em 30s: "Não foi possível conectar"
 - **Conectar**: cria o perfil com a PSK (`key-mgmt` `sae` para WPA3, senão `wpa-psk`) e ativa (`add_and_activate_connection`); o painel fecha e a rede mostra "Conectando…". Perfis criados pela ilha (inclusive de rede aberta) são só do usuário (`permissions=user:<nome>`), o que não pede senha de admin; o Shell faz o mesmo quando o polkit nega `settings.modify.system`. Em falha (senha errada ou 30s), o perfil é apagado.
-- **Senha errada**: o pedido de novo segredo que o NM faz para essa conexão é interceptado (o diálogo nativo do Shell não aparece), o perfil recém-criado é apagado e o painel reabre com "Senha incorreta". Depende do spike S2; se inviável, o diálogo nativo aparece e a spec é atualizada.
+- **Senha errada**: o pedido de novo segredo que o NM faz para essa conexão é interceptado (o diálogo nativo do Shell não aparece), o perfil recém-criado é apagado e o painel reabre com "Senha incorreta". A interceptação é uma injeção (`InjectionManager`) em `_showNotification`/`_handleRequest` do protótipo do agente de rede do Shell (`js/ui/components/networkAgent.js`), filtrando pelo UUID do perfil criado pela ilha e respondendo `USER_CANCELED` (com `INTERNAL_ERROR` o NM repassa o pedido pra outro agente).
 
 ## Modo `bt` (520×348, desligado 300)
 

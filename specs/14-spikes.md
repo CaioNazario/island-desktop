@@ -9,13 +9,6 @@ Pontos que ninguém verificou ainda. Cada spike se resolve **antes** de implemen
 - **Como**: `dbus-monitor "interface='org.freedesktop.Notifications'"` enquanto YouTube, YouTube Music, Spotify Web e WhatsApp Web mandam notificação em cada navegador. Guardar os payloads como fixtures dos testes de `notification-source.ts`.
 - **Pronto quando**: há uma fixture por navegador × serviço e a regra de extração está escrita na spec 04.
 
-## S2 · Senha errada de Wi‑Fi sem diálogo nativo
-
-- **Bloqueia**: spec 08 (painel de senha, erro "Senha incorreta").
-- **Pergunta**: dá pra interceptar o pedido de novo segredo que o NetworkManager faz ao agente do Shell (`js/ui/components/networkAgent.js` na 50.x) só para conexões criadas pela ilha, sem quebrar o agente para o resto do sistema?
-- **Como**: injeção com `InjectionManager` no handler de pedido de segredo, filtrando pelo UUID da conexão recém-criada. Testar senha certa, senha errada, cancelamento e rede Enterprise.
-- **Pronto quando**: senha errada volta ao painel inline com "Senha incorreta" e nenhum diálogo aparece; ou fica provado que não dá, e a spec 08 passa a aceitar o diálogo nativo nesse caso.
-
 ## S4 · Publicação no extensions.gnome.org (futuro, fora da v1)
 
 - **Pergunta**: o review do EGO aceita uma extensão que lê credenciais de CLIs de terceiros e chama endpoints não documentados com User-Agent de outro cliente?
