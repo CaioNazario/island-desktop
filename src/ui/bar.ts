@@ -1,4 +1,5 @@
 import Clutter from 'gi://Clutter';
+import type Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -51,8 +52,10 @@ export class BarManager {
   private readonly unsubscribeArrival: () => void;
   private readonly unsubscribeTrack: () => void;
 
-  constructor() {
+  constructor(settings: Gio.Settings) {
     this.state = new IslandState(new GLibScheduler(), {
+      islandClickOpens: () =>
+        settings.get_string('click-action') === 'calendar' ? 'calendar' : 'card',
       onChange: () => this.render(),
     });
     this.system = {

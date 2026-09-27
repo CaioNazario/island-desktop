@@ -99,15 +99,18 @@ export function getSize(mode: Mode, ctx: SizeContext = {}): Size {
   }
 }
 
+export type IslandClickOpens = 'card' | 'calendar';
+
 export interface IslandStateOptions {
-  islandClickOpens?: 'card' | 'calendar';
+  /** Lida a cada clique: a preferência muda sem recriar o estado (specs/13-preferencias.md). */
+  islandClickOpens?: () => IslandClickOpens;
   /** Chamado sempre que `mode` ou `cardOpen` muda, para a UI se re-sincronizar. */
   onChange?: () => void;
 }
 
 export class IslandState {
   private readonly scheduler: Scheduler;
-  private readonly islandClickOpens: 'card' | 'calendar';
+  private readonly islandClickOpens: () => IslandClickOpens;
   private readonly onChange: () => void;
   private _mode: Mode = 'compact';
   private _cardOpen = false;
@@ -118,7 +121,7 @@ export class IslandState {
 
   constructor(scheduler: Scheduler, options: IslandStateOptions = {}) {
     this.scheduler = scheduler;
-    this.islandClickOpens = options.islandClickOpens ?? 'card';
+    this.islandClickOpens = options.islandClickOpens ?? (() => 'card');
     this.onChange = options.onChange ?? (() => {});
   }
 
@@ -180,7 +183,7 @@ export class IslandState {
   /** Clique na ilha: regra 5. */
   islandClick(): IslandClickResult {
     if (this._mode === 'compact') {
-      if (this.islandClickOpens === 'calendar') {
+      if (this.islandClickOpens() === 'calendar') {
         this.setMode('calendar');
         return 'opened-calendar';
       }

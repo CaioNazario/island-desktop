@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="island@caionazario.dev">
+  <enum id="org.gnome.shell.extensions.island.ClickAction">
+    <value nick="center-card" value="0"/>
+    <value nick="calendar" value="1"/>
+  </enum>
   <schema id="org.gnome.shell.extensions.island" path="/org/gnome/shell/extensions/island/">
+    <key name="click-action" enum="org.gnome.shell.extensions.island.ClickAction">
+      <default>'center-card'</default>
+      <summary>Clique na ilha abre</summary>
+    </key>
   </schema>
 </schemalist>

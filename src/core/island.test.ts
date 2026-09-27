@@ -101,9 +101,18 @@ describe('IslandState', () => {
   });
 
   it('regra 5: clique na ilha compacta abre o calendário quando configurado', () => {
-    const state = new IslandState(new FakeScheduler(), { islandClickOpens: 'calendar' });
+    const state = new IslandState(new FakeScheduler(), { islandClickOpens: () => 'calendar' });
     expect(state.islandClick()).toBe('opened-calendar');
     expect(state.mode).toBe('calendar');
+  });
+
+  it('regra 5: mudar a opção vale no próximo clique, sem recriar o estado', () => {
+    let opens: 'card' | 'calendar' = 'card';
+    const state = new IslandState(new FakeScheduler(), { islandClickOpens: () => opens });
+    expect(state.islandClick()).toBe('toggled-card');
+    state.closeAll();
+    opens = 'calendar';
+    expect(state.islandClick()).toBe('opened-calendar');
   });
 
   it('regra 5: clique em notif abre stack', () => {
