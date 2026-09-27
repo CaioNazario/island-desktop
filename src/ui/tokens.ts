@@ -102,6 +102,7 @@ export const effects = {
   bannerSlide: { durationMs: 400, offsetY: -16, easing: 'EASE_OUT_BACK' },
   bannerFade: { durationMs: 220, easing: 'EASE' },
   cardSpring: { durationMs: 400, easing: 'EASE_OUT_BACK' },
+  cardFade: { durationMs: 220, easing: 'EASE' },
   contentCrossfade: { durationMs: 220, delayMs: 80, easing: 'EASE' },
   contentScale: {
     durationMs: 300,

@@ -16,7 +16,7 @@ import { GSettingsToggle } from '../system/toggleSetting.js';
 import { SystemVolume } from '../system/volume.js';
 import { SystemWifi } from '../system/wifi.js';
 import { Bar } from './barChrome.js';
-import type { IslandActor, IslandSystem } from './island.js';
+import type { IslandSystem } from './island.js';
 
 class GLibScheduler implements Scheduler {
   setTimeout(callback: () => void, ms: number): number {
@@ -42,7 +42,7 @@ export class BarManager {
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
-  private grabbedIsland: IslandActor | null = null;
+  private grabbedActor: Clutter.Actor | null = null;
   private readonly osdRedirect: OsdRedirect;
   private readonly unsubscribeWifi: () => void;
   private readonly unsubscribeBt: () => void;
@@ -173,7 +173,6 @@ export class BarManager {
   }
 
   private handleIslandClick(monitorIndex: number): void {
-    if (this.state.mode === 'compact') return;
     this.targetMonitorIndex = monitorIndex;
     // Abrir a lista pelo `notif` marca tudo como lido (specs/04-notificacoes.md).
     if (this.state.islandClick() === 'opened-stack') this.notifications.markAllRead();
@@ -184,7 +183,7 @@ export class BarManager {
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;
-      this.grabbedIsland = null;
+      this.grabbedActor = null;
     }
     this.bars.forEach((bar) => bar.destroy());
     this.bars = Main.layoutManager.monitors.map(
@@ -204,28 +203,31 @@ export class BarManager {
   }
 
   private render(): void {
-    this.bars.forEach((bar, index) => bar.island.render(index === this.targetMonitorIndex));
+    this.bars.forEach((bar, index) => bar.render(index === this.targetMonitorIndex));
     this.syncGrab();
   }
 
   /** Modos fixos e o cartão central tomam o foco de teclado (specs/03-ilha.md). */
   private syncGrab(): void {
     const shouldGrab = this.state.cardOpen || isFixedMode(this.state.mode);
-    const targetIsland = this.bars[this.targetMonitorIndex]?.island ?? null;
-    const wantedIsland = shouldGrab ? targetIsland : null;
+    const targetBar = this.bars[this.targetMonitorIndex];
+    // O cartão fica fora da ilha: com ele aberto, o grab é dele, e o
+    // clique na ilha vira "clique fora", que fecha tudo.
+    const targetActor = (this.state.cardOpen ? targetBar?.card : targetBar?.island) ?? null;
+    const wantedActor = shouldGrab ? targetActor : null;
 
-    if (wantedIsland === this.grabbedIsland) return;
+    if (wantedActor === this.grabbedActor) return;
 
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;
-      this.grabbedIsland = null;
+      this.grabbedActor = null;
     }
-    if (wantedIsland) {
+    if (wantedActor) {
       // POPUP, como os menus do Shell: o padrão (NONE) filtra todos os
       // atalhos globais, e aí `Super+S` não fecharia a ilha.
-      this.grab = Main.pushModal(wantedIsland, { actionMode: Shell.ActionMode.POPUP });
-      this.grabbedIsland = wantedIsland;
+      this.grab = Main.pushModal(wantedActor, { actionMode: Shell.ActionMode.POPUP });
+      this.grabbedActor = wantedActor;
     }
   }
 
@@ -238,7 +240,7 @@ export class BarManager {
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;
-      this.grabbedIsland = null;
+      this.grabbedActor = null;
     }
     this.bars.forEach((bar) => bar.destroy());
     this.bars = [];
