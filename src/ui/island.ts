@@ -6,6 +6,7 @@ import St from 'gi://St';
 import { formatClock, formatDay } from '../core/clock.js';
 import { getSize, type IslandState, type Mode, type SizeContext } from '../core/island.js';
 import type { SystemBluetooth } from '../system/bluetooth.js';
+import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { MusicSource } from '../system/mpris.js';
@@ -37,6 +38,7 @@ export interface IslandSystem {
   session: SystemSession;
   notifications: NotificationFeed;
   music: MusicSource;
+  calendar: CalendarEventsSource;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado

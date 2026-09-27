@@ -167,7 +167,7 @@ export class Bar {
       this.banner.handlePressUnderGrab(target),
     );
     this.island = island;
-    this.card = new CenterCard(system.music, {
+    this.card = new CenterCard(system.music, system.calendar, {
       onEscape,
       onPressOutside: () => state.closeAll(),
       claimPressUnderGrab: (target: Clutter.Actor) => this.banner.handlePressUnderGrab(target),

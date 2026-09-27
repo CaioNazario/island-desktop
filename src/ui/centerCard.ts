@@ -3,8 +3,23 @@ import GObject from 'gi://GObject';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 
+import {
+  monthGrid,
+  todayEvents,
+  visibleWeeks,
+  type CalendarView,
+  type TodayEvent,
+} from '../core/calendar.js';
 import { artistLine, formatTrackTime, progressFraction, sourceGlyph } from '../core/music.js';
+import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import type { MusicSource } from '../system/mpris.js';
+import {
+  CalendarGrid,
+  CalendarViewToggle,
+  monthNavButton,
+  type CalendarGridActor,
+  type CalendarViewToggleActor,
+} from './calendarView.js';
 import { phosphor } from './icons.js';
 import { MusicControls, MusicCover, MusicProgressBar } from './musicView.js';
 import { colors, derivedColors, effects } from './tokens.js';
@@ -13,6 +28,7 @@ export const CENTER_CARD_WIDTH = 420;
 /** `top: 38px` no design: distância do topo da barra. */
 export const CENTER_CARD_TOP = 38;
 const CARD_RADIUS = 22;
+const CARD_PADDING = 18;
 // Entra de `translateY(-10px) scale(.96)`, origem no topo (specs/05-musica.md).
 const HIDDEN_OFFSET_Y = -10;
 const HIDDEN_SCALE = 0.96;
@@ -54,7 +70,10 @@ const CardMusicSection = GObject.registerClass(
     private readonly unsubscribe: Array<() => void>;
 
     constructor(music: MusicSource) {
-      super({ orientation: Clutter.Orientation.VERTICAL });
+      super({
+        orientation: Clutter.Orientation.VERTICAL,
+        style: `padding: 0 ${CARD_PADDING}px;`,
+      });
       this.music = music;
 
       const head = new St.BoxLayout({ style: 'spacing: 14px;' });
@@ -131,6 +150,161 @@ const CardMusicSection = GObject.registerClass(
   },
 );
 
+// Divisor entre as seções: 1px, transparente → `neutral-800` (15%–85%) →
+// transparente, de borda a borda do cartão. O St só faz gradiente de duas
+// cores: são três faixas.
+function sectionDivider(): St.BoxLayout {
+  const fadeWidth = Math.round(CENTER_CARD_WIDTH * 0.15);
+  const transparent = 'rgba(63,66,77,0)';
+  const fade = (from: string, to: string) =>
+    new St.Widget({
+      style: `width: ${fadeWidth}px; background-gradient-direction: horizontal; background-gradient-start: ${from}; background-gradient-end: ${to};`,
+    });
+  const divider = new St.BoxLayout({ style: 'height: 1px; margin: 14px 0;' });
+  divider.add_child(fade(transparent, colors.neutral800));
+  divider.add_child(
+    new St.Widget({ style: `background-color: ${colors.neutral800};`, x_expand: true }),
+  );
+  divider.add_child(fade(colors.neutral800, transparent));
+  return divider;
+}
+
+const EVENT_DOT_SIZE = 8;
+
+function eventRow(event: TodayEvent): St.BoxLayout {
+  const row = new St.BoxLayout({ style: 'spacing: 10px; font-size: 12.5px;' });
+  row.add_child(
+    new St.Widget({
+      style: `width: ${EVENT_DOT_SIZE}px; height: ${EVENT_DOT_SIZE}px; border-radius: ${EVENT_DOT_SIZE / 2}px; background-color: ${colors[event.dot]};`,
+      y_align: Clutter.ActorAlign.CENTER,
+    }),
+  );
+  row.add_child(
+    singleLine(
+      new St.Label({
+        text: event.name,
+        style: `color: ${colors.text};`,
+        x_expand: true,
+        y_align: Clutter.ActorAlign.CENTER,
+      }),
+    ),
+  );
+  row.add_child(
+    new St.Label({
+      text: event.time,
+      style: `color: ${colors.neutral500}; font-size: 11px;`,
+      y_align: Clutter.ActorAlign.CENTER,
+    }),
+  );
+  return row;
+}
+
+// Seção de calendário do cartão (specs/06-calendario.md "Seção no cartão
+// central"): abre sempre em Semana, no mês atual.
+const CardCalendarSection = GObject.registerClass(
+  class CardCalendarSection extends St.BoxLayout {
+    private readonly events: CalendarEventsSource;
+    private readonly toggle: CalendarViewToggleActor;
+    private readonly monthLabel: St.Label;
+    private readonly grid: CalendarGridActor;
+    private readonly eventList: St.BoxLayout;
+    private readonly unsubscribe: () => void;
+    private view: CalendarView = 'week';
+    private monthOffset = 0;
+
+    constructor(events: CalendarEventsSource) {
+      super({
+        orientation: Clutter.Orientation.VERTICAL,
+        style: `padding: 0 ${CARD_PADDING}px;`,
+      });
+      this.events = events;
+
+      const header = new St.BoxLayout({ style: 'spacing: 8px; margin-bottom: 10px;' });
+      header.add_child(
+        new St.Icon({
+          gicon: phosphor('calendar-blank'),
+          icon_size: 16,
+          style: `color: ${colors.neutral300};`,
+          y_align: Clutter.ActorAlign.CENTER,
+        }),
+      );
+      header.add_child(
+        new St.Label({
+          text: 'Calendário',
+          style: `color: ${colors.text}; font-size: 14px; font-weight: 500;`,
+          x_expand: true,
+          y_align: Clutter.ActorAlign.CENTER,
+        }),
+      );
+      this.toggle = new CalendarViewToggle(24, () => {
+        this.view = this.view === 'week' ? 'month' : 'week';
+        this.sync();
+      });
+      header.add_child(this.toggle);
+      this.add_child(header);
+
+      const monthRow = new St.BoxLayout({ style: 'margin-bottom: 8px;' });
+      this.monthLabel = new St.Label({
+        style: `color: ${colors.text}; font-size: 13px;`,
+        x_expand: true,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+      monthRow.add_child(this.monthLabel);
+      monthRow.add_child(monthNavButton('caret-left', 26, 13, () => this.moveMonth(-1)));
+      monthRow.add_child(monthNavButton('caret-right', 26, 13, () => this.moveMonth(1)));
+      this.add_child(monthRow);
+
+      this.grid = new CalendarGrid({
+        headerFont: 11,
+        headerMarginBottom: 4,
+        cellHeight: 26,
+        dayFont: 12.5,
+        pillWidth: 26,
+        pillHeight: 22,
+      });
+      this.add_child(this.grid);
+
+      this.eventList = new St.BoxLayout({
+        orientation: Clutter.Orientation.VERTICAL,
+        style: 'spacing: 9px; margin-top: 12px;',
+      });
+      this.add_child(this.eventList);
+
+      this.unsubscribe = events.onChange(() => this.sync());
+      this.sync();
+      this.connectObject('destroy', () => this.unsubscribe(), this);
+    }
+
+    /** Reabrir o cartão volta a Semana, no mês atual. */
+    reset(): void {
+      this.view = 'week';
+      this.monthOffset = 0;
+      this.sync();
+    }
+
+    private moveMonth(step: number): void {
+      this.monthOffset += step;
+      this.sync();
+    }
+
+    private sync(): void {
+      const now = new Date();
+      const grid = monthGrid(now, this.monthOffset);
+      this.toggle.setView(this.view);
+      this.monthLabel.text = grid.title;
+      this.grid.setWeeks(visibleWeeks(grid, this.view));
+
+      this.eventList.destroy_all_children();
+      const events = todayEvents(this.events.today, now);
+      events.forEach((event) => this.eventList.add_child(eventRow(event)));
+      this.eventList.visible = events.length > 0;
+    }
+  },
+);
+
+type CardMusicSectionActor = InstanceType<typeof CardMusicSection>;
+type CardCalendarSectionActor = InstanceType<typeof CardCalendarSection>;
+
 export interface CenterCardOptions {
   onEscape: () => void;
   /** Clique fora do cartão com ele segurando o grab: fecha tudo. */
@@ -145,9 +319,10 @@ export interface CenterCardOptions {
 export const CenterCard = GObject.registerClass(
   class CenterCard extends St.Widget {
     private readonly options: CenterCardOptions;
+    private readonly calendar: CardCalendarSectionActor;
     private isOpen = false;
 
-    constructor(music: MusicSource, options: CenterCardOptions) {
+    constructor(music: MusicSource, events: CalendarEventsSource, options: CenterCardOptions) {
       super({
         layout_manager: new Clutter.BinLayout(),
         reactive: true,
@@ -164,13 +339,21 @@ export const CenterCard = GObject.registerClass(
         x_expand: true,
         y_expand: true,
         style: `
-          padding: 18px;
+          padding: ${CARD_PADDING}px 0;
           border-radius: ${CARD_RADIUS}px;
           background-color: ${derivedColors.centralCardBg};
           border: 1px solid ${colors.neutral800};
         `,
       });
-      surface.add_child(new CardMusicSection(music));
+      // Música · divisor · calendário, como no design. Nada tocando: seção
+      // de música e divisor somem (specs/05-musica.md).
+      const musicSection: CardMusicSectionActor = new CardMusicSection(music);
+      const divider = sectionDivider();
+      musicSection.bind_property('visible', divider, 'visible', GObject.BindingFlags.SYNC_CREATE);
+      this.calendar = new CardCalendarSection(events);
+      surface.add_child(musicSection);
+      surface.add_child(divider);
+      surface.add_child(this.calendar);
 
       this.add_child(shadowLayer(CARD_SHADOW.glow));
       this.add_child(shadowLayer(CARD_SHADOW.drop));
@@ -207,6 +390,7 @@ export const CenterCard = GObject.registerClass(
       if (open === this.isOpen) return;
       this.isOpen = open;
       this.remove_all_transitions();
+      if (open) this.calendar.reset();
       if (open && !this.visible) {
         this.opacity = 0;
         Object.assign(this, hiddenTransform());

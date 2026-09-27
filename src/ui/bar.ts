@@ -8,6 +8,7 @@ import { routeNotification, type IncomingNotification } from '../core/notificati
 import { SystemBattery } from '../system/battery.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
+import { SystemCalendarEvents } from '../system/calendarEvents.js';
 import { SystemMpris } from '../system/mpris.js';
 import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
 import { OsdRedirect } from '../system/osd.js';
@@ -39,6 +40,7 @@ export class BarManager {
   private readonly battery = new SystemBattery();
   private readonly notifications = new SystemNotifications();
   private readonly music = new SystemMpris();
+  private readonly calendar = new SystemCalendarEvents();
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -66,6 +68,7 @@ export class BarManager {
       session: new SystemSession(),
       notifications: this.notifications,
       music: this.music,
+      calendar: this.calendar,
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -254,6 +257,7 @@ export class BarManager {
     this.battery.destroy();
     this.notifications.destroy();
     this.music.destroy();
+    this.calendar.destroy();
     this.osdRedirect.destroy();
   }
 }
