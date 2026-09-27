@@ -15,11 +15,24 @@ import { BtView, type BtViewActor } from './btView.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
+import { IslandPowerToggle, PowerRow } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
+
+// `quick`: linha de controles com a linha de energia abaixo (specs/09-sessao-energia.md).
+function quickContent(
+  row: ControlsRowActor,
+  system: IslandSystem,
+  controls: ControlsRowOptions,
+): St.BoxLayout {
+  const content = new St.BoxLayout({ orientation: Clutter.Orientation.VERTICAL, x_expand: true });
+  content.add_child(row);
+  content.add_child(new PowerRow(system.session, controls.power, controls.onPowerAction));
+  return content;
+}
 
 export interface IslandSystem {
   volume: SystemVolume;
@@ -70,6 +83,7 @@ export const Island = GObject.registerClass(
     private readonly wifiView: WifiViewActor;
     private readonly btView: BtViewActor;
     private readonly layers: ReadonlyMap<Mode, St.Widget>;
+    private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
     private contentMode: Mode = 'compact';
@@ -132,6 +146,7 @@ export const Island = GObject.registerClass(
       this.brightnessRow = new SliderRow(brightnessIconName, 6, system.brightness, drag);
       // "abre wifi; em wifi, volta a quick" (specs/08) — não é a regra 2 da
       // spec 03 (gatilho fecha a ilha): o tile vive dentro de quick/wifi/bt.
+      this.power = new IslandPowerToggle(state);
       const controls: ControlsRowOptions = {
         onWifiTileClick: () =>
           this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi'),
@@ -140,6 +155,11 @@ export const Island = GObject.registerClass(
         onSettingsClick: () => {
           this.state.closeAll();
           system.session.openSettings();
+        },
+        power: this.power,
+        onPowerAction: (action) => {
+          this.state.closeAll();
+          system.session.run(action);
         },
       };
       this.quickRow = new ControlsRow(system, drag, controls);
@@ -158,7 +178,7 @@ export const Island = GObject.registerClass(
         ['compact', modeLayer(this.clockLabel)],
         ['volume', modeLayer(this.volumeRow)],
         ['brightness', modeLayer(this.brightnessRow)],
-        ['quick', modeLayer(this.quickRow)],
+        ['quick', modeLayer(quickContent(this.quickRow, system, controls))],
         ['wifi', modeLayer(this.wifiView)],
         ['bt', modeLayer(this.btView)],
       ]);
@@ -227,8 +247,10 @@ export const Island = GObject.registerClass(
     render(isTargetMonitor: boolean): void {
       this.isTargetMonitor = isTargetMonitor;
       const mode = isTargetMonitor ? this.state.mode : 'compact';
+      this.power.sync();
       this.showContentFor(mode);
-      this.applySize(getSize(mode, this.sizeContext()), true);
+      // A linha de energia muda a altura sem trocar de modo.
+      this.resize();
       this.syncExpanded(mode !== 'compact' || (isTargetMonitor && this.state.cardOpen));
       // "Cursor de mão só em `compact` e `notif`" (specs/03-ilha.md): nos
       // outros modos, cliques são do conteúdo.
@@ -251,16 +273,20 @@ export const Island = GObject.registerClass(
       }
     }
 
-    /** O conteúdo do modo atual mudou de altura (painel de senha do `wifi`, rádio do `bt`). */
+    /** O conteúdo do modo atual mudou de altura (energia, senha do `wifi`, rádio do `bt`). */
     private resize(): void {
       this.syncLayerSize(this.contentMode);
       this.applySize(getSize(this.contentMode, this.sizeContext()), true);
     }
 
     private sizeContext(): SizeContext {
+      const powerOpen = this.state.powerOpen;
       return {
+        quickEnergyOpen: powerOpen,
+        wifiEnergyOpen: powerOpen,
         wifiPasswordField: this.wifiView.passwordField,
         btOn: this.btView.radioIsOn,
+        btEnergyOpen: powerOpen,
       };
     }
 

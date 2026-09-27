@@ -52,6 +52,7 @@ export const batteryIconName = 'battery-medium-fill';
 
 export const nightLightIconName = 'moon-fill';
 export const settingsIconName = 'gear-six';
+export const powerIconName = 'power-bold';
 export const dndIconName = 'bell-slash-fill';
 
 export function btDeviceIconName(kind: DeviceKind): string {

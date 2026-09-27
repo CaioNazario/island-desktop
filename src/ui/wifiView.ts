@@ -11,6 +11,7 @@ import {
 } from '../core/wifi.js';
 import type { ConnectResult } from '../system/wifi.js';
 import { ControlsRow, type ControlsRowOptions } from './controlsRow.js';
+import { PowerRow } from './powerRow.js';
 import {
   concealIconName,
   keyIconName,
@@ -99,6 +100,7 @@ export const WifiView = GObject.registerClass(
       this.callbacks = callbacks;
 
       this.add_child(new ControlsRow(system, drag, callbacks));
+      this.add_child(new PowerRow(system.session, callbacks.power, callbacks.onPowerAction));
       this.add_child(sectionDivider());
 
       const section = vertical({ style: 'padding: 0 12px;', y_expand: true });

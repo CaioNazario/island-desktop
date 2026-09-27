@@ -10,6 +10,7 @@ import {
   type DeviceStatus,
 } from '../core/bluetooth.js';
 import { ControlsRow, type ControlsRowOptions } from './controlsRow.js';
+import { PowerRow } from './powerRow.js';
 import {
   batteryIconName,
   btDeviceIconName,
@@ -138,6 +139,7 @@ export const BtView = GObject.registerClass(
       this.callbacks = callbacks;
 
       this.add_child(new ControlsRow(system, drag, callbacks));
+      this.add_child(new PowerRow(system.session, callbacks.power, callbacks.onPowerAction));
       this.add_child(sectionDivider());
 
       const section = vertical({ style: 'padding: 0 12px;', y_expand: true });

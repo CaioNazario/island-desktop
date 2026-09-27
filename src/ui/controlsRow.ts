@@ -8,15 +8,18 @@ import {
   btIconName,
   dndIconName,
   nightLightIconName,
+  powerIconName,
   settingsIconName,
   volumeIconName,
   wifiTileIconName,
 } from './icons.js';
 import type { IslandSystem } from './island.js';
-import { RoundButton } from './roundButton.js';
+import type { PowerAction } from '../system/session.js';
+import type { PowerToggle } from './powerRow.js';
+import { ROUND_BUTTON_RESTING, RoundButton } from './roundButton.js';
 import { SliderRow, type DragHooks, type SliderRowActor } from './sliderRow.js';
 import { Tile, type TileActor, type TileSource } from './tile.js';
-import { colors } from './tokens.js';
+import { colors, derivedColors } from './tokens.js';
 
 function divider(): St.Widget {
   return new St.Widget({
@@ -30,11 +33,14 @@ export interface ControlsRowOptions {
   onBtTileClick(): void;
   /** Configurações: a ilha fecha e o app abre (specs/09-sessao-energia.md). */
   onSettingsClick(): void;
+  /** Energia alterna a linha de energia; cada ação fecha a ilha antes de rodar. */
+  power: PowerToggle;
+  onPowerAction(action: PowerAction): void;
 }
 
 // Linha de controles comum a `quick`/`wifi`/`bt` (specs/08-controles-rapidos.md):
-// brilho, volume, os quatro tiles e, depois do divisor, Configurações
-// (specs/09-sessao-energia.md).
+// brilho, volume, os quatro tiles e, depois do divisor, Configurações e
+// Energia (specs/09-sessao-energia.md).
 export const ControlsRow = GObject.registerClass(
   class ControlsRow extends St.BoxLayout {
     private readonly brightnessPill: SliderRowActor;
@@ -45,6 +51,7 @@ export const ControlsRow = GObject.registerClass(
     private readonly unsubscribeWifi: () => void;
     private readonly unsubscribeBt: () => void;
     private readonly unsubscribeSession: () => void;
+    private readonly unsubscribePower: () => void;
 
     constructor(system: IslandSystem, drag: DragHooks, options: ControlsRowOptions) {
       super({
@@ -92,6 +99,7 @@ export const ControlsRow = GObject.registerClass(
 
       this.add_child(divider());
       this.unsubscribeSession = this.addSettingsButton(system, options);
+      this.unsubscribePower = this.addPowerButton(options.power);
 
       this.unsubscribeBrightness = system.brightness.onChange(() =>
         this.syncBrightnessVisibility(),
@@ -111,6 +119,7 @@ export const ControlsRow = GObject.registerClass(
           this.unsubscribeWifi();
           this.unsubscribeBt();
           this.unsubscribeSession();
+          this.unsubscribePower();
         },
         this,
       );
@@ -122,6 +131,20 @@ export const ControlsRow = GObject.registerClass(
       this.add_child(button);
       button.visible = session.settingsAvailable;
       return session.onChange(() => (button.visible = session.settingsAvailable));
+    }
+
+    // Aberto: `#932b2a` / `neutral-100`.
+    private addPowerButton(power: PowerToggle): () => void {
+      const button = new RoundButton(
+        powerIconName,
+        () => power.toggle(),
+        () =>
+          power.open
+            ? { bg: derivedColors.powerOpenBg, fg: colors.neutral100 }
+            : ROUND_BUTTON_RESTING,
+      );
+      this.add_child(button);
+      return power.onChange(() => button.refresh());
     }
 
     private syncBrightnessVisibility(): void {
