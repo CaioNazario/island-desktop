@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
-"""Extrai o protótipo empacotado (Claude Design) para arquivos legíveis em design/."""
+"""Extrai o protótipo empacotado (Claude Design) para arquivos legíveis em design/
+e os ícones Phosphor usados para SVGs simbólicos em icons/ (specs/01-design-tokens.md)."""
 
+import base64
+import gzip
 import html
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "Desktop Island.html"
 OUT = ROOT / "design"
+ICONS = ROOT / "icons"
+
+# Usados pelo código mas ausentes do design (specs/08-controles-rapidos.md:
+# ícone pelo tipo do dispositivo Bluetooth).
+EXTRA_ICONS = {("fill", "laptop"), ("fill", "game-controller"), ("fill", "bluetooth")}
+
+ICON_CLASS = re.compile(r"\bph(?:-(bold|fill))? ph-([a-z0-9-]+)")
 
 
 def script_block(doc: str, kind: str) -> str:
@@ -17,6 +28,42 @@ def script_block(doc: str, kind: str) -> str:
     if not m:
         sys.exit(f"bloco __bundler/{kind} não encontrado em {SRC}")
     return m.group(1)
+
+
+def glyph_paths(manifest: dict) -> dict[str, str]:
+    """Nome do glifo (`gear-six`, `power-bold`, `moon-fill`) → path, das fontes SVG do bundle."""
+    paths: dict[str, str] = {}
+    for asset in manifest.values():
+        if asset["mime"] != "image/svg+xml":
+            continue
+        raw = base64.b64decode(asset["data"])
+        font = (gzip.decompress(raw) if asset.get("compressed") else raw).decode("utf-8")
+        for tag in re.findall(r"<glyph\b[^>]*>", font):
+            names = re.search(r'glyph-name="([^"]*)"', tag)
+            path = re.search(r'\bd="([^"]*)"', tag)
+            if not (names and path):
+                continue
+            for name in names.group(1).split(","):
+                paths.setdefault(name.strip(), path.group(1))
+    return paths
+
+
+def write_icons(manifest: dict, sources: list[str]) -> int:
+    used = {(weight or "regular", name) for text in sources for weight, name in ICON_CLASS.findall(text)}
+    paths = glyph_paths(manifest)
+    shutil.rmtree(ICONS, ignore_errors=True)
+    ICONS.mkdir()
+    for weight, name in sorted(used | EXTRA_ICONS):
+        glyph = name if weight == "regular" else f"{name}-{weight}"
+        if glyph not in paths:
+            sys.exit(f"ícone ph-{glyph} não encontrado nas fontes Phosphor do bundle")
+        # Fonte SVG: y para cima, ascent 960, descent -64, 1024 por em.
+        (ICONS / f"{glyph}-symbolic.svg").write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 1024 1024">'
+            f'<path transform="matrix(1 0 0 -1 0 960)" d="{paths[glyph]}"/></svg>\n',
+            encoding="utf-8",
+        )
+    return len(used | EXTRA_ICONS)
 
 
 def main() -> None:
@@ -35,7 +82,9 @@ def main() -> None:
     (OUT / "logic.js").write_text(logic.group(2).strip() + "\n", encoding="utf-8")
     props = json.loads(html.unescape(logic.group(1)))
     (OUT / "props.json").write_text(json.dumps(props, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"design/ atualizado a partir de {SRC.name}")
+    manifest = json.loads(script_block(doc, "manifest"))
+    count = write_icons(manifest, [page.group(1), logic.group(2)])
+    print(f"design/ e icons/ ({count} ícones) atualizados a partir de {SRC.name}")
 
 
 if __name__ == "__main__":
