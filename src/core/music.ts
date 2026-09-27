@@ -38,6 +38,10 @@ export class PlayerTracker {
   // Do menos para o mais recente a entrar em `Playing`.
   private order: string[] = [];
   private previous = new Map<string, PlayerSnapshot>();
+  // Última faixa vista tocando, por player. O Spotify web troca de faixa
+  // pausado e só depois volta a tocar: comparar com o estado anterior
+  // confundiria isso com retomar a mesma faixa.
+  private playedKeys = new Map<string, string>();
   private started = false;
 
   update(players: ReadonlyMap<string, PlayerSnapshot>): TrackerUpdate {
@@ -60,12 +64,20 @@ export class PlayerTracker {
 
     const current = [...this.order].reverse().find((name) => showable(players.get(name)!)) ?? null;
     const player = current === null ? undefined : players.get(current);
-    const before = current === null ? undefined : this.previous.get(current);
     const trackChanged =
       !firstRead &&
       player?.status === 'Playing' &&
-      (before === undefined || trackKey(before) !== trackKey(player));
+      this.playedKeys.get(current!) !== trackKey(player);
 
+    const playedKeys = new Map<string, string>();
+    for (const [name, snapshot] of players) {
+      // Na primeira leitura, a faixa pausada conta como vista: retomar depois
+      // do desbloqueio não dispara.
+      const seen = showable(snapshot) && (firstRead || snapshot.status === 'Playing');
+      const key = seen ? trackKey(snapshot) : this.playedKeys.get(name);
+      if (key !== undefined) playedKeys.set(name, key);
+    }
+    this.playedKeys = playedKeys;
     this.previous = new Map(players);
     return { current, trackChanged };
   }

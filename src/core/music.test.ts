@@ -110,6 +110,26 @@ describe('PlayerTracker', () => {
       expect(tracker.update(players({ a: player('Paused', 'Dois') })).trackChanged).toBe(false);
     });
 
+    it('pular pausado e voltar a tocar dispara (Spotify web no Firefox)', () => {
+      const tracker = new PlayerTracker();
+      const firefox = '/org/mpris/MediaPlayer2/firefox';
+      tracker.update(players({ a: player('Playing', 'You Were Right', firefox) }));
+      tracker.update(players({ a: player('Paused', 'You Were Right', firefox) }));
+      expect(tracker.update(players({ a: player('Paused', 'Eyes', firefox) })).trackChanged).toBe(
+        false,
+      );
+      expect(tracker.update(players({ a: player('Playing', 'Eyes', firefox) })).trackChanged).toBe(
+        true,
+      );
+    });
+
+    it('pausar e retomar depois de tocar não dispara', () => {
+      const tracker = new PlayerTracker();
+      tracker.update(players({ a: player('Playing') }));
+      tracker.update(players({ a: player('Paused') }));
+      expect(tracker.update(players({ a: player('Playing') })).trackChanged).toBe(false);
+    });
+
     it('retomar a mesma faixa não dispara', () => {
       const tracker = new PlayerTracker();
       tracker.update(players({ a: player('Paused') }));
