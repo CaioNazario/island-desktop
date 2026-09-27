@@ -9,6 +9,7 @@ import { isFixedMode, IslandState, type Scheduler } from '../core/island.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
 import { OsdRedirect } from '../system/osd.js';
+import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
 import { SystemVolume } from '../system/volume.js';
 import { SystemWifi } from '../system/wifi.js';
@@ -173,6 +174,7 @@ export class BarManager {
       dnd: new GSettingsToggle('org.gnome.desktop.notifications', 'show-banners', true),
       wifi: new SystemWifi(),
       bluetooth: new SystemBluetooth(),
+      session: new SystemSession(),
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -298,6 +300,7 @@ export class BarManager {
     this.system.dnd.destroy();
     this.system.wifi.destroy();
     this.system.bluetooth.destroy();
+    this.system.session.destroy();
     this.osdRedirect.destroy();
   }
 }
