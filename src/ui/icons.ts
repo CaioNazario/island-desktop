@@ -54,6 +54,7 @@ export const nightLightIconName = 'moon-fill';
 export const settingsIconName = 'gear-six';
 export const powerIconName = 'power-bold';
 export const dndIconName = 'bell-slash-fill';
+export const caretIconName = 'caret-down';
 
 export function btDeviceIconName(kind: DeviceKind): string {
   switch (kind) {

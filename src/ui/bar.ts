@@ -5,7 +5,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { isFixedMode, IslandState, type Scheduler } from '../core/island.js';
+import { isFixedMode, IslandState, type Mode, type Scheduler } from '../core/island.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
 import { OsdRedirect } from '../system/osd.js';
@@ -15,6 +15,7 @@ import { SystemVolume } from '../system/volume.js';
 import { SystemWifi } from '../system/wifi.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
+import { RightPill } from './rightPill.js';
 import { layout } from './tokens.js';
 
 class GLibScheduler implements Scheduler {
@@ -120,6 +121,7 @@ class Bar {
     system: IslandSystem,
     onIslandClick: () => void,
     onEscape: () => void,
+    onTrigger: (mode: Mode) => void,
   ) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
@@ -132,7 +134,7 @@ class Bar {
     const leftPill = new Pill();
     const island = new Island(state, system, onIslandClick, onEscape);
     this.island = island;
-    const rightPill = new Pill();
+    const rightPill = new RightPill(() => onTrigger('quick'));
     this.chrome = new BarChrome(leftPill, island, rightPill);
     this.chrome.set_position(monitor.x, monitor.y);
     this.chrome.set_width(monitor.width);
@@ -230,6 +232,13 @@ export class BarManager {
     return focusWindow ? focusWindow.get_monitor() : Main.layoutManager.primaryIndex;
   }
 
+  /** Gatilho na barra: a ilha daquela barra abre o modo (specs/02-barra.md). */
+  private handleBarTrigger(monitorIndex: number, mode: Mode): void {
+    this.targetMonitorIndex = monitorIndex;
+    this.state.openFromTrigger(mode);
+    this.render();
+  }
+
   private handleIslandClick(monitorIndex: number): void {
     if (this.state.mode === 'compact') return;
     this.targetMonitorIndex = monitorIndex;
@@ -252,6 +261,7 @@ export class BarManager {
           this.system,
           () => this.handleIslandClick(index),
           () => this.handleEscape(),
+          (mode) => this.handleBarTrigger(index, mode),
         ),
     );
     this.render();
