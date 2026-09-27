@@ -4,7 +4,7 @@ import St from 'gi://St';
 
 import { WEEKDAY_HEADERS, type CalendarDay, type CalendarView } from '../core/calendar.js';
 import { phosphor } from './icons.js';
-import { colors } from './tokens.js';
+import { colors, effects } from './tokens.js';
 
 // Peças do calendário compartilhadas pela seção do cartão central e pelo modo
 // `calendar` (specs/06-calendario.md): as medidas mudam, o comportamento não.
@@ -58,16 +58,35 @@ export const CalendarGrid = GObject.registerClass(
 
       this.weeksGrid = new St.Widget({
         layout_manager: new Clutter.GridLayout({ column_homogeneous: true }),
+        clip_to_allocation: true,
       });
       this.add_child(this.weeksGrid);
     }
 
+    // Semana ↔ Mês (e meses de 5 ↔ 6 semanas) anima a altura das semanas;
+    // o que vem abaixo acompanha. Fora da tela, troca direto.
     setWeeks(weeks: readonly CalendarDay[][]): void {
-      this.weeksGrid.destroy_all_children();
-      const layout = this.weeksGrid.layout_manager as Clutter.GridLayout;
+      const grid = this.weeksGrid;
+      const from = grid.height;
+      grid.remove_all_transitions();
+      grid.height = -1;
+
+      grid.destroy_all_children();
+      const layout = grid.layout_manager as Clutter.GridLayout;
       weeks.forEach((week, row) =>
         week.forEach((day, column) => layout.attach(this.dayCell(day), column, row, 1, 1)),
       );
+
+      if (!grid.mapped) return;
+      const [, to] = grid.get_preferred_height(-1);
+      if (to === from) return;
+      grid.height = from;
+      grid.ease({
+        height: to,
+        duration: effects.cardSpring.durationMs,
+        mode: Clutter.AnimationMode.EASE_OUT_BACK,
+        onComplete: () => (grid.height = -1),
+      });
     }
 
     private dayCell(day: CalendarDay): St.Widget {
