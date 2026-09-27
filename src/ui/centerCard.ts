@@ -254,14 +254,17 @@ const CardCalendarSection = GObject.registerClass(
       monthRow.add_child(monthNavButton('caret-right', 26, 13, () => this.moveMonth(1)));
       this.add_child(monthRow);
 
-      this.grid = new CalendarGrid({
-        headerFont: 11,
-        headerMarginBottom: 4,
-        cellHeight: 26,
-        dayFont: 12.5,
-        pillWidth: 26,
-        pillHeight: 22,
-      });
+      this.grid = new CalendarGrid(
+        {
+          headerFont: 11,
+          headerMarginBottom: 4,
+          cellHeight: 26,
+          dayFont: 12.5,
+          pillWidth: 26,
+          pillHeight: 22,
+        },
+        effects.cardSpring.durationMs,
+      );
       this.add_child(this.grid);
 
       this.eventList = new St.BoxLayout({

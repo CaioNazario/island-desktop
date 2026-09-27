@@ -15,6 +15,7 @@ import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BtView, type BtViewActor } from './btView.js';
+import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
@@ -82,6 +83,7 @@ export const Island = GObject.registerClass(
     private readonly btView: BtViewActor;
     private readonly notifRow: NotificationRowActor;
     private readonly stackView: StackViewActor;
+    private readonly calendarView: CalendarModeViewActor;
     private readonly layers: ReadonlyMap<Mode, St.Widget>;
     private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
@@ -188,6 +190,10 @@ export const Island = GObject.registerClass(
         },
       });
 
+      this.calendarView = new CalendarModeView(system.calendar, {
+        onSizeChanged: () => this.resize(),
+      });
+
       this.layers = new Map<Mode, St.Widget>([
         ['compact', modeLayer(this.clockLabel)],
         ['notif', modeLayer(notif.content)],
@@ -195,6 +201,7 @@ export const Island = GObject.registerClass(
         ['music', modeLayer(new MusicModeRow(system.music, () => this.state.keepAlive()))],
         ['volume', modeLayer(this.volumeRow)],
         ['brightness', modeLayer(this.brightnessRow)],
+        ['calendar', modeLayer(this.calendarView)],
         ['quick', modeLayer(quickContent(this.quickRow, system.session, controls))],
         ['wifi', modeLayer(this.wifiView)],
         ['bt', modeLayer(this.btView)],
@@ -314,6 +321,7 @@ export const Island = GObject.registerClass(
       const powerOpen = this.state.powerOpen;
       return {
         stackItemCount: this.stackView.itemCount,
+        calendarView: this.calendarView.view,
         quickEnergyOpen: powerOpen,
         wifiEnergyOpen: powerOpen,
         wifiPasswordField: this.wifiView.passwordField,
@@ -330,6 +338,8 @@ export const Island = GObject.registerClass(
       // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
       const outgoing = this.layers.get(previous);
       if (outgoing) hideLayer(this.surface, outgoing, previous);
+      // Antes de medir a camada, e fora da tela: volta a Semana sem animar.
+      if (mode === 'calendar') this.calendarView.reset();
       const incoming = this.layers.get(mode);
       if (incoming) {
         this.syncLayerSize(mode);

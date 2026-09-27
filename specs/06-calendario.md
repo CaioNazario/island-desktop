@@ -26,7 +26,7 @@ Regra pura em `src/core/calendar.ts`:
 Aberto quando "Clique na ilha abre" = **Calendário compacto**.
 - Padding 14px 16px, gap 16px, duas colunas separadas por divisor vertical em gradiente.
 - Esquerda (264px): título 13px/500 + botão Mês/Semana (22px, raio 11, `neutral-900`, 11px) + `‹` `›` 22×22; cabeçalho de dias 10.5px `neutral-500`; células 22px de altura, número 12px em pílula 24×20 raio 10.
-- Direita: "Hoje, sex, 25" 13px/500 (dia da semana minúsculo, como no design) e eventos (nome 12px, horário 10.5px `neutral-500`), gap 12px, sem quebra de linha.
+- Direita: "Hoje, sex, 25" 13px/500 (dia da semana minúsculo, como no design) e eventos (nome 12px, horário 10.5px `neutral-500`), gap 12px, sem quebra de linha; o que não cabe rola (barra sobreposta, como no `stack`).
 - Altura 150 em Semana, 214 em Mês.
 
 ## Seção no cartão central
