@@ -184,6 +184,7 @@ export class BarManager {
       wifi: new SystemWifi(),
       bluetooth: new SystemBluetooth(),
       session: new SystemSession(),
+      notifications: this.notifications,
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -233,6 +234,7 @@ export class BarManager {
       mode: this.state.mode,
       cardOpen: this.state.cardOpen,
     });
+    if (route === 'stack') this.bars.forEach((bar) => bar.island.flashStack(entry));
     if (route !== 'notif') return;
     // Transitório: monitor da janela focada (specs/02-barra.md). Com `notif`
     // já aberto, a troca de conteúdo fica onde está.

@@ -6,7 +6,7 @@ import St from 'gi://St';
 import { formatClock, formatDay } from '../core/clock.js';
 import { getSize, type IslandState, type Mode, type SizeContext } from '../core/island.js';
 import type { SystemBluetooth } from '../system/bluetooth.js';
-import type { NotificationEntry } from '../system/notifications.js';
+import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { SystemSession } from '../system/session.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
@@ -19,6 +19,7 @@ import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
 import { notifContent, type NotificationRowActor } from './notificationRow.js';
 import { IslandPowerToggle, quickContent } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
+import { StackView, type StackViewActor } from './stackView.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
 
@@ -32,6 +33,7 @@ export interface IslandSystem {
   wifi: SystemWifi;
   bluetooth: SystemBluetooth;
   session: SystemSession;
+  notifications: NotificationFeed;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
@@ -73,6 +75,7 @@ export const Island = GObject.registerClass(
     private readonly wifiView: WifiViewActor;
     private readonly btView: BtViewActor;
     private readonly notifRow: NotificationRowActor;
+    private readonly stackView: StackViewActor;
     private readonly layers: ReadonlyMap<Mode, St.Widget>;
     private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
@@ -169,9 +172,18 @@ export const Island = GObject.registerClass(
       const notif = notifContent(() => this.state.closeAll());
       this.notifRow = notif.row;
 
+      this.stackView = new StackView(system.notifications, {
+        onSizeChanged: () => this.resize(),
+        onActivate: (entry: NotificationEntry) => {
+          this.state.closeAll();
+          entry.activate();
+        },
+      });
+
       this.layers = new Map<Mode, St.Widget>([
         ['compact', modeLayer(this.clockLabel)],
         ['notif', modeLayer(notif.content)],
+        ['stack', modeLayer(this.stackView)],
         ['volume', modeLayer(this.volumeRow)],
         ['brightness', modeLayer(this.brightnessRow)],
         ['quick', modeLayer(quickContent(this.quickRow, system.session, controls))],
@@ -235,6 +247,7 @@ export const Island = GObject.registerClass(
         () => {
           this.updateClock();
           this.notifRow.refreshTime();
+          this.stackView.refreshTimes();
           return GLib.SOURCE_CONTINUE;
         },
       );
@@ -243,6 +256,11 @@ export const Island = GObject.registerClass(
     /** Conteúdo do `notif`; o `BarManager` chama antes de abrir o modo. */
     setNotification(entry: NotificationEntry): void {
       this.notifRow.setEntry(entry);
+    }
+
+    /** Notificação nova com `stack` aberto (specs/04-notificacoes.md). */
+    flashStack(entry: NotificationEntry): void {
+      this.stackView.flash(entry);
     }
 
     /** Chamado pelo `BarManager` a cada mudança de modo ou de monitor-alvo. */
@@ -284,6 +302,7 @@ export const Island = GObject.registerClass(
     private sizeContext(): SizeContext {
       const powerOpen = this.state.powerOpen;
       return {
+        stackItemCount: this.stackView.itemCount,
         quickEnergyOpen: powerOpen,
         wifiEnergyOpen: powerOpen,
         wifiPasswordField: this.wifiView.passwordField,

@@ -58,6 +58,7 @@ export const dndIconName = 'bell-slash-fill';
 export const caretIconName = 'caret-down';
 export const closeIconName = 'x';
 export const notificationFallbackIconName = 'bell-fill';
+export const silentBellIconName = 'bell-slash';
 
 /**
  * Ícone de notificação de app nativo (specs/04-notificacoes.md): o simbólico

@@ -8,6 +8,8 @@ import { notificationText, type IncomingNotification } from '../core/notificatio
 const SHOWN_LIMIT = 8;
 
 export interface NotificationEntry {
+  /** Identidade estável entre leituras de `entries` (a notificação do Shell). */
+  readonly key: object;
   readonly appName: string;
   readonly text: string;
   readonly appIcon: Gio.Icon | null;
@@ -41,6 +43,7 @@ function toEntry(notification: MessageTray.Notification): NotificationEntry {
   const source = notification.source;
   const appName = source?.title ?? '';
   return {
+    key: notification,
     appName,
     text: notificationText(
       appName,
