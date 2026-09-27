@@ -52,7 +52,7 @@ St não entende `oklch()` nem `color-mix()`. Valores convertidos:
 
 | Design | St |
 |---|---|
-| `backdrop-filter: blur(16px)` nas pílulas, `blur(20px)` no cartão | `Shell.BlurEffect` com raio equivalente no ator de fundo |
+| `backdrop-filter: blur(16px)` nas pílulas, `blur(20px)` no cartão | Pílulas sem blur: o `Shell.BlurEffect` não segue o `border-radius` (spec 02). Cartão: `Shell.BlurEffect` com raio equivalente no ator de fundo |
 | Mola da ilha `cubic-bezier(.3,1.2,.4,1)` .46s | `ease()` com `Clutter.AnimationMode.EASE_OUT_BACK`, 460ms |
 | Cartões `cubic-bezier(.3,1.15,.4,1)` .4s | `EASE_OUT_BACK`, 400ms |
 | Crossfade de conteúdo `.22s ease` com atraso `.08s` | `ease()` de `opacity`, 220ms, `delay: 80` |

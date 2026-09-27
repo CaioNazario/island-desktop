@@ -1,11 +1,11 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
-import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import { derivedColors, layout } from './tokens.js';
 
-// Pílula flutuante (specs/02-barra.md): fundo translúcido + blur + anel 1px.
+// Pílula flutuante (specs/02-barra.md): fundo translúcido + anel 1px, sem blur:
+// o `Shell.BlurEffect` não segue o `border-radius` e deixa as quinas quadradas.
 export const Pill = GObject.registerClass(
   class Pill extends St.BoxLayout {
     constructor(params: Partial<St.BoxLayout.ConstructorProps> = {}) {
@@ -24,12 +24,6 @@ export const Pill = GObject.registerClass(
       });
 
       this.set_height(layout.barHeight);
-      this.add_effect(
-        new Shell.BlurEffect({
-          radius: 16,
-          mode: Shell.BlurMode.BACKGROUND,
-        }),
-      );
     }
   },
 );
