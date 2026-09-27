@@ -59,6 +59,7 @@ export const NotificationRow = GObject.registerClass(
     private readonly appLabel: St.Label;
     private readonly timeLabel: St.Label;
     private readonly textLabel: St.Label;
+    private readonly closeButton: St.Button;
     private receivedAtMs = 0;
 
     constructor(metrics: NotificationRowMetrics, onClose: () => void) {
@@ -105,7 +106,8 @@ export const NotificationRow = GObject.registerClass(
 
       this.add_child(block);
       this.add_child(lines);
-      this.add_child(closeButton(metrics, onClose));
+      this.closeButton = closeButton(metrics, onClose);
+      this.add_child(this.closeButton);
     }
 
     setEntry(entry: NotificationEntry): void {
@@ -114,6 +116,10 @@ export const NotificationRow = GObject.registerClass(
       this.textLabel.text = entry.text;
       this.receivedAtMs = entry.receivedAtMs;
       this.refreshTime();
+    }
+
+    isCloseTarget(actor: Clutter.Actor): boolean {
+      return this.closeButton.contains(actor);
     }
 
     /** "Atualiza a cada minuto enquanto visível" (specs/04-notificacoes.md). */

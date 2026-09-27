@@ -68,6 +68,7 @@ export const Island = GObject.registerClass(
     private readonly state: IslandState;
     private readonly onIslandClick: () => void;
     private readonly onEscape: () => void;
+    private readonly onPressOutside: (target: Clutter.Actor) => boolean;
     private readonly clockLabel: St.Label;
     private readonly volumeRow: SliderRowActor;
     private readonly brightnessRow: SliderRowActor;
@@ -88,6 +89,7 @@ export const Island = GObject.registerClass(
       system: IslandSystem,
       onIslandClick: () => void,
       onEscape: () => void,
+      onPressOutside: (target: Clutter.Actor) => boolean,
     ) {
       super({
         style_class: 'island',
@@ -124,6 +126,7 @@ export const Island = GObject.registerClass(
       this.state = state;
       this.onIslandClick = onIslandClick;
       this.onEscape = onEscape;
+      this.onPressOutside = onPressOutside;
 
       this.clockLabel = new St.Label({
         style: `
@@ -214,6 +217,8 @@ export const Island = GObject.registerClass(
             return Clutter.EVENT_PROPAGATE;
           const target = global.stage.get_event_actor(event);
           if (target && this.contains(target)) return Clutter.EVENT_PROPAGATE;
+          // O banner fica fora da ilha e do grab (specs/04-notificacoes.md).
+          if (target && this.onPressOutside(target)) return Clutter.EVENT_STOP;
           this.state.closeAll();
           return Clutter.EVENT_STOP;
         },

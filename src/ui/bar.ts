@@ -16,6 +16,7 @@ import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
 import { SystemVolume } from '../system/volume.js';
 import { SystemWifi } from '../system/wifi.js';
+import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } from './banner.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { RightPill } from './rightPill.js';
@@ -43,15 +44,23 @@ const BarChrome = GObject.registerClass(
     private readonly leftPill: PillActor;
     private readonly island: IslandActor;
     private readonly rightPill: PillActor;
+    private readonly banner: BannerActor;
 
-    constructor(leftPill: PillActor, island: IslandActor, rightPill: PillActor) {
+    constructor(
+      leftPill: PillActor,
+      island: IslandActor,
+      rightPill: PillActor,
+      banner: BannerActor,
+    ) {
       super({ reactive: false });
       this.leftPill = leftPill;
       this.island = island;
       this.rightPill = rightPill;
+      this.banner = banner;
       this.add_child(leftPill);
       this.add_child(island);
       this.add_child(rightPill);
+      this.add_child(banner);
     }
 
     // Altura via preferred size, sem ouvir notify::width/height da ilha: esses
@@ -63,7 +72,9 @@ const BarChrome = GObject.registerClass(
     // uiGroup usa ClutterFixedLayout, que aloca no tamanho preferido.
     override vfunc_get_preferred_height(_forWidth: number): [number, number] {
       const [, islandHeight] = this.island.get_preferred_height(-1);
-      const height = Math.max(layout.barHeight, islandHeight);
+      // O banner fica abaixo da ilha e também precisa de área no chrome.
+      const bannerBottom = this.banner.visible ? islandHeight + BANNER_GAP + BANNER_HEIGHT : 0;
+      const height = Math.max(layout.barHeight, islandHeight, bannerBottom);
       return [height, height];
     }
 
@@ -97,6 +108,15 @@ const BarChrome = GObject.registerClass(
       childBox.y1 = 0;
       childBox.y2 = layout.barHeight;
       this.rightPill.allocate(childBox);
+
+      // "`top` = altura atual da ilha + 8px (acompanha a ilha com a mesma
+      // mola)" (specs/04-notificacoes.md): a altura lida aqui já é a animada.
+      childBox.x1 =
+        layout.sideMargin + sideWidth + layout.pillGap + (islandWidth - BANNER_WIDTH) / 2;
+      childBox.x2 = childBox.x1 + BANNER_WIDTH;
+      childBox.y1 = islandHeight + BANNER_GAP;
+      childBox.y2 = childBox.y1 + BANNER_HEIGHT;
+      this.banner.allocate(childBox);
     }
   },
 );
@@ -115,6 +135,7 @@ const StrutActor = GObject.registerClass(
 
 class Bar {
   readonly island: IslandActor;
+  readonly banner: BannerActor;
   private readonly strut: InstanceType<typeof StrutActor>;
   private readonly chrome: InstanceType<typeof BarChrome>;
 
@@ -126,6 +147,7 @@ class Bar {
     onIslandClick: () => void,
     onEscape: () => void,
     onTrigger: (mode: Mode) => void,
+    onBannerOpen: () => void,
   ) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
@@ -136,10 +158,13 @@ class Bar {
     });
 
     const leftPill = new Pill();
-    const island = new Island(state, system, onIslandClick, onEscape);
+    this.banner = new Banner(onBannerOpen);
+    const island = new Island(state, system, onIslandClick, onEscape, (target: Clutter.Actor) =>
+      this.banner.handlePressUnderGrab(target),
+    );
     this.island = island;
     const rightPill = new RightPill(battery, () => onTrigger('quick'));
-    this.chrome = new BarChrome(leftPill, island, rightPill);
+    this.chrome = new BarChrome(leftPill, island, rightPill, this.banner);
     this.chrome.set_position(monitor.x, monitor.y);
     this.chrome.set_width(monitor.width);
     Main.layoutManager.addTopChrome(this.chrome, {
@@ -235,12 +260,22 @@ export class BarManager {
       cardOpen: this.state.cardOpen,
     });
     if (route === 'stack') this.bars.forEach((bar) => bar.island.flashStack(entry));
+    if (route === 'banner') this.bars[this.targetMonitorIndex]?.banner.present(entry);
     if (route !== 'notif') return;
     // Transitório: monitor da janela focada (specs/02-barra.md). Com `notif`
     // já aberto, a troca de conteúdo fica onde está.
     if (this.state.mode === 'compact') this.targetMonitorIndex = this.focusedMonitorIndex();
     this.bars.forEach((bar) => bar.island.setNotification(entry));
     this.state.openNotification(incoming.critical);
+  }
+
+  /** Clique no banner: abre `stack` naquela barra e marca tudo como lido. */
+  private handleBannerOpen(monitorIndex: number): void {
+    this.bars.forEach((bar) => bar.banner.dismiss());
+    this.targetMonitorIndex = monitorIndex;
+    this.state.openFromTrigger('stack');
+    this.notifications.markAllRead();
+    this.render();
   }
 
   private handleEscape(): void {
@@ -293,6 +328,7 @@ export class BarManager {
           () => this.handleIslandClick(index),
           () => this.handleEscape(),
           (mode) => this.handleBarTrigger(index, mode),
+          () => this.handleBannerOpen(index),
         ),
     );
     this.render();
