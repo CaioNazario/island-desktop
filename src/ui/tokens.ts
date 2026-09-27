@@ -39,8 +39,6 @@ export const derivedColors = {
 
   sidePillBg: 'rgba(22,24,38,0.82)', // bg 82%
   centralCardBg: 'rgba(22,24,38,0.92)', // bg 92%
-  islandExpandedGlow: 'rgba(145,132,217,0.18)', // accent 18%
-  centralCardGlow: 'rgba(145,132,217,0.10)', // accent 10%
   volumeThumbGlow: 'rgba(145,132,217,0.60)', // accent 60%
 
   btnPrimaryHover: 'rgba(145,132,217,0.12)',
@@ -88,16 +86,7 @@ export const layout = {
 export const effects = {
   islandSpring: { durationMs: 460, easing: 'EASE_OUT_BACK' },
   islandRadius: { durationMs: 460, easing: 'EASE' },
-  islandChrome: { durationMs: 300, easing: 'EASE' }, // linha de acento e sombra
-  islandShadow: {
-    drop: '0 18px 44px rgba(0,0,0,0.6)',
-    glow: `0 0 28px ${derivedColors.islandExpandedGlow}`,
-  },
-  // Banner de notificação (specs/04-notificacoes.md): brilho `accent` 18% 24px.
-  bannerShadow: {
-    drop: '0 18px 40px rgba(0,0,0,0.6)',
-    glow: `0 0 24px ${derivedColors.islandExpandedGlow}`,
-  },
+  islandChrome: { durationMs: 300, easing: 'EASE' }, // linha de acento
   // Entrada `translateY(-16px)` com `transform .4s cubic-bezier(.3,1.25,.4,1)`.
   bannerSlide: { durationMs: 400, offsetY: -16, easing: 'EASE_OUT_BACK' },
   bannerFade: { durationMs: 220, easing: 'EASE' },

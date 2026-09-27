@@ -36,7 +36,7 @@ Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entr
 
 - Abre ao clicar na ilha em `compact` quando "Clique na ilha abre" = **Calendário e música** (padrão, spec 13). Clicar de novo na ilha, Esc ou clique fora fecha.
 - 420px, centralizado, `top: 38px`. Entra com opacidade 220ms + `translateY(-10px) scale(.96)` → normal em 400ms `EASE_OUT_BACK`, origem no topo.
-- Raio 22, fundo `rgba(22,24,38,0.92)` + blur, anel `neutral-800` + sombra `0 24px 60px rgba(0,0,0,.6)` + brilho `accent` 10% 32px. Padding 18px.
+- Raio 22, fundo `rgba(22,24,38,0.92)` + blur, anel `neutral-800`, sem a sombra escura e o brilho do design (spec 03, "Animação"). Padding 18px.
 - **Seção de música**: capa 56×56 raio 12, artista 14px/500, título 12.5px `neutral-400`, ícone da fonte 22px `accent-400` alinhado ao topo. Progresso (margin-top 12px): barra 3px + `pos / duração` 10.5px `neutral-500`. Controles centralizados, gap 18px: 36/40/36 com ícones 17/24/17.
 - Divisor: 1px, gradiente transparente → `neutral-800` (15%–85%) → transparente, sangrando até as bordas do cartão (margin 14px −18px).
 - **Seção de calendário**: spec 06.

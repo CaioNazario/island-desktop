@@ -62,7 +62,7 @@ Padding 0 12px, gap 12px:
 
 ## Banner
 
-- 380px de largura, centralizado, `top` = altura atual da ilha + 8px (acompanha a ilha com a mesma mola). 58px de altura, raio 22, fundo `bg`, anel `neutral-800` + sombra `0 18px 40px rgba(0,0,0,.6)` + brilho `accent` 18% 24px.
+- 380px de largura, centralizado, `top` = altura atual da ilha + 8px (acompanha a ilha com a mesma mola). 58px de altura, raio 22, fundo `bg`, anel `neutral-800`, sem a sombra escura e o brilho do design (spec 03, "Animação").
 - Mesmo conteúdo do `notif` (bloco 34×34, ícone 19px, × 24×24).
 - Entra de `translateY(-16px)`, fica 4000ms. Clique abre `stack`; × dispensa só o banner.
 

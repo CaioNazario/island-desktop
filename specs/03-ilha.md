@@ -35,10 +35,10 @@ A máquina de estados vive em `src/core/island.ts` (pura, testada). A UI só ren
 
 ## Animação
 
-- Largura e altura: 460ms `EASE_OUT_BACK`; raio: 460ms ease; sombra: 300ms.
+- Largura e altura: 460ms `EASE_OUT_BACK`; raio: 460ms ease.
 - Cada modo é uma camada própria, centrada no topo da ilha, com o tamanho do seu modo. Troca de modo = crossfade: a camada que entra vai a opacidade 1 em 220ms com atraso de 80ms e escala 0.94→1 (300ms); a que sai faz o inverso. A camada `notif` entra de `translateY(-18px) scale(.96)`.
 - Linha de acento: 36×2 no topo central, `accent`, raio inferior 2px; opacidade 1 quando a ilha não está em `compact` ou o cartão central está aberto (300ms).
-- Sombra expandida: anel 1px `neutral-800` + `0 18px 44px rgba(0,0,0,.6)` + brilho `accent` 18% 28px. Compacta: só o anel. Se o St não compuser as três num ator, o anel vira `border` e o brilho um ator irmão.
+- Contorno: só o anel 1px `neutral-800` (`border` da superfície), expandida ou compacta. A sombra escura e o brilho `accent` do design saíram de propósito: no Shell eles aparecem como um halo quadrado em volta da ilha.
 - Cursor de mão só em `compact` e `notif`.
 
 ## Regras de transição

@@ -32,23 +32,11 @@ const CARD_PADDING = 18;
 // Entra de `translateY(-10px) scale(.96)`, origem no topo (specs/05-musica.md).
 const HIDDEN_OFFSET_Y = -10;
 const HIDDEN_SCALE = 0.96;
-const CARD_SHADOW = {
-  drop: '0 24px 60px rgba(0,0,0,0.6)',
-  glow: `0 0 32px ${derivedColors.centralCardGlow}`,
-};
 
 function singleLine(label: St.Label): St.Label {
   label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
   label.clutter_text.line_wrap = false;
   return label;
-}
-
-function shadowLayer(boxShadow: string): St.Widget {
-  return new St.Widget({
-    style: `border-radius: ${CARD_RADIUS}px; background-color: ${colors.bg}; box-shadow: ${boxShadow};`,
-    x_expand: true,
-    y_expand: true,
-  });
 }
 
 type MusicCoverActor = InstanceType<typeof MusicCover>;
@@ -317,8 +305,7 @@ export interface CenterCardOptions {
 }
 
 // Cartão central (specs/05-musica.md "Cartão central"): abre abaixo da ilha
-// compacta, que não muda de tamanho. Como na ilha, o St só compõe um
-// `box-shadow` por ator: sombra e brilho são irmãos atrás da superfície.
+// compacta, que não muda de tamanho.
 export const CenterCard = GObject.registerClass(
   class CenterCard extends St.Widget {
     private readonly options: CenterCardOptions;
@@ -358,8 +345,6 @@ export const CenterCard = GObject.registerClass(
       surface.add_child(divider);
       surface.add_child(this.calendar);
 
-      this.add_child(shadowLayer(CARD_SHADOW.glow));
-      this.add_child(shadowLayer(CARD_SHADOW.drop));
       this.add_child(surface);
 
       this.connectObject(

@@ -14,17 +14,8 @@ export const BANNER_HEIGHT = 58;
 export const BANNER_GAP = 8;
 const BANNER_RADIUS = 22;
 
-function shadowLayer(boxShadow: string): St.Widget {
-  return new St.Widget({
-    style: `border-radius: ${BANNER_RADIUS}px; background-color: ${colors.bg}; box-shadow: ${boxShadow};`,
-    x_expand: true,
-    y_expand: true,
-  });
-}
-
 // Banner abaixo da ilha ocupada (specs/04-notificacoes.md "Banner"): mesmo
-// conteúdo do `notif` em medidas menores. Como na ilha, o St só compõe um
-// `box-shadow` por ator: sombra e brilho são irmãos atrás da superfície.
+// conteúdo do `notif` em medidas menores.
 export const Banner = GObject.registerClass(
   class Banner extends St.Widget {
     private readonly row: NotificationRowActor;
@@ -70,8 +61,6 @@ export const Banner = GObject.registerClass(
       });
       surface.connectObject('clicked', () => onOpen(), this);
 
-      this.add_child(shadowLayer(effects.bannerShadow.glow));
-      this.add_child(shadowLayer(effects.bannerShadow.drop));
       this.add_child(surface);
       this.connectObject('destroy', () => this.clearTimer(), this);
     }
