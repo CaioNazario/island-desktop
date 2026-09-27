@@ -27,7 +27,7 @@ St não entende `oklch()` nem `color-mix()`. Valores convertidos:
 | Fundo do botão Energia aberto | `oklch(0.45 0.14 25)` | `#932b2a` |
 | Texto "Desligar" | `oklch(0.78 0.13 25)` | `#ff958d` |
 | Borda do campo de senha com erro | `oklch(0.55 0.16 25)` | `#bd413f` |
-| Pílulas laterais | `bg` 82% | `rgba(22,24,38,0.82)` |
+| Pílulas laterais | `bg` 92% | `rgba(22,24,38,0.92)` |
 | Cartão central | `bg` 92% | `rgba(22,24,38,0.92)` |
 | Brilho da ilha expandida | `accent` 18% | `rgba(145,132,217,0.18)` |
 | Brilho do cartão central | `accent` 10% | `rgba(145,132,217,0.10)` |

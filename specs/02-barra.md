@@ -5,7 +5,7 @@ Origem: `design/markup.html` linhas 5–28 (container e pílula esquerda) e 320�
 ## Layout
 
 - Container no topo de cada monitor: `left: 12px`, `right: 12px`, `top: 0`, três filhos em linha com `gap: 6px`, alinhados pelo topo (a ilha cresce para baixo sem mover as laterais).
-- **Pílulas laterais**: dividem igualmente o espaço que sobra da ilha (`flex: 1 1 0`); altura 30px, raio 15px, fundo `rgba(22,24,38,0.82)`, anel 1px `neutral-800`, padding horizontal 6px. Sem o blur do design: o `Shell.BlurEffect` é retangular (não segue o raio) e deixa as quinas quadradas.
+- **Pílulas laterais**: dividem igualmente o espaço que sobra da ilha (`flex: 1 1 0`); altura 30px, raio 15px, fundo `rgba(22,24,38,0.92)`, anel 1px `neutral-800`, padding horizontal 6px. Sem o blur do design: o `Shell.BlurEffect` é retangular (não segue o raio) e deixa as quinas quadradas.
 - **Ilha**: largura/altura/raio do modo atual (spec 03), centralizada entre as laterais.
 
 ### Pílula esquerda
