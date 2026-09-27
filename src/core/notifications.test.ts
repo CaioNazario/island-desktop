@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Mode } from './island.js';
 import {
   formatRelativeTime,
+  notificationText,
   routeNotification,
   type IncomingNotification,
 } from './notifications.js';
@@ -86,5 +87,49 @@ describe('formatRelativeTime', () => {
 
   it('relógio andando para trás conta como "agora"', () => {
     expect(formatRelativeTime(-5 * MIN)).toBe('agora');
+  });
+});
+
+describe('notificationText', () => {
+  it('junta título e corpo como no design ("Lucas: Bora no cinema hoje?")', () => {
+    expect(notificationText('Telegram', 'Lucas', 'Bora no cinema hoje?', false)).toBe(
+      'Lucas: Bora no cinema hoje?',
+    );
+  });
+
+  it('usa só o que existir quando falta título ou corpo', () => {
+    expect(notificationText('GitHub', '', 'ci: add dynamic island widget', false)).toBe(
+      'ci: add dynamic island widget',
+    );
+    expect(notificationText('Discord', 'Nova mensagem', '', false)).toBe('Nova mensagem');
+  });
+
+  it('omite o título quando ele repete o nome do app', () => {
+    expect(notificationText('Slack', 'Slack', 'Deploy concluído', false)).toBe('Deploy concluído');
+  });
+
+  it('achata quebras de linha e espaços em uma linha', () => {
+    expect(notificationText('App', 'Oi', 'linha 1\n\n  linha 2\t', false)).toBe(
+      'Oi: linha 1 linha 2',
+    );
+  });
+
+  it('com markup, remove as tags e decodifica as entidades', () => {
+    expect(
+      notificationText(
+        'App',
+        'Oi',
+        '<b>negrito</b> &amp; <a href="x">link</a> &lt;3 &#39;ok&#x27;',
+        true,
+      ),
+    ).toBe("Oi: negrito & link <3 'ok'");
+  });
+
+  it('entidade numérica fora do Unicode fica literal, sem lançar', () => {
+    expect(notificationText('App', '', 'a &#99999999; b', true)).toBe('a &#99999999; b');
+  });
+
+  it('sem markup, mantém o texto literal', () => {
+    expect(notificationText('App', '', '<b>x</b> &amp;', false)).toBe('<b>x</b> &amp;');
   });
 });
