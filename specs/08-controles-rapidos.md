@@ -119,4 +119,3 @@ Pareamento "Just Works" (fone) sem agente: validado no GNOME 50.4 / BlueZ 5.87 /
 - [x] Senha de 7 caracteres mostra o erro local sem tentativa de conexão.
 - [x] Rede 802.1X abre Configurações → Wi‑Fi.
 - [x] Parear um mouse Bluetooth sem PIN pela ilha funciona; a busca para ao fechar `bt`.
-- [ ] Sem adaptador Bluetooth, o tile de BT não aparece.
