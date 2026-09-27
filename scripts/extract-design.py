@@ -18,12 +18,13 @@ ICONS = ROOT / "icons"
 
 # Usados pelo código mas ausentes do design (specs/08-controles-rapidos.md:
 # ícone pelo tipo do dispositivo Bluetooth; specs/04-notificacoes.md: tabela
-# de sites).
+# de sites; specs/05-musica.md: ícone da fonte).
 EXTRA_ICONS = {
     ("fill", "laptop"),
     ("fill", "game-controller"),
     ("fill", "bluetooth"),
     ("fill", "whatsapp-logo"),
+    ("fill", "google-chrome-logo"),
 }
 
 ICON_CLASS = re.compile(r"\bph(?:-(bold|fill))? ph-([a-z0-9-]+)")
