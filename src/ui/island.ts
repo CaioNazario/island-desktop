@@ -136,7 +136,7 @@ export const Island = GObject.registerClass(
         this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi');
       const onBtTileClick = (): void =>
         this.state.openFromTrigger(this.state.mode === 'bt' ? 'quick' : 'bt');
-      this.quickRow = new ControlsRow(system, drag, onWifiTileClick, onBtTileClick);
+      this.quickRow = new ControlsRow(system, drag, { onWifiTileClick, onBtTileClick });
       this.wifiView = new WifiView(system, drag, {
         onWifiTileClick,
         onBtTileClick,

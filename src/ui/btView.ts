@@ -9,7 +9,7 @@ import {
   type BtDevice,
   type DeviceStatus,
 } from '../core/bluetooth.js';
-import { ControlsRow } from './controlsRow.js';
+import { ControlsRow, type ControlsRowOptions } from './controlsRow.js';
 import {
   batteryIconName,
   btDeviceIconName,
@@ -41,9 +41,7 @@ const STATUS: Record<DeviceStatus, { text: string; color: string }> = {
   pairing: { text: 'Pareando…', color: colors.neutral400 },
 };
 
-export interface BtViewCallbacks {
-  onWifiTileClick(): void;
-  onBtTileClick(): void;
+export interface BtViewCallbacks extends ControlsRowOptions {
   /** O rádio ligou/desligou: a ilha muda de altura. */
   onSizeChanged(): void;
   /** Abriu as Configurações: a ilha fecha pra janela não ficar atrás do grab. */
@@ -139,9 +137,7 @@ export const BtView = GObject.registerClass(
       this.system = system;
       this.callbacks = callbacks;
 
-      this.add_child(
-        new ControlsRow(system, drag, callbacks.onWifiTileClick, callbacks.onBtTileClick),
-      );
+      this.add_child(new ControlsRow(system, drag, callbacks));
       this.add_child(sectionDivider());
 
       const section = vertical({ style: 'padding: 0 12px;', y_expand: true });

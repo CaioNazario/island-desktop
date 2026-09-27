@@ -10,7 +10,7 @@ import {
   type WifiNetwork,
 } from '../core/wifi.js';
 import type { ConnectResult } from '../system/wifi.js';
-import { ControlsRow } from './controlsRow.js';
+import { ControlsRow, type ControlsRowOptions } from './controlsRow.js';
 import {
   concealIconName,
   keyIconName,
@@ -47,9 +47,7 @@ const ERROR_TEXT: Record<PasswordError, string> = {
 const PASSWORD_CHAR = '●';
 const EMPTY_BUTTON_OPACITY = Math.round(0.45 * 255);
 
-export interface WifiViewCallbacks {
-  onWifiTileClick(): void;
-  onBtTileClick(): void;
+export interface WifiViewCallbacks extends ControlsRowOptions {
   /** O painel de senha abriu/fechou ou ganhou/perdeu erro: a ilha muda de altura. */
   onSizeChanged(): void;
   /** Abriu as Configurações: a ilha fecha pra janela não ficar atrás do grab. */
@@ -100,9 +98,7 @@ export const WifiView = GObject.registerClass(
       this.system = system;
       this.callbacks = callbacks;
 
-      this.add_child(
-        new ControlsRow(system, drag, callbacks.onWifiTileClick, callbacks.onBtTileClick),
-      );
+      this.add_child(new ControlsRow(system, drag, callbacks));
       this.add_child(sectionDivider());
 
       const section = vertical({ style: 'padding: 0 12px;', y_expand: true });

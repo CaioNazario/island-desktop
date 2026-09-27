@@ -23,6 +23,11 @@ function divider(): St.Widget {
   });
 }
 
+export interface ControlsRowOptions {
+  onWifiTileClick(): void;
+  onBtTileClick(): void;
+}
+
 // Linha de controles comum a `quick`/`wifi`/`bt` (specs/08-controles-rapidos.md):
 // brilho, volume, e os quatro tiles. Configurações/Energia ficam pra spec 09.
 export const ControlsRow = GObject.registerClass(
@@ -35,12 +40,7 @@ export const ControlsRow = GObject.registerClass(
     private readonly unsubscribeWifi: () => void;
     private readonly unsubscribeBt: () => void;
 
-    constructor(
-      system: IslandSystem,
-      drag: DragHooks,
-      onWifiClick: () => void,
-      onBtClick: () => void,
-    ) {
+    constructor(system: IslandSystem, drag: DragHooks, options: ControlsRowOptions) {
       super({
         style: 'height: 58px; padding: 0 10px; spacing: 8px;',
         y_align: Clutter.ActorAlign.CENTER,
@@ -68,7 +68,7 @@ export const ControlsRow = GObject.registerClass(
         },
         onChange: (callback) => wifi.onChange(callback),
       };
-      this.wifiTile = new Tile(wifiTileIconName, wifiRadio, onWifiClick);
+      this.wifiTile = new Tile(wifiTileIconName, wifiRadio, () => options.onWifiTileClick());
       this.add_child(this.wifiTile);
       const bt = system.bluetooth;
       const btRadio: TileSource = {
@@ -77,7 +77,7 @@ export const ControlsRow = GObject.registerClass(
         },
         onChange: (callback) => bt.onChange(callback),
       };
-      this.btTile = new Tile(btIconName, btRadio, onBtClick);
+      this.btTile = new Tile(btIconName, btRadio, () => options.onBtTileClick());
       this.add_child(this.btTile);
       this.add_child(
         new Tile(nightLightIconName, system.nightLight, () => system.nightLight.toggle()),
