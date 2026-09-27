@@ -16,6 +16,7 @@ build: clean
 	mkdir -p dist/schemas
 	glib-compile-schemas schemas --targetdir=dist/schemas
 	cp metadata.json dist/
+	cp -r icons dist/
 
 dev: build
 	dbus-run-session gnome-shell --devkit --wayland
