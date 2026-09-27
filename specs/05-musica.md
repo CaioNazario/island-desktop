@@ -5,7 +5,7 @@ Origem: `design/markup.html` 73–91 (modo `music`) e 338–383 (cartão central
 ## Fonte: MPRIS
 
 - Serviço em `src/system/mpris.ts`: acompanha nomes `org.mpris.MediaPlayer2.*` no barramento de sessão (entrada, saída, `PropertiesChanged`, `Seeked`).
-- **Player atual**: o último que entrou em `Playing`. Pausado continua atual até outro tocar ou ele sair do barramento.
+- **Player atual**: o último que entrou em `Playing`. Pausado continua atual até outro tocar ou ele sair do barramento. `Stopped` ou sem título não é atual (o Brave fica no barramento em `Stopped` com metadados vazios quando o vídeo acaba) e volta a valer se tocar de novo. Na primeira leitura (o `enable()` roda a cada desbloqueio), os que já tocam têm prioridade sobre os pausados.
 - Dados: `xesam:artist` (array, junto com ", "), `xesam:title`, `mpris:length`, `mpris:artUrl`, `Position`, `PlaybackStatus`, `CanGoPrevious`/`CanGoNext`.
 - `Position` não gera sinal: ler ao abrir e avançar localmente a cada 1s enquanto tocando; ressincronizar em `Seeked` e em troca de faixa.
 - Capa: `file://` direto; `http(s)://` baixada de forma assíncrona para cache em `$XDG_CACHE_HOME/island/`. Sem capa: bloco `accent-900` com `ph-fill ph-music-note` 24px `accent-300`.
@@ -13,18 +13,21 @@ Origem: `design/markup.html` 73–91 (modo `music`) e 338–383 (cartão central
 
 ### Ícone da fonte
 
-| Player | Ícone |
+Pelo `Identity` do player, sem diferenciar maiúsculas:
+
+| `Identity` | Ícone |
 |---|---|
-| Spotify (app nativo) | `ph-fill ph-spotify-logo` |
-| Google Chrome / Chromium | `ph-fill ph-google-chrome-logo` |
-| Firefox | `ph-fill ph-firefox-logo` |
-| qualquer outro (inclui Brave) | `ph-fill ph-music-note` |
+| `Spotify` (app nativo) | `ph-fill ph-spotify-logo` |
+| `Chrome` / `Chromium` | `ph-fill ph-google-chrome-logo` |
+| qualquer outro (inclui `Brave` e `Mozilla firefox`) | `ph-fill ph-music-note` |
+
+O Phosphor não tem logo do Firefox, então ele fica com a nota.
 
 Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entrega. A Island não sabe qual site é: sem companion de navegador na v1.
 
 ## Modo `music` (500×82, transitório 4500ms)
 
-- **Gatilho**: troca de faixa (`mpris:trackid` ou título muda) com o player atual tocando, respeitando a regra 3 da spec 03. Descobrir um player já tocando não dispara.
+- **Gatilho**: troca de faixa (`mpris:trackid` ou título muda; o Firefox manda sempre o mesmo `trackid`) com o player atual tocando, respeitando a regra 3 da spec 03. Descobrir um player já tocando na primeira leitura não dispara; um player novo que já chega tocando dispara.
 - Padding 0 14px, gap 14px: capa 56×56 raio 12 · bloco de texto · controles · ícone da fonte 22px `accent-400`.
 - Texto: artista 13px/500, título 12px `neutral-400`. Progresso (margin-top 6px, 10px `neutral-500`): posição · barra 3px (`accent` sobre `neutral-800`) · duração. Tempo em `m:ss`.
 - Controles: anterior 34×34 (`ph-fill ph-skip-back` 17px), tocar/pausar 38×38 (`ph-fill ph-play`/`ph-pause` 22px), próxima 34×34 (`ph-fill ph-skip-forward` 17px); hover `neutral-900`. Qualquer controle rearma o timer. Botão desabilitado quando `CanGo*` é falso.
