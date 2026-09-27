@@ -113,6 +113,7 @@ export class IslandState {
   private _cardOpen = false;
   private _powerOpen = false;
   private hovering = false;
+  private notifSticky = false;
   private timerId: number | null = null;
 
   constructor(scheduler: Scheduler, options: IslandStateOptions = {}) {
@@ -156,6 +157,15 @@ export class IslandState {
     if (this._mode !== 'compact' && !isTransient(this._mode)) return false;
     this.setMode(mode);
     return true;
+  }
+
+  /**
+   * Notificação roteada para `notif` (specs/04-notificacoes.md): abre ou
+   * troca o conteúdo e rearma o timer. Crítica não fecha sozinha.
+   */
+  openNotification(critical: boolean): void {
+    this.notifSticky = critical;
+    this.setMode('notif');
   }
 
   /** Tecla de volume/brilho: regra 4. */
@@ -239,6 +249,7 @@ export class IslandState {
     this.clearTimer();
     const ms = TRANSIENT_MS[mode];
     if (ms === undefined || this.hovering) return;
+    if (mode === 'notif' && this.notifSticky) return;
     this.timerId = this.scheduler.setTimeout(() => {
       this.timerId = null;
       if (this._mode === mode) {

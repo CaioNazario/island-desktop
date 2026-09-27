@@ -184,6 +184,49 @@ describe('IslandState', () => {
     expect(state.escape(false)).toBe('noop');
   });
 
+  it('spec 04: notificação abre notif e fecha em 4200ms', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openNotification(false);
+    expect(state.mode).toBe('notif');
+    scheduler.advance(4200);
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 04: nova notificação em notif rearma o timer', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openNotification(false);
+    scheduler.advance(3000);
+    state.openNotification(false);
+    scheduler.advance(3000);
+    expect(state.mode).toBe('notif');
+    scheduler.advance(1200);
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 04: notif de notificação crítica não fecha sozinho, nem depois do hover', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openNotification(true);
+    scheduler.advance(60_000);
+    expect(state.mode).toBe('notif');
+
+    state.hoverStart();
+    state.hoverEnd();
+    scheduler.advance(60_000);
+    expect(state.mode).toBe('notif');
+  });
+
+  it('spec 04: notificação comum depois de uma crítica volta a fechar sozinha', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openNotification(true);
+    state.openNotification(false);
+    scheduler.advance(4200);
+    expect(state.mode).toBe('compact');
+  });
+
   it('onChange dispara em toda transição de mode/cardOpen, mas não em no-ops', () => {
     const scheduler = new FakeScheduler();
     let changes = 0;

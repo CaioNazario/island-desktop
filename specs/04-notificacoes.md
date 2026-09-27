@@ -39,7 +39,9 @@ Toda notificação nova acende o ponto de não lido do sino.
 
 ### Não perturbe
 
-Com "Não perturbe" ligado (`org.gnome.desktop.notifications show-banners = false`), a notificação vai direto para a lista, sem abrir `notif` nem banner. Urgência **crítica** fura o DND e segue a tabela acima; `notif` de notificação crítica não fecha sozinho.
+Com "Não perturbe" ligado (`org.gnome.desktop.notifications show-banners = false`), a notificação vai direto para a lista, sem abrir `notif` nem banner. A fonte é o `policy.showBanners` da notificação, que junta o DND com a opção "banners" por app das Configurações. Urgência **crítica** fura o DND e segue a tabela acima; `notif` de notificação crítica não fecha sozinho.
+
+Como no Shell (`_onNotificationRequestBanner`, `js/ui/messageTray.js`, 50.4), notificação de urgência **baixa** ou que já chega reconhecida (app residente com foco) vai só para a lista.
 
 ## Modo `notif` (400×62)
 
