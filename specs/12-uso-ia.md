@@ -64,7 +64,7 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 ## Critérios de aceite
 
 - [x] Testes de `aiUsage.ts`: parse dos dois payloads, janelas do Codex fora de ordem, campos ausentes, formatação de "Reinicia", faixas de cor.
-- [ ] Nenhuma escrita em `~/.claude` ou `~/.codex` durante a execução (verificável por `inotifywait`).
-- [ ] Sem `~/.codex/auth.json`, o cartão do Codex mostra "Faça login no Codex", o Codex some do botão na pílula e o Claude funciona normalmente.
-- [ ] Rodar o Claude Code (que renova o token) faz o cartão sair do estado expirado sem reiniciar a extensão.
+- [x] Nenhuma escrita em `~/.claude` ou `~/.codex` durante a execução (verificável por `inotifywait`).
+- [x] Sem `~/.codex/auth.json`, o cartão do Codex mostra "Faça login no Codex", o Codex some do botão na pílula e o Claude funciona normalmente.
+- [x] Rodar o Claude Code (que renova o token) faz o cartão sair do estado expirado sem reiniciar a extensão.
 - [x] Resposta HTTP malformada não gera exceção no log do Shell.
