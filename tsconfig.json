@@ -16,7 +16,8 @@
       "@girs/gnome-shell/extensions/global",
       "@girs/gjs/dom",
       "@girs/gweather-4.0/ambient",
-      "@girs/geoclue-2.0/ambient"
+      "@girs/geoclue-2.0/ambient",
+      "@girs/soup-3.0/ambient"
     ]
   },
   "include": ["src"]
