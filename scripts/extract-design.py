@@ -18,7 +18,7 @@ ICONS = ROOT / "icons"
 
 # Usados pelo código mas ausentes do design (specs/08-controles-rapidos.md:
 # ícone pelo tipo do dispositivo Bluetooth; specs/04-notificacoes.md: tabela
-# de sites; specs/05-musica.md: ícone da fonte).
+# de sites; specs/05-musica.md: ícone da fonte; specs/07-clima.md: condição).
 EXTRA_ICONS = {
     ("fill", "laptop"),
     ("fill", "game-controller"),
@@ -26,6 +26,13 @@ EXTRA_ICONS = {
     ("fill", "whatsapp-logo"),
     ("fill", "google-chrome-logo"),
     ("fill", "music-note"),
+    ("fill", "cloud-sun"),
+    ("fill", "cloud-moon"),
+    ("fill", "cloud"),
+    ("fill", "cloud-fog"),
+    ("fill", "cloud-rain"),
+    ("fill", "cloud-lightning"),
+    ("fill", "snowflake"),
 }
 
 ICON_CLASS = re.compile(r"\bph(?:-(bold|fill))? ph-([a-z0-9-]+)")
