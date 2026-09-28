@@ -12,6 +12,7 @@ const normal: IncomingNotification = {
   low: false,
   acknowledged: false,
   bannersAllowed: true,
+  fromBrowser: false,
 };
 
 const island = (mode: Mode, cardOpen = false) => ({ mode, cardOpen });

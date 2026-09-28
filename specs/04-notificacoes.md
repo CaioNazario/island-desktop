@@ -30,7 +30,7 @@ Regra pura em `src/core/notificationSource.ts`, com a tabela como constante no m
 
 | Estado da ilha | Resultado |
 |---|---|
-| `compact` sem cartão aberto | abre `notif` (2500ms) |
+| `compact` sem cartão aberto | abre `notif` (2500ms; 2100ms se o app for navegador: Brave, Google Chrome, Chromium ou Firefox) |
 | `notif` | troca o conteúdo pela nova e rearma o timer |
 | `stack` | entra no topo da lista com fundo `accent-900` por 2500ms (transição 600ms) |
 | qualquer outro modo, ou cartão central aberto | **banner** abaixo da ilha; nada aberto é substituído |

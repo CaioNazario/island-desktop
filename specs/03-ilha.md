@@ -9,7 +9,7 @@ A máquina de estados vive em `src/core/island.ts` (pura, testada). A UI só ren
 | Modo | L × A (px) | Raio | Tipo | Spec |
 |---|---|---|---|---|
 | `compact` | 240 × 30 | 15 | — | abaixo |
-| `notif` | 400 × 62 | 22 | transitório 2500ms | 04 |
+| `notif` | 400 × 62 | 22 | transitório 2500ms (navegador 2100ms) | 04 |
 | `stack` | 400 × (56 + min(6, n)·52), vazia 56 + 72 | 24 | fixo | 04 |
 | `music` | 500 × 82 | 26 | transitório 2500ms | 05 |
 | `volume` | 320 × 50 | 25 | transitório 1500ms | 08 |

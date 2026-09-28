@@ -2,7 +2,7 @@ import type Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
-import { identifySource } from '../core/notificationSource.js';
+import { identifySource, isBrowserApp } from '../core/notificationSource.js';
 import { notificationText, type IncomingNotification } from '../core/notifications.js';
 
 /** Quantas a lista mostra (specs/04-notificacoes.md "Modo `stack`"). */
@@ -73,6 +73,7 @@ function toIncoming(notification: MessageTray.Notification): IncomingNotificatio
     low: notification.urgency === MessageTray.Urgency.LOW,
     acknowledged: notification.acknowledged,
     bannersAllowed: notification.source?.policy.showBanners ?? true,
+    fromBrowser: isBrowserApp(notification.source?.title ?? ''),
   };
 }
 

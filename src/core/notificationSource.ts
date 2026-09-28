@@ -30,6 +30,11 @@ const UNKNOWN_SITE_GLYPH = 'globe';
 // não manda a origem em nenhum campo, então fica como app.
 const CHROMIUM_BROWSERS: ReadonlySet<string> = new Set(['Brave', 'Google Chrome', 'Chromium']);
 
+/** App de navegador, identificando o site ou não (o `notif` dele fecha mais cedo, specs/04-notificacoes.md). */
+export function isBrowserApp(appName: string): boolean {
+  return CHROMIUM_BROWSERS.has(appName) || appName === 'Firefox';
+}
+
 // Sem a Public Suffix List inteira: só os sufixos de segundo nível comuns, o
 // bastante para `globo.com.br` virar "Globo" e não "Com".
 const SECOND_LEVEL_SUFFIXES: ReadonlySet<string> = new Set([

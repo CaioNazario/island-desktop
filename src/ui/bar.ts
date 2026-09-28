@@ -129,7 +129,7 @@ export class BarManager {
     // já aberto, a troca de conteúdo fica onde está.
     if (this.state.mode === 'compact') this.targetMonitorIndex = this.focusedMonitorIndex();
     this.bars.forEach((bar) => bar.island.setNotification(entry));
-    this.state.openNotification(incoming.critical);
+    this.state.openNotification(incoming.critical, incoming.fromBrowser);
   }
 
   /** Troca de faixa: abre `music` pela regra 3 da spec 03 (specs/05-musica.md). */

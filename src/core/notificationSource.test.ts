@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { identifySource } from './notificationSource.js';
+import { identifySource, isBrowserApp } from './notificationSource.js';
 
 // Payloads reais no GNOME 50 (spike S1): `new Notification(título, {body:
 // "oi"})` em web.whatsapp.com, vistos pelo `dbus-monitor`. `appName` é o
@@ -101,5 +101,15 @@ describe('identifySource', () => {
       glyph: null,
       body: 'oi',
     });
+  });
+});
+
+describe('isBrowserApp', () => {
+  it.each(['Brave', 'Google Chrome', 'Chromium', 'Firefox'])('%s é navegador', (appName) => {
+    expect(isBrowserApp(appName)).toBe(true);
+  });
+
+  it('app nativo não é navegador', () => {
+    expect(isBrowserApp('Telegram')).toBe(false);
   });
 });

@@ -13,6 +13,8 @@ export interface IncomingNotification {
   acknowledged: boolean;
   /** `showBanners` da política da fonte: "Não perturbe" + a opção por app. */
   bannersAllowed: boolean;
+  /** Veio de um navegador (`isBrowserApp`). */
+  fromBrowser: boolean;
 }
 
 export interface IslandSnapshot {

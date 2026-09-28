@@ -236,6 +236,31 @@ describe('IslandState', () => {
     expect(state.mode).toBe('compact');
   });
 
+  it('spec 04: notificação de navegador fecha em 2100ms, também depois do hover', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openNotification(false, true);
+    scheduler.advance(2100);
+    expect(state.mode).toBe('compact');
+
+    state.openNotification(false, true);
+    state.hoverStart();
+    state.hoverEnd();
+    scheduler.advance(2100);
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 04: nativa trocando uma de navegador volta aos 2500ms', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openNotification(false, true);
+    state.openNotification(false);
+    scheduler.advance(2100);
+    expect(state.mode).toBe('notif');
+    scheduler.advance(400);
+    expect(state.mode).toBe('compact');
+  });
+
   it('onChange dispara em toda transição de mode/cardOpen, mas não em no-ops', () => {
     const scheduler = new FakeScheduler();
     let changes = 0;

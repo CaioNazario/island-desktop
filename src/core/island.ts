@@ -22,6 +22,9 @@ const TRANSIENT_MS: Partial<Record<Mode, number>> = {
   brightness: 1500,
 };
 
+/** `notif` de notificação de navegador (specs/04-notificacoes.md). */
+const BROWSER_NOTIF_MS = 2100;
+
 /** Modos com a linha de controles, onde fica o botão Energia (specs/09-sessao-energia.md). */
 const POWER_MODES: ReadonlySet<Mode> = new Set<Mode>(['quick', 'wifi', 'bt']);
 
@@ -117,6 +120,7 @@ export class IslandState {
   private _powerOpen = false;
   private hovering = false;
   private notifSticky = false;
+  private notifFromBrowser = false;
   private timerId: number | null = null;
 
   constructor(scheduler: Scheduler, options: IslandStateOptions = {}) {
@@ -164,10 +168,12 @@ export class IslandState {
 
   /**
    * Notificação roteada para `notif` (specs/04-notificacoes.md): abre ou
-   * troca o conteúdo e rearma o timer. Crítica não fecha sozinha.
+   * troca o conteúdo e rearma o timer. Crítica não fecha sozinha; a de
+   * navegador fecha em 2100ms.
    */
-  openNotification(critical: boolean): void {
+  openNotification(critical: boolean, fromBrowser = false): void {
     this.notifSticky = critical;
+    this.notifFromBrowser = fromBrowser;
     this.setMode('notif');
   }
 
@@ -250,7 +256,7 @@ export class IslandState {
 
   private arm(mode: Mode): void {
     this.clearTimer();
-    const ms = TRANSIENT_MS[mode];
+    const ms = mode === 'notif' && this.notifFromBrowser ? BROWSER_NOTIF_MS : TRANSIENT_MS[mode];
     if (ms === undefined || this.hovering) return;
     if (mode === 'notif' && this.notifSticky) return;
     this.timerId = this.scheduler.setTimeout(() => {
