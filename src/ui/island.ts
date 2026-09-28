@@ -18,7 +18,7 @@ import { BtView, type BtViewActor } from './btView.js';
 import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
-import { hideLayer, modeLayer, showLayer } from './modeLayer.js';
+import { hideLayer, modeLayer, ModeLayersLayout, showLayer } from './modeLayer.js';
 import { MusicModeRow } from './musicView.js';
 import { notifContent, type NotificationRowActor } from './notificationRow.js';
 import { IslandPowerToggle, quickContent } from './powerRow.js';
@@ -28,6 +28,7 @@ import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
+const ISLAND_RING = 1;
 
 export interface IslandSystem {
   volume: SystemVolume;
@@ -102,7 +103,7 @@ export const Island = GObject.registerClass(
       });
 
       this.surface = new St.Widget({
-        layout_manager: new Clutter.BinLayout(),
+        layout_manager: new ModeLayersLayout(),
         clip_to_allocation: true,
         x_expand: true,
         y_expand: true,
@@ -339,9 +340,10 @@ export const Island = GObject.registerClass(
       if (mode === 'bt') this.btView.onOpen();
     }
 
+    // As camadas ficam dentro do anel da `surface`.
     private syncLayerSize(mode: Mode): void {
       const size = getSize(mode, this.sizeContext());
-      this.layers.get(mode)?.set_size(size.width, size.height);
+      this.layers.get(mode)?.set_size(size.width - 2 * ISLAND_RING, size.height - 2 * ISLAND_RING);
     }
 
     private updateClock(): void {
@@ -356,7 +358,7 @@ export const Island = GObject.registerClass(
     set radius(radius: number) {
       if (this.radiusPx === radius) return;
       this.radiusPx = radius;
-      this.surface.style = `background-color: ${colors.bg}; border-radius: ${radius}px; border: 1px solid ${colors.neutral800};`;
+      this.surface.style = `background-color: ${colors.bg}; border-radius: ${radius}px; border: ${ISLAND_RING}px solid ${colors.neutral800};`;
       this.notify('radius');
     }
 

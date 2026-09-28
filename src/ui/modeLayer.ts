@@ -1,23 +1,50 @@
 import Clutter from 'gi://Clutter';
+import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import type { Mode } from '../core/island.js';
 import { effects } from './tokens.js';
 
+// Layout da `surface` da ilha: cada camada no seu tamanho preferido,
+// centrada no topo, mesmo maior que a ilha. O `BinLayout` espremeria a
+// camada até o tamanho da ilha durante a animação (CLAMP em
+// `clutter_actor_allocate_align_fill`, mutter 50.4).
+export const ModeLayersLayout = GObject.registerClass(
+  class ModeLayersLayout extends Clutter.LayoutManager {
+    override vfunc_get_preferred_width(
+      container: Clutter.Actor,
+      forHeight: number,
+    ): [number, number] {
+      let natural = 0;
+      for (const child of container.get_children())
+        natural = Math.max(natural, child.get_preferred_width(forHeight)[1]);
+      return [0, natural];
+    }
+
+    override vfunc_get_preferred_height(
+      container: Clutter.Actor,
+      forWidth: number,
+    ): [number, number] {
+      let natural = 0;
+      for (const child of container.get_children())
+        natural = Math.max(natural, child.get_preferred_height(forWidth)[1]);
+      return [0, natural];
+    }
+
+    override vfunc_allocate(container: Clutter.Actor, box: Clutter.ActorBox): void {
+      for (const child of container.get_children()) {
+        const [, width] = child.get_preferred_width(-1);
+        child.allocate_preferred_size(box.x1 + (box.get_width() - width) / 2, box.y1);
+      }
+    }
+  },
+);
+
 // Camada de um modo (specs/03-ilha.md "Cada modo é uma camada própria,
 // centrada no topo da ilha, com o tamanho do seu modo"): o conteúdo mantém o
 // layout final enquanto a ilha anima, e a `surface` corta o que sobra.
-//
-// O `BinLayout` só respeita `x_align`/`y_align` de filho com `*_expand`; sem
-// isso, centraliza.
 export function modeLayer(content: Clutter.Actor): St.Widget {
-  const layer = new St.Widget({
-    layout_manager: new Clutter.BinLayout(),
-    x_expand: true,
-    y_expand: true,
-    x_align: Clutter.ActorAlign.CENTER,
-    y_align: Clutter.ActorAlign.START,
-  });
+  const layer = new St.Widget({ layout_manager: new Clutter.BinLayout() });
   layer.set_pivot_point(0.5, 0.5);
   layer.add_child(content);
   return layer;
