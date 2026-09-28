@@ -82,9 +82,7 @@ export const layout = {
 } as const;
 
 export const effects = {
-  islandSpring: { durationMs: 460, easing: 'EASE_OUT_BACK' },
-  // Abertura de `wifi` e `bt`: crescem ~240px, então mais devagar e sem repique.
-  radioOpen: { durationMs: 550, easing: 'EASE_OUT_CUBIC' },
+  islandSpring: { durationMs: 460, bezier: [0.3, 1.2, 0.4, 1] }, // `easeSpring` em spring.ts
   islandChrome: { durationMs: 300, easing: 'EASE' }, // linha de acento
   // Entrada `translateY(-16px)` com `transform .4s cubic-bezier(.3,1.25,.4,1)`.
   bannerSlide: { durationMs: 400, offsetY: -16, easing: 'EASE_OUT_BACK' },

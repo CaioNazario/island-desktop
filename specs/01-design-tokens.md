@@ -51,7 +51,7 @@ St não entende `oklch()` nem `color-mix()`. Valores convertidos:
 | Design | St |
 |---|---|
 | `backdrop-filter: blur(16px)` nas pílulas, `blur(20px)` no cartão | Sem blur: o `Shell.BlurEffect` não segue o `border-radius` e deixa as quinas quadradas (spec 02) |
-| Mola da ilha `cubic-bezier(.3,1.2,.4,1)` .46s | `ease()` com `Clutter.AnimationMode.EASE_OUT_BACK`, 460ms |
+| Mola da ilha `cubic-bezier(.3,1.2,.4,1)` .46s | `ease()` de 460ms + `set_cubic_bezier_progress((.3,1.2), (.4,1))` nas transições criadas (`easeSpring` em `src/ui/spring.ts`). Não usar `EASE_OUT_BACK`: passa ~10% do alvo, a curva do design ~1,25% |
 | Cartões `cubic-bezier(.3,1.15,.4,1)` .4s | `EASE_OUT_BACK`, 400ms |
 | Crossfade de conteúdo `.22s ease` com atraso `.08s` | `ease()` de `opacity`, 220ms, `delay: 80` |
 | Auto-ocultar `cubic-bezier(.2,.8,.2,1)` .32s | `EASE_OUT_CUBIC`, 320ms |

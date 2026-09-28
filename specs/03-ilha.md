@@ -37,9 +37,7 @@ Os tempos dos transitórios são mais curtos que o `TRANSIENT` do design (4200/4
 
 ## Animação
 
-- Largura e altura: 460ms `EASE_OUT_BACK`; raio: 460ms ease.
-- Voltar a `compact`: 460ms `EASE_OUT_CUBIC`, sem repique. Com a mola, a ilha encolhe abaixo do compacto e, vindo de um modo alto (cartão central), a altura passa de 0 e a ilha pisca no tamanho do modo que saiu.
-- Entrar em `wifi` ou `bt`, ou sair deles para outro modo que não `compact` (tile de volta a `quick`): 550ms `EASE_OUT_CUBIC`, sem repique, e o raio na mesma duração. Eles crescem ~240px; com a mola padrão a abertura parece rápida demais e o repique recolhe a borda de baixo, e no fechamento a ilha encolhe abaixo do `quick` e repica.
+- Largura e altura: 460ms na mola `cubic-bezier(.3,1.2,.4,1)` (spec 01), em toda mudança de tamanho: troca de modo, voltar a `compact`, linha de energia, senha do `wifi`, rádio do `bt`. Raio: 460ms ease.
 - Cada modo é uma camada própria, centrada no topo da ilha, com o tamanho do seu modo. Troca de modo = crossfade: a camada que entra vai a opacidade 1 em 220ms com atraso de 80ms e escala 0.94→1 (300ms); a que sai faz o inverso. A camada `notif` entra de `translateY(-18px) scale(.96)`.
 - Linha de acento: 36×2 no topo central, `accent`, raio inferior 2px; opacidade 1 quando a ilha não está em `compact` ou o cartão central está aberto (300ms).
 - Contorno: só o anel 1px `neutral-800` (`border` da superfície), expandida ou compacta. A sombra escura e o brilho `accent` do design saíram de propósito: no Shell eles aparecem como um halo quadrado em volta da ilha.

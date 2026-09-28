@@ -16,6 +16,7 @@ import {
 import { getSize } from '../core/island.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import { phosphor } from './icons.js';
+import { easeSpring } from './spring.js';
 import { colors, effects } from './tokens.js';
 
 // Peças do calendário compartilhadas pela seção do cartão central e pelo modo
@@ -104,12 +105,11 @@ export const CalendarGrid = GObject.registerClass(
       const [, to] = grid.get_preferred_height(-1);
       if (to === from) return;
       grid.height = from;
-      grid.ease({
-        height: to,
-        duration: this.heightDurationMs,
-        mode: Clutter.AnimationMode.EASE_OUT_BACK,
-        onComplete: () => (grid.height = -1),
-      });
+      easeSpring(
+        grid,
+        { height: to },
+        { duration: this.heightDurationMs, onComplete: () => (grid.height = -1) },
+      );
     }
 
     private dayCell(day: CalendarDay): St.Widget {

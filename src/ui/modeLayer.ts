@@ -110,33 +110,6 @@ function hiddenTransform(mode: LayerId): {
     : { scaleX: hiddenScale, scaleY: hiddenScale, translationY: 0 };
 }
 
-export interface Spring {
-  duration: number;
-  mode: Clutter.AnimationMode;
-}
-
-export const ISLAND_SPRING: Spring = {
-  duration: effects.islandSpring.durationMs,
-  mode: Clutter.AnimationMode.EASE_OUT_BACK,
-};
-
-/** Mesma duração da mola, sem repique. */
-export const ISLAND_EASE: Spring = {
-  duration: effects.islandSpring.durationMs,
-  mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
-};
-
-/** Mola da ilha ao entrar no modo (specs/03-ilha.md "Animação"). */
-export function openSpring(mode: LayerId, previous: LayerId): Spring {
-  // Fechar sem repique: abaixo do compacto a altura passa de 0 e a ilha volta
-  // por um quadro ao tamanho preferido, o do modo que saiu.
-  if (mode === 'compact') return ISLAND_EASE;
-  // Sair de `wifi`/`bt` pelo tile encolhe os mesmos ~240px da abertura.
-  const radio = (id: LayerId) => id === 'wifi' || id === 'bt';
-  if (!radio(mode) && !radio(previous)) return ISLAND_SPRING;
-  return { duration: effects.radioOpen.durationMs, mode: Clutter.AnimationMode.EASE_OUT_CUBIC };
-}
-
 // Crossfade (specs/03-ilha.md "Animação"): a camada que entra vai a
 // opacidade 1 em 220ms com atraso de 80ms e escala 0.94→1 em 300ms; a que
 // sai faz o inverso.
