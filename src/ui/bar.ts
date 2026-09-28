@@ -19,6 +19,7 @@ import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
 import { SystemVolume } from '../system/volume.js';
 import { SystemWifi } from '../system/wifi.js';
+import { SystemWeather } from '../system/weather.js';
 import { Bar } from './barChrome.js';
 import type { IslandSystem } from './island.js';
 
@@ -45,6 +46,7 @@ export class BarManager {
   private readonly notifications = new SystemNotifications();
   private readonly music = new SystemMpris();
   private readonly calendar = new SystemCalendarEvents();
+  private readonly weather: SystemWeather;
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -63,6 +65,7 @@ export class BarManager {
       onChange: () => this.render(),
       log: (message, caller) => debugLog(caller ? `${message} at ${callerStack(3)}` : message),
     });
+    this.weather = new SystemWeather(settings);
     this.system = {
       volume: new SystemVolume(),
       brightness: new SystemBrightness(),
@@ -77,6 +80,7 @@ export class BarManager {
       notifications: this.notifications,
       music: this.music,
       calendar: this.calendar,
+      weather: this.weather,
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -272,6 +276,7 @@ export class BarManager {
     this.notifications.destroy();
     this.music.destroy();
     this.calendar.destroy();
+    this.weather.destroy();
     this.osdRedirect.destroy();
   }
 }

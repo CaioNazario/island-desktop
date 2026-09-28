@@ -14,6 +14,7 @@ import type { MusicSource } from '../system/mpris.js';
 import type { SystemSession } from '../system/session.js';
 import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
+import type { WeatherSource } from '../system/weather.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BtView, type BtViewActor } from './btView.js';
 import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
@@ -34,11 +35,19 @@ import { IslandPowerToggle, quickContent } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { easeSpring } from './spring.js';
 import { StackView, type StackViewActor } from './stackView.js';
+import { WeatherItem } from './weatherItem.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
 const ISLAND_RING = 1;
+
+const COMPACT_TEXT_STYLE = `
+  color: #e9e9ed;
+  font-weight: 500;
+  font-size: 13px;
+  font-feature-settings: "tnum";
+`;
 
 export interface IslandSystem {
   volume: SystemVolume;
@@ -51,6 +60,7 @@ export interface IslandSystem {
   notifications: NotificationFeed;
   music: MusicSource;
   calendar: CalendarEventsSource;
+  weather: WeatherSource;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
@@ -119,15 +129,29 @@ export const Island = GObject.registerClass(
       this.onPressOutside = onPressOutside;
 
       this.clockLabel = new St.Label({
-        style: `
-          color: #e9e9ed;
-          font-weight: 500;
-          font-size: 13px;
-          font-feature-settings: "tnum";
-        `,
+        style: COMPACT_TEXT_STYLE,
         y_align: Clutter.ActorAlign.CENTER,
-        x_align: Clutter.ActorAlign.CENTER,
       });
+      // `[clima] · [hora] · [dia]`: sem clima, o item e seu separador somem.
+      const weatherItem = new WeatherItem(system.weather);
+      const weatherSeparator = new St.Label({
+        text: ' · ',
+        style: COMPACT_TEXT_STYLE,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+      weatherItem.bind_property(
+        'visible',
+        weatherSeparator,
+        'visible',
+        GObject.BindingFlags.SYNC_CREATE,
+      );
+      const compact = new St.BoxLayout({
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+      compact.add_child(weatherItem);
+      compact.add_child(weatherSeparator);
+      compact.add_child(this.clockLabel);
       const drag = { start: () => this.state.dragStart(), end: () => this.state.dragEnd() };
       this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 7, system.volume, drag);
       this.brightnessRow = new SliderRow(brightnessIconName, 6, system.brightness, drag);
@@ -182,7 +206,7 @@ export const Island = GObject.registerClass(
       });
 
       this.layers = new Map<LayerId, St.Widget>([
-        ['compact', modeLayer(this.clockLabel)],
+        ['compact', modeLayer(compact)],
         ['notif', modeLayer(notif.content)],
         ['stack', modeLayer(this.stackView)],
         ['music', modeLayer(new MusicModeRow(system.music, () => this.state.keepAlive()))],
