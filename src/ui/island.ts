@@ -233,7 +233,10 @@ export const Island = GObject.registerClass(
         'enter-event',
         (_actor: St.Widget, event: Clutter.Event) => {
           debugLog(this.crossingLog('enter', event));
-          if (this.isTargetMonitor) this.state.hoverStart();
+          // Com o grab modal, o Clutter entrega crossings à ilha mesmo com o
+          // ponteiro fora dela; sem o `leave` correspondente depois do
+          // `popModal`, o hover ficaria preso e os transitórios não fechariam.
+          if (this.isTargetMonitor && this.containsPointer(event)) this.state.hoverStart();
         },
         'leave-event',
         (_actor: St.Widget, event: Clutter.Event) => {
@@ -296,6 +299,13 @@ export const Island = GObject.registerClass(
           ? Clutter.CursorType.POINTER
           : Clutter.CursorType.DEFAULT,
       );
+    }
+
+    private containsPointer(event: Clutter.Event): boolean {
+      const [x, y] = event.get_coords();
+      const [ix, iy] = this.get_transformed_position();
+      const [width, height] = this.get_transformed_size();
+      return x >= ix && x < ix + width && y >= iy && y < iy + height;
     }
 
     private crossingLog(kind: string, event: Clutter.Event): string {
