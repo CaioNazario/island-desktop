@@ -18,5 +18,13 @@
       <default>false</default>
       <summary>Dica de configurar a cidade já foi mostrada</summary>
     </key>
+    <key name="ai-claude-enabled" type="b">
+      <default>true</default>
+      <summary>Mostrar o uso do Claude</summary>
+    </key>
+    <key name="ai-codex-enabled" type="b">
+      <default>true</default>
+      <summary>Mostrar o uso do Codex</summary>
+    </key>
   </schema>
 </schemalist>
