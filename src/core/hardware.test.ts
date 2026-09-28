@@ -141,17 +141,11 @@ describe('netRates', () => {
 describe('hardwareBlocks', () => {
   it('matches the design sample', () => {
     expect(hardwareBlocks(reading())).toEqual([
-      { id: 'cpu', label: 'CPU', value: '12%', tone: 'normal', tooltip: 'CPU 12%' },
-      { id: 'ram', label: 'RAM', value: '7.2G', tone: 'normal', tooltip: 'RAM 7.2 / 15.3 GB' },
-      { id: 'gpu', label: 'GPU', value: '8%', tone: 'normal', tooltip: 'GPU 8%' },
-      { id: 'temp', label: 'TEMP', value: '54°', tone: 'normal', tooltip: 'Temperatura 54°C' },
-      {
-        id: 'net',
-        label: 'NET',
-        value: '↓1.2',
-        tone: 'normal',
-        tooltip: 'Rede ↓1.2 MB/s ↑86 KB/s',
-      },
+      { id: 'cpu', label: 'CPU', value: '12%', tone: 'normal' },
+      { id: 'ram', label: 'RAM', value: '7.2G', tone: 'normal' },
+      { id: 'gpu', label: 'GPU', value: '8%', tone: 'normal' },
+      { id: 'temp', label: 'TEMP', value: '54°', tone: 'normal' },
+      { id: 'net', label: 'NET', value: '↓1.2', tone: 'normal' },
     ]);
   });
 
@@ -190,14 +184,6 @@ describe('hardwareBlocks', () => {
     expect(net(99_940_000)).toBe('↓99.9');
     expect(net(99_960_000)).toBe('↓100');
     expect(net(123_400_000)).toBe('↓123');
-  });
-
-  it('rounds the upload to whole KB/s', () => {
-    const tooltip = block(
-      reading({ net: { downBytesPerSecond: 0, upBytesPerSecond: 1_234_567 } }),
-      'net',
-    )?.tooltip;
-    expect(tooltip).toBe('Rede ↓0.0 MB/s ↑1235 KB/s');
   });
 
   it('clamps CPU and GPU to 0–100', () => {

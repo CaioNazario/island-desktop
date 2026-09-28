@@ -11,7 +11,6 @@ export interface HardwareBlock {
   label: string;
   value: string;
   tone: HardwareTone;
-  tooltip: string;
 }
 
 /** Valor mais largo de cada bloco, usado para fixar a largura (dígitos tabulares). */
@@ -27,7 +26,6 @@ const CPU_BUSY = 60;
 const TEMP_HOT = 70;
 const GIB = 1024 ** 3;
 const MB = 1000 ** 2;
-const KB = 1000;
 
 export interface CpuTimes {
   idle: number;
@@ -153,32 +151,28 @@ export function hardwareBlocks(reading: HardwareReading): HardwareBlock[] {
 function cpuBlock(percent: number): HardwareBlock {
   const cpu = Math.round(clampPercent(percent));
   const tone = cpu >= CPU_BUSY ? 'busy' : 'normal';
-  return { id: 'cpu', label: 'CPU', value: `${cpu}%`, tone, tooltip: `CPU ${cpu}%` };
+  return { id: 'cpu', label: 'CPU', value: `${cpu}%`, tone };
 }
 
 function ramBlock(memory: Memory): HardwareBlock {
   const used = oneDecimal(memory.usedBytes / GIB);
-  const total = oneDecimal(memory.totalBytes / GIB);
-  const tooltip = `RAM ${used} / ${total} GB`;
-  return { id: 'ram', label: 'RAM', value: `${used}G`, tone: 'normal', tooltip };
+  return { id: 'ram', label: 'RAM', value: `${used}G`, tone: 'normal' };
 }
 
 function gpuBlock(percent: number): HardwareBlock {
   const gpu = Math.round(clampPercent(percent));
-  return { id: 'gpu', label: 'GPU', value: `${gpu}%`, tone: 'normal', tooltip: `GPU ${gpu}%` };
+  return { id: 'gpu', label: 'GPU', value: `${gpu}%`, tone: 'normal' };
 }
 
 function tempBlock(celsius: number): HardwareBlock {
   const temp = Math.round(celsius);
   const tone = temp >= TEMP_HOT ? 'hot' : 'normal';
-  return { id: 'temp', label: 'TEMP', value: `${temp}°`, tone, tooltip: `Temperatura ${temp}°C` };
+  return { id: 'temp', label: 'TEMP', value: `${temp}°`, tone };
 }
 
 function netBlock(net: NetRates): HardwareBlock {
   const down = megabytes(net.downBytesPerSecond);
-  const up = Math.round(net.upBytesPerSecond / KB);
-  const tooltip = `Rede ↓${down} MB/s ↑${up} KB/s`;
-  return { id: 'net', label: 'NET', value: `↓${down}`, tone: 'normal', tooltip };
+  return { id: 'net', label: 'NET', value: `↓${down}`, tone: 'normal' };
 }
 
 function clampPercent(value: number): number {
