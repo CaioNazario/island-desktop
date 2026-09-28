@@ -138,7 +138,8 @@ export const PowerRow = GObject.registerClass(
       this.ease({
         height: open ? natural : 0,
         duration: effects.islandSpring.durationMs,
-        mode: Clutter.AnimationMode.EASE_OUT_BACK,
+        // Fechar sem repique: abaixo de 0 a lista subiria para dentro dos tiles.
+        mode: open ? Clutter.AnimationMode.EASE_OUT_BACK : Clutter.AnimationMode.EASE_OUT_CUBIC,
         onStopped: (isFinished: boolean) => {
           if (!isFinished) return;
           this.height = -1;
