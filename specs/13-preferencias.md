@@ -36,6 +36,6 @@ A notificação de dica do clima (spec 07) abre esta janela direto na página Cl
 
 ## Critérios de aceite
 
-- [ ] Cada chave do schema muda o comportamento na hora, com a extensão rodando.
-- [ ] `glib-compile-schemas` roda sem aviso no build e no `install.sh`.
-- [ ] A janela abre pelo app Extensões e por `gnome-extensions prefs island@caionazario.dev`.
+- [x] Cada chave do schema muda o comportamento na hora, com a extensão rodando.
+- [x] `glib-compile-schemas` roda sem aviso no build e no `install.sh`.
+- [x] A janela abre pelo app Extensões e por `gnome-extensions prefs island@caionazario.dev`.
