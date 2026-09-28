@@ -19,7 +19,7 @@ export default class IslandExtension extends Extension {
     // três pílulas passam a reservar o próprio espaço (specs/02-barra.md).
     Main.layoutManager.untrackChrome(Main.layoutManager.panelBox);
     Main.panel.hide();
-    this.barManager = new BarManager(this.getSettings());
+    this.barManager = new BarManager(this.getSettings(), () => this.openPreferences());
 
     // specs/03-ilha.md "Atalho Super+S": a Island assume o atalho nativo de
     // quick settings (o painel nativo está escondido atrás dela) e devolve o

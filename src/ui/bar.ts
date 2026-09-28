@@ -20,6 +20,7 @@ import { GSettingsToggle } from '../system/toggleSetting.js';
 import { SystemVolume } from '../system/volume.js';
 import { SystemWifi } from '../system/wifi.js';
 import { SystemWeather } from '../system/weather.js';
+import { WeatherHint } from '../system/weatherHint.js';
 import { Bar } from './barChrome.js';
 import type { IslandSystem } from './island.js';
 
@@ -47,6 +48,7 @@ export class BarManager {
   private readonly music = new SystemMpris();
   private readonly calendar = new SystemCalendarEvents();
   private readonly weather: SystemWeather;
+  private readonly weatherHint: WeatherHint;
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
   private grab: Clutter.Grab | null = null;
@@ -57,7 +59,7 @@ export class BarManager {
   private readonly unsubscribeArrival: () => void;
   private readonly unsubscribeTrack: () => void;
 
-  constructor(settings: Gio.Settings) {
+  constructor(settings: Gio.Settings, openPreferences: () => void) {
     syncDebugLog();
     this.state = new IslandState(new GLibScheduler(), {
       islandClickOpens: () =>
@@ -100,6 +102,8 @@ export class BarManager {
     this.unsubscribeTrack = this.music.onTrackChange(() => this.handleTrackChange());
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
+    // Depois do `rebuild()`: a dica chega como notificação e a ilha já precisa existir.
+    this.weatherHint = new WeatherHint(settings, this.weather, openPreferences);
   }
 
   /**
@@ -276,6 +280,7 @@ export class BarManager {
     this.notifications.destroy();
     this.music.destroy();
     this.calendar.destroy();
+    this.weatherHint.destroy();
     this.weather.destroy();
     this.osdRedirect.destroy();
   }
