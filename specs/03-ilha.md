@@ -70,10 +70,10 @@ Modos fixos e o cartão central tomam o foco de teclado (grab modal, como os men
 
 ## Critérios de aceite
 
-- [ ] `src/core/island.ts` tem teste para cada regra de transição acima, incluindo timers com relógio falso.
-- [ ] Cada modo abre com as medidas da tabela (±1px).
-- [ ] Uma notificação chegando com `wifi` aberto não altera a ilha (vira banner, spec 04).
-- [ ] Trocar de faixa com `calendar` aberto não abre `music`.
-- [ ] Segurar `Super+S` não faz a ilha piscar.
-- [ ] Com o mouse sobre a ilha em `notif`, ela não fecha; ao sair, fecha 2500ms depois.
-- [ ] Esc com o campo de senha focado fecha só o painel de senha; um segundo Esc fecha a ilha.
+- [x] `src/core/island.ts` tem teste para cada regra de transição acima, incluindo timers com relógio falso.
+- [x] Cada modo abre com as medidas da tabela (±1px).
+- [x] Uma notificação chegando com `wifi` aberto não altera a ilha (vira banner, spec 04).
+- [x] Trocar de faixa com `calendar` aberto não abre `music`.
+- [x] Segurar `Super+S` não faz a ilha piscar.
+- [x] Com o mouse sobre a ilha em `notif`, ela não fecha; ao sair, fecha 2500ms depois.
+- [x] Esc com o campo de senha focado fecha só o painel de senha; um segundo Esc fecha a ilha.
