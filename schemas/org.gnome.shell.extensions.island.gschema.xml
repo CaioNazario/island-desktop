@@ -9,5 +9,14 @@
       <default>'center-card'</default>
       <summary>Clique na ilha abre</summary>
     </key>
+    <key name="weather-location" type="v">
+      <default>&lt;@mv nothing&gt;</default>
+      <summary>Cidade do clima</summary>
+      <description>Localização GWeather serializada (GWeather.Location.serialize); vazio segue a cadeia de localização.</description>
+    </key>
+    <key name="weather-hint-shown" type="b">
+      <default>false</default>
+      <summary>Dica de configurar a cidade já foi mostrada</summary>
+    </key>
   </schema>
 </schemalist>
