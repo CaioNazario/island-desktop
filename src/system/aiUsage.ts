@@ -3,6 +3,7 @@ import GLib from 'gi://GLib';
 import Soup from 'gi://Soup?version=3.0';
 
 import {
+  CREDENTIAL_FILES,
   type Credential,
   type FetchOutcome,
   INITIAL_SCHEDULE,
@@ -10,9 +11,7 @@ import {
   isOffline,
   nextSchedule,
   OPEN_REFRESH_MS,
-  parseClaudeCredentials,
   parseClaudeUsage,
-  parseCodexCredentials,
   parseCodexUsage,
   type PollSchedule,
   type ProviderId,
@@ -52,8 +51,6 @@ const CLAUDE_USER_AGENT = 'claude-cli/2.1.281 (external, cli)';
 interface ProviderConfig {
   id: ProviderId;
   settingsKey: string;
-  credentialPath: string[];
-  parseCredential(text: string): Credential | null;
   request(credential: Credential): Soup.Message;
   parseUsage(body: string, now: number): Usage | null;
 }
@@ -69,8 +66,6 @@ const PROVIDERS: readonly ProviderConfig[] = [
   {
     id: 'claude',
     settingsKey: 'ai-claude-enabled',
-    credentialPath: ['.claude', '.credentials.json'],
-    parseCredential: parseClaudeCredentials,
     request: (credential) =>
       get('https://api.anthropic.com/api/oauth/usage', {
         Authorization: `Bearer ${credential.token}`,
@@ -82,8 +77,6 @@ const PROVIDERS: readonly ProviderConfig[] = [
   {
     id: 'codex',
     settingsKey: 'ai-codex-enabled',
-    credentialPath: ['.codex', 'auth.json'],
-    parseCredential: parseCodexCredentials,
     request: (credential) =>
       get('https://chatgpt.com/backend-api/wham/usage', {
         Authorization: `Bearer ${credential.token}`,
@@ -155,7 +148,7 @@ class ProviderPoller {
     this.onUpdate = onUpdate;
     this.cache = cacheFor(config.id);
     this.file = Gio.File.new_for_path(
-      GLib.build_filenamev([GLib.get_home_dir(), ...config.credentialPath]),
+      GLib.build_filenamev([GLib.get_home_dir(), ...CREDENTIAL_FILES[config.id].path]),
     );
     // O CLI troca o arquivo quando renova o token; a pasta pode nem existir
     // ainda (o GIO vigia o caminho ausente).
@@ -229,7 +222,7 @@ class ProviderPoller {
     }
     if (generation !== this.loadGeneration) return;
     const wasExpired = this.cache.rejectedToken !== null || this.isCredentialExpired();
-    this.credential = text === null ? null : this.config.parseCredential(text);
+    this.credential = text === null ? null : CREDENTIAL_FILES[this.config.id].parse(text);
     this.credentialLoaded = true;
     if (this.credential && this.credential.token !== this.cache.rejectedToken)
       this.cache.rejectedToken = null;

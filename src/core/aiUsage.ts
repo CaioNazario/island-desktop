@@ -152,6 +152,15 @@ export function parseCodexCredentials(text: string): Credential | null {
   };
 }
 
+/** Arquivo de credencial de cada provedor, relativo à home, e o parser dele. */
+export const CREDENTIAL_FILES: Record<
+  ProviderId,
+  { path: readonly string[]; parse: (text: string) => Credential | null }
+> = {
+  claude: { path: ['.claude', '.credentials.json'], parse: parseClaudeCredentials },
+  codex: { path: ['.codex', 'auth.json'], parse: parseCodexCredentials },
+};
+
 export function isExpired(credential: Credential, now: number): boolean {
   return credential.expiresAt !== null && credential.expiresAt <= now;
 }
