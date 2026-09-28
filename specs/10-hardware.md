@@ -14,7 +14,7 @@ Cinco blocos de duas linhas, gap 2px, sem entrelinha:
 | Bloco | Valor | Cor | Tooltip |
 |---|---|---|---|
 | CPU | `12%` | `accent-300` se ≥60%, senão `text` | `CPU 12%` |
-| RAM | `7.2G` (usada, 1 casa) | `text` | `RAM 7.2 / 16 GB` |
+| RAM | `7.2G` (usada, GiB, 1 casa) | `text` | `RAM 7.2 / 15.3 GB` (usada / total, GiB, 1 casa) |
 | GPU | `8%` | `text` | `GPU 8%` |
 | TEMP | `54°` | `#f75d59` se ≥70°, senão `text` | `Temperatura 54°C` |
 | NET | `↓1.2` (MB/s, 1 casa; ≥100 sem casa) | `text` | `Rede ↓1.2 MB/s ↑86 KB/s` |
