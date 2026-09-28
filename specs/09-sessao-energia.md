@@ -12,7 +12,7 @@ Depois do divisor, na linha de controles de `quick`, `wifi` e `bt`:
 ## Linha de energia
 
 - Aparece abaixo da linha de controles. Em `quick` a ilha vai de 58 a 106px; em `wifi`/`bt` soma 48px.
-- Abre com a mola da ilha (460ms `EASE_OUT_BACK`): a linha se revela de cima para baixo, igual em `quick`, `wifi` e `bt`; em `wifi`/`bt` a lista abaixo desce junto. Fecha em 460ms `EASE_OUT_CUBIC`, sem repique: abaixo de 0 a lista subiria para dentro dos tiles.
+- Abre e fecha em 460ms `EASE_OUT_CUBIC`, sem repique, a linha e a altura da ilha: a linha se revela de cima para baixo, igual em `quick`, `wifi` e `bt`; em `wifi`/`bt` a lista abaixo desce junto. Com a mola, abrindo a linha e a borda da ilha passam do tamanho; fechando, abaixo de 0 a lista subiria para dentro dos tiles.
 - 5 botões `flex: 1`, 36px, raio 12, `neutral-900`, hover `neutral-800`, 12px, ícone 14px, gap 6px:
 
   | Botão | Ícone | Ação |

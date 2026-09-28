@@ -103,7 +103,7 @@ function powerButtons(
   return row;
 }
 
-// Abre e fecha com a mola da ilha: a moldura corta a linha, presa no topo,
+// Abre e fecha no tempo da mola da ilha: a moldura corta a linha, presa no topo,
 // e cresce de 0 a 48px. Em `quick` acompanha a borda da ilha; em `wifi` e
 // `bt`, onde fica entre os controles e a lista, empurra a lista junto.
 export const PowerRow = GObject.registerClass(
@@ -138,8 +138,9 @@ export const PowerRow = GObject.registerClass(
       this.ease({
         height: open ? natural : 0,
         duration: effects.islandSpring.durationMs,
-        // Fechar sem repique: abaixo de 0 a lista subiria para dentro dos tiles.
-        mode: open ? Clutter.AnimationMode.EASE_OUT_BACK : Clutter.AnimationMode.EASE_OUT_CUBIC,
+        // Sem repique: fechando, abaixo de 0 a lista subiria para dentro dos
+        // tiles; abrindo, a linha e a borda da ilha passam do tamanho.
+        mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
         onStopped: (isFinished: boolean) => {
           if (!isFinished) return;
           this.height = -1;

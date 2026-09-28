@@ -24,6 +24,7 @@ import {
   IslandSurface,
   type IslandSurfaceActor,
   type LayerId,
+  ISLAND_EASE,
   ISLAND_SPRING,
   modeLayer,
   openSpring,
@@ -284,8 +285,8 @@ export const Island = GObject.registerClass(
       this.power.sync();
       const previous = this.contentMode;
       const entered = this.showContentFor(mode);
-      // A linha de energia muda a altura sem trocar de modo.
-      this.resize(entered ? openSpring(mode, previous) : ISLAND_SPRING);
+      // A linha de energia muda a altura sem trocar de modo, sem repique.
+      this.resize(entered ? openSpring(mode, previous) : ISLAND_EASE);
       this.syncExpanded(mode !== 'compact');
       // "Cursor de mão só em `compact` e `notif`" (specs/03-ilha.md): nos
       // outros modos, cliques são do conteúdo.
