@@ -10,6 +10,7 @@ import { colors } from './tokens.js';
 export const BarButton = GObject.registerClass(
   class BarButton extends St.Button {
     private readonly sizeStyle: string;
+    private isActive = false;
 
     constructor(child: Clutter.Actor, onClick: () => void, sizeStyle = 'width: 30px;') {
       super({ child, track_hover: true, y_align: Clutter.ActorAlign.CENTER });
@@ -24,8 +25,15 @@ export const BarButton = GObject.registerClass(
       this.refresh();
     }
 
+    /** Fundo `neutral-900` também com o modo do botão aberto (botão de IA). */
+    set active(active: boolean) {
+      if (active === this.isActive) return;
+      this.isActive = active;
+      this.refresh();
+    }
+
     private refresh(): void {
-      const bg = this.hover ? colors.neutral900 : 'transparent';
+      const bg = this.hover || this.isActive ? colors.neutral900 : 'transparent';
       this.style = `height: 24px; border-radius: 12px; background-color: ${bg}; ${this.sizeStyle}`;
     }
   },

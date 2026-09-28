@@ -5,6 +5,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { MAX_ISLAND_WIDTH, type IslandState, type Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
+import { AiButton, type AiButtonActor } from './aiButton.js';
 import type { HardwareSource } from '../system/hardware.js';
 import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } from './banner.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
@@ -115,6 +116,8 @@ const StrutActor = GObject.registerClass(
 export class Bar {
   readonly island: IslandActor;
   readonly banner: BannerActor;
+  private readonly state: IslandState;
+  private readonly aiButton: AiButtonActor;
   private readonly strut: InstanceType<typeof StrutActor>;
   private readonly chrome: InstanceType<typeof BarChrome>;
 
@@ -137,7 +140,12 @@ export class Bar {
       trackFullscreen: true,
     });
 
+    this.state = state;
+    // "margin-left: auto" do design: o botão de IA fica na ponta direita.
     const leftPill = new Pill();
+    leftPill.add_child(new St.Widget({ x_expand: true }));
+    this.aiButton = new AiButton(system.aiUsage, () => onTrigger('ai'));
+    leftPill.add_child(this.aiButton);
     this.banner = new Banner(onBannerOpen);
     const island = new Island(state, system, onIslandClick, onEscape, (target: Clutter.Actor) =>
       this.banner.handlePressUnderGrab(target),
@@ -163,6 +171,7 @@ export class Bar {
 
   render(isTargetMonitor: boolean): void {
     this.island.render(isTargetMonitor);
+    this.aiButton.active = isTargetMonitor && this.state.mode === 'ai';
   }
 
   destroy(): void {

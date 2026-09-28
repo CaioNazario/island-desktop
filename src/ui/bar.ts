@@ -6,6 +6,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { isFixedMode, IslandState, type Mode, type Scheduler } from '../core/island.js';
 import { routeNotification, type IncomingNotification } from '../core/notifications.js';
+import { SystemAiUsage } from '../system/aiUsage.js';
 import { SystemBattery } from '../system/battery.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
@@ -48,6 +49,7 @@ export class BarManager {
   private readonly music = new SystemMpris();
   private readonly calendar = new SystemCalendarEvents();
   private readonly weather: SystemWeather;
+  private readonly aiUsage: SystemAiUsage;
   private readonly weatherHint: WeatherHint;
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
@@ -68,6 +70,7 @@ export class BarManager {
       log: (message, caller) => debugLog(caller ? `${message} at ${callerStack(3)}` : message),
     });
     this.weather = new SystemWeather(settings);
+    this.aiUsage = new SystemAiUsage(settings);
     this.system = {
       volume: new SystemVolume(),
       brightness: new SystemBrightness(),
@@ -83,6 +86,7 @@ export class BarManager {
       music: this.music,
       calendar: this.calendar,
       weather: this.weather,
+      aiUsage: this.aiUsage,
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -282,6 +286,7 @@ export class BarManager {
     this.calendar.destroy();
     this.weatherHint.destroy();
     this.weather.destroy();
+    this.aiUsage.destroy();
     this.osdRedirect.destroy();
   }
 }
