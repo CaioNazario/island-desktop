@@ -5,10 +5,12 @@ import St from 'gi://St';
 import { batteryDisplay, type BatteryTone } from '../core/battery.js';
 import type { Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
+import type { HardwareSource } from '../system/hardware.js';
 import type { NotificationFeed } from '../system/notifications.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BarButton, type BarButtonActor } from './barButton.js';
+import { HardwareGroup } from './hardwareGroup.js';
 import {
   batteryLevelIconName,
   caretIconName,
@@ -141,18 +143,19 @@ function volumeButton(volume: SystemVolume, onClick: () => void): BarButtonActor
 
 export interface RightPillSources {
   battery: BatterySource;
+  hardware: HardwareSource;
   notifications: NotificationFeed;
   wifi: SystemWifi;
   volume: SystemVolume;
 }
 
-// Pílula direita (specs/02-barra.md): os botões ficam à direita, com gap 2px;
-// o espaço à esquerda é do grupo de hardware (spec 10).
+// Pílula direita (specs/02-barra.md): grupo de hardware à esquerda (spec 10),
+// botões à direita, com gap 2px.
 export const RightPill = GObject.registerClass(
   class RightPill extends Pill {
     constructor(sources: RightPillSources, onTrigger: (mode: Mode) => void) {
       super();
-      this.add_child(new St.Widget({ x_expand: true }));
+      this.add_child(new HardwareGroup(sources.hardware));
 
       const onOpenQuick = (): void => onTrigger('quick');
       const buttons = new St.BoxLayout({

@@ -5,6 +5,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import type { IslandState, Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
+import type { HardwareSource } from '../system/hardware.js';
 import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } from './banner.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
@@ -120,6 +121,7 @@ export class Bar {
     state: IslandState,
     system: IslandSystem,
     battery: BatterySource,
+    hardware: HardwareSource,
     onIslandClick: () => void,
     onEscape: () => void,
     onTrigger: (mode: Mode) => void,
@@ -142,6 +144,7 @@ export class Bar {
     const rightPill = new RightPill(
       {
         battery,
+        hardware,
         notifications: system.notifications,
         wifi: system.wifi,
         volume: system.volume,
