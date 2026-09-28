@@ -49,7 +49,6 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 
 - Padding 0 10px, gap 12px entre provedores; fundo `neutral-900` com `ai` aberto; hover `neutral-900`.
 - Por provedor logado (gap 6px): ícone 13px `neutral-300` · mini barra 26×4 raio 2 (`neutral-800` + preenchimento da **sessão**, transição 600ms) · `62%` 11.5px/500 alinhado à direita, largura fixa.
-- Tooltip por provedor: `Claude · sessão 62% · semanal 41%`.
 - Nenhum provedor logado (sem credencial ou desligado nas preferências): `ph ph-sparkle` 14px + "IA" 12px `neutral-400`.
 - Clique abre `ai`.
 
