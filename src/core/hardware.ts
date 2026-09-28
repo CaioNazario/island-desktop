@@ -83,23 +83,20 @@ export function isPhysicalInterface(name: string): boolean {
 
 export interface NetBytes {
   rx: number;
-  tx: number;
 }
 
-/** /proc/net/dev: soma rx/tx em bytes das interfaces físicas. */
+/** /proc/net/dev: soma os bytes recebidos das interfaces físicas. */
 export function parseNetDev(netDev: string): NetBytes {
-  const sum = { rx: 0, tx: 0 };
+  const sum = { rx: 0 };
   for (const line of netDev.split('\n')) {
     const counters = parseNetDevLine(line);
     if (!counters) continue;
     sum.rx += counters.rx;
-    sum.tx += counters.tx;
   }
   return sum;
 }
 
-// `iface: rx_bytes … (8 campos de recepção) tx_bytes …`; cabeçalho e
-// interface virtual dão `null`.
+// `iface: rx_bytes …`; cabeçalho e interface virtual dão `null`.
 function parseNetDevLine(line: string): NetBytes | null {
   const colon = line.indexOf(':');
   if (colon < 0 || !isPhysicalInterface(line.slice(0, colon).trim())) return null;
@@ -108,24 +105,18 @@ function parseNetDevLine(line: string): NetBytes | null {
     .trim()
     .split(/\s+/)
     .map(Number);
-  const [rx, tx] = [fields[0], fields[8]];
-  if (rx === undefined || tx === undefined) return null;
-  return Number.isFinite(rx) && Number.isFinite(tx) ? { rx, tx } : null;
+  const rx = fields[0];
+  return rx !== undefined && Number.isFinite(rx) ? { rx } : null;
 }
 
 export interface NetRates {
   downBytesPerSecond: number;
-  upBytesPerSecond: number;
 }
 
 /** Contador que volta (interface recriada) conta como 0, não negativo. */
 export function netRates(prev: NetBytes, cur: NetBytes, elapsedMs: number): NetRates {
-  if (elapsedMs <= 0) return { downBytesPerSecond: 0, upBytesPerSecond: 0 };
-  const perSecond = (delta: number): number => (Math.max(0, delta) * 1000) / elapsedMs;
-  return {
-    downBytesPerSecond: perSecond(cur.rx - prev.rx),
-    upBytesPerSecond: perSecond(cur.tx - prev.tx),
-  };
+  if (elapsedMs <= 0) return { downBytesPerSecond: 0 };
+  return { downBytesPerSecond: (Math.max(0, cur.rx - prev.rx) * 1000) / elapsedMs };
 }
 
 export interface HardwareReading {

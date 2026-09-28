@@ -21,7 +21,7 @@ function reading(overrides: Partial<HardwareReading> = {}): HardwareReading {
     memory: { totalBytes: 15.3 * GIB, usedBytes: 7.2 * GIB },
     gpu: 8,
     temp: 54,
-    net: { downBytesPerSecond: 1_200_000, upBytesPerSecond: 86_000 },
+    net: { downBytesPerSecond: 1_200_000 },
     ...overrides,
   };
 }
@@ -109,7 +109,7 @@ describe('isPhysicalInterface', () => {
 });
 
 describe('parseNetDev', () => {
-  it('sums rx and tx bytes of physical interfaces', () => {
+  it('sums the received bytes of physical interfaces', () => {
     const netDev = [
       'Inter-|   Receive                                                |  Transmit',
       ' face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed',
@@ -118,23 +118,17 @@ describe('parseNetDev', () => {
       'enp3s0:500 2 0 0 0 0 0 0 50 1 0 0 0 0 0 0',
       'docker0: 7777 1 0 0 0 0 0 0 7777 1 0 0 0 0 0 0',
     ].join('\n');
-    expect(parseNetDev(netDev)).toEqual({ rx: 1500, tx: 250 });
+    expect(parseNetDev(netDev)).toEqual({ rx: 1500 });
   });
 });
 
 describe('netRates', () => {
   it('converts the delta to bytes per second', () => {
-    expect(netRates({ rx: 0, tx: 0 }, { rx: 3_000_000, tx: 172_000 }, 2000)).toEqual({
-      downBytesPerSecond: 1_500_000,
-      upBytesPerSecond: 86_000,
-    });
+    expect(netRates({ rx: 0 }, { rx: 3_000_000 }, 2000)).toEqual({ downBytesPerSecond: 1_500_000 });
   });
 
   it('treats a counter reset as 0', () => {
-    expect(netRates({ rx: 5000, tx: 5000 }, { rx: 100, tx: 100 }, 1000)).toEqual({
-      downBytesPerSecond: 0,
-      upBytesPerSecond: 0,
-    });
+    expect(netRates({ rx: 5000 }, { rx: 100 }, 1000)).toEqual({ downBytesPerSecond: 0 });
   });
 });
 
@@ -168,7 +162,7 @@ describe('hardwareBlocks', () => {
   });
 
   it('never colors RAM, GPU or NET', () => {
-    const busy = reading({ gpu: 100, net: { downBytesPerSecond: 1e9, upBytesPerSecond: 1e9 } });
+    const busy = reading({ gpu: 100, net: { downBytesPerSecond: 1e9 } });
     for (const id of ['ram', 'gpu', 'net'] as const) expect(block(busy, id)?.tone).toBe('normal');
   });
 
@@ -179,7 +173,7 @@ describe('hardwareBlocks', () => {
 
   it('shows NET with one decimal below 100 MB/s and none from 100', () => {
     const net = (down: number) =>
-      block(reading({ net: { downBytesPerSecond: down, upBytesPerSecond: 0 } }), 'net')?.value;
+      block(reading({ net: { downBytesPerSecond: down } }), 'net')?.value;
     expect(net(0)).toBe('↓0.0');
     expect(net(99_940_000)).toBe('↓99.9');
     expect(net(99_960_000)).toBe('↓100');
@@ -202,7 +196,7 @@ describe('hardwareBlocks', () => {
         memory: { totalBytes: 128 * GIB, usedBytes: 99.9 * GIB },
         gpu: 100,
         temp: 100,
-        net: { downBytesPerSecond: 99_900_000, upBytesPerSecond: 0 },
+        net: { downBytesPerSecond: 99_900_000 },
       });
       for (const b of hardwareBlocks(extreme)) expect(b.value).toBe(WIDEST_VALUE[b.id]);
     });
@@ -216,7 +210,7 @@ describe('hardwareBlocks', () => {
             memory: { totalBytes: 128 * GIB, usedBytes: t * 99.9 * GIB },
             gpu: t * 100,
             temp: t * 100,
-            net: { downBytesPerSecond: t * 999_000_000, upBytesPerSecond: 0 },
+            net: { downBytesPerSecond: t * 999_000_000 },
           }),
         );
         for (const id of Object.keys(got) as HardwareBlockId[]) {
