@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getSize, isFixedMode, IslandState, type Scheduler } from './island.js';
+import {
+  getSize,
+  isFixedMode,
+  IslandState,
+  MAX_ISLAND_WIDTH,
+  type Mode,
+  type Scheduler,
+} from './island.js';
 
 class FakeScheduler implements Scheduler {
   private nextId = 1;
@@ -345,6 +352,24 @@ describe('isFixedMode', () => {
 });
 
 describe('getSize', () => {
+  it('nenhum modo passa de MAX_ISLAND_WIDTH', () => {
+    const modes: Mode[] = [
+      'compact',
+      'notif',
+      'stack',
+      'music',
+      'volume',
+      'brightness',
+      'calendar',
+      'quick',
+      'wifi',
+      'bt',
+      'ai',
+    ];
+    const widths = modes.map((mode) => getSize(mode).width);
+    expect(Math.max(...widths)).toBe(MAX_ISLAND_WIDTH);
+  });
+
   it('retorna as medidas estáticas da tabela', () => {
     expect(getSize('compact')).toEqual({ width: 240, height: 30, radius: 15 });
     expect(getSize('notif')).toEqual({ width: 400, height: 62, radius: 22 });

@@ -62,6 +62,9 @@ export interface SizeContext {
   providerCount?: number;
 }
 
+/** Largura do maior modo; a barra mede o espaço das laterais com ela. */
+export const MAX_ISLAND_WIDTH = 520;
+
 export function getSize(mode: Mode, ctx: SizeContext = {}): Size {
   switch (mode) {
     case 'compact':
