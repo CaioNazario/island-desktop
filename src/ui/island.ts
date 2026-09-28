@@ -18,7 +18,13 @@ import { BtView, type BtViewActor } from './btView.js';
 import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
-import { hideLayer, modeLayer, ModeLayersLayout, showLayer } from './modeLayer.js';
+import {
+  hideLayer,
+  IslandSurface,
+  type IslandSurfaceActor,
+  modeLayer,
+  showLayer,
+} from './modeLayer.js';
 import { MusicModeRow } from './musicView.js';
 import { notifContent, type NotificationRowActor } from './notificationRow.js';
 import { IslandPowerToggle, quickContent } from './powerRow.js';
@@ -50,22 +56,8 @@ export interface IslandSystem {
 // A ilha em si não pinta nada: o fundo, o anel e o corte do conteúdo
 // (`overflow: hidden` no design) ficam na `surface`.
 export const Island = GObject.registerClass(
-  {
-    Properties: {
-      // Animável com `ease_property` (specs/03-ilha.md: "raio: 460ms ease").
-      radius: GObject.ParamSpec.double(
-        'radius',
-        null,
-        null,
-        GObject.ParamFlags.READWRITE,
-        0,
-        Number.MAX_SAFE_INTEGER,
-        0,
-      ),
-    },
-  },
   class Island extends St.Widget {
-    private readonly surface: St.Widget;
+    private readonly surface: IslandSurfaceActor;
     private readonly accentLine: St.Widget;
     private readonly state: IslandState;
     private readonly onIslandClick: () => void;
@@ -85,7 +77,6 @@ export const Island = GObject.registerClass(
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
     private contentMode: Mode = 'compact';
-    private radiusPx = 0;
 
     constructor(
       state: IslandState,
@@ -102,12 +93,7 @@ export const Island = GObject.registerClass(
         track_hover: true,
       });
 
-      this.surface = new St.Widget({
-        layout_manager: new ModeLayersLayout(),
-        clip_to_allocation: true,
-        x_expand: true,
-        y_expand: true,
-      });
+      this.surface = new IslandSurface(ISLAND_RING);
       this.add_child(this.surface);
 
       this.accentLine = new St.Widget({
@@ -351,24 +337,13 @@ export const Island = GObject.registerClass(
       this.clockLabel.text = `${formatClock(now)} · ${formatDay(now)}`;
     }
 
-    get radius(): number {
-      return this.radiusPx;
-    }
-
-    set radius(radius: number) {
-      if (this.radiusPx === radius) return;
-      this.radiusPx = radius;
-      this.surface.style = `background-color: ${colors.bg}; border-radius: ${radius}px; border: ${ISLAND_RING}px solid ${colors.neutral800};`;
-      this.notify('radius');
-    }
-
     private applySize(
       size: { width: number; height: number; radius: number },
       animate: boolean,
     ): void {
       if (!animate) {
         this.set_size(size.width, size.height);
-        this.radius = size.radius;
+        this.surface.radius = size.radius;
         return;
       }
       this.ease({
@@ -377,7 +352,7 @@ export const Island = GObject.registerClass(
         duration: effects.islandSpring.durationMs,
         mode: Clutter.AnimationMode.EASE_OUT_BACK,
       });
-      this.ease_property('radius', size.radius, {
+      this.surface.ease_property('radius', size.radius, {
         duration: effects.islandRadius.durationMs,
         mode: Clutter.AnimationMode.EASE,
       });

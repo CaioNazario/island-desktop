@@ -3,7 +3,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import type { Mode } from '../core/island.js';
-import { effects } from './tokens.js';
+import { colors, effects } from './tokens.js';
 
 // Layout da `surface` da ilha: cada camada no seu tamanho preferido,
 // centrada no topo, mesmo maior que a ilha. O `BinLayout` espremeria a
@@ -39,6 +39,52 @@ export const ModeLayersLayout = GObject.registerClass(
     }
   },
 );
+
+// Superfície da ilha: fundo, anel e o corte do conteúdo (`overflow: hidden`
+// no design). As camadas dos modos ficam dentro dela.
+export const IslandSurface = GObject.registerClass(
+  {
+    Properties: {
+      // Animável com `ease_property` (specs/03-ilha.md: "raio: 460ms ease").
+      radius: GObject.ParamSpec.double(
+        'radius',
+        null,
+        null,
+        GObject.ParamFlags.READWRITE,
+        0,
+        Number.MAX_SAFE_INTEGER,
+        0,
+      ),
+    },
+  },
+  class IslandSurface extends St.Widget {
+    private readonly ring: number;
+    private radiusPx = -1;
+
+    constructor(ring: number) {
+      super({
+        layout_manager: new ModeLayersLayout(),
+        clip_to_allocation: true,
+        x_expand: true,
+        y_expand: true,
+      });
+      this.ring = ring;
+    }
+
+    get radius(): number {
+      return this.radiusPx;
+    }
+
+    set radius(radius: number) {
+      if (this.radiusPx === radius) return;
+      this.radiusPx = radius;
+      this.style = `background-color: ${colors.bg}; border-radius: ${radius}px; border: ${this.ring}px solid ${colors.neutral800};`;
+      this.notify('radius');
+    }
+  },
+);
+
+export type IslandSurfaceActor = InstanceType<typeof IslandSurface>;
 
 // Camada de um modo (specs/03-ilha.md "Cada modo é uma camada própria,
 // centrada no topo da ilha, com o tamanho do seu modo"): o conteúdo mantém o
