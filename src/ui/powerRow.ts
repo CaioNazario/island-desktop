@@ -6,7 +6,7 @@ import type { IslandState } from '../core/island.js';
 import type { PowerAction, SystemSession } from '../system/session.js';
 import type { ControlsRowActor, ControlsRowOptions } from './controlsRow.js';
 import { phosphor } from './icons.js';
-import { colors, derivedColors } from './tokens.js';
+import { colors, derivedColors, effects } from './tokens.js';
 
 export interface PowerToggle {
   readonly open: boolean;
@@ -80,40 +80,90 @@ function powerButton(label: string, glyph: string, color: string, onClick: () =>
 // Linha de energia abaixo da linha de controles (specs/09-sessao-energia.md):
 // 48px (40 de linha + 8 de respiro), 5 botões de mesma largura. Ação
 // indisponível (ex.: suspender bloqueado por política) → o botão some.
+function powerButtons(
+  session: SystemSession,
+  onAction: (action: PowerAction) => void,
+): St.BoxLayout {
+  const row = new St.BoxLayout({
+    style: 'height: 40px; padding: 0 10px 8px; spacing: 6px;',
+    x_expand: true,
+  });
+  (row.layout_manager as Clutter.BoxLayout).homogeneous = true;
+  const buttons = POWER_BUTTONS.map(({ action, label, glyph }) => {
+    const color = action === 'power-off' ? derivedColors.powerOffText : colors.text;
+    const button = powerButton(label, glyph, color, () => onAction(action));
+    row.add_child(button);
+    return { action, button };
+  });
+  const syncAvailable = (): void =>
+    buttons.forEach(({ action, button }) => (button.visible = session.canRun(action)));
+  syncAvailable();
+  const unsubscribe = session.onChange(syncAvailable);
+  row.connectObject('destroy', unsubscribe, row);
+  return row;
+}
+
+// Abre e fecha com a mola da ilha: a moldura corta a linha, presa no topo,
+// e cresce de 0 a 48px. Em `quick` acompanha a borda da ilha; em `wifi` e
+// `bt`, onde fica entre os controles e a lista, empurra a lista junto.
 export const PowerRow = GObject.registerClass(
-  class PowerRow extends St.BoxLayout {
+  class PowerRow extends St.Widget {
+    private readonly row: St.BoxLayout;
+
     constructor(
       session: SystemSession,
       power: PowerToggle,
       onAction: (action: PowerAction) => void,
     ) {
-      super({ style: 'height: 40px; padding: 0 10px 8px; spacing: 6px;', x_expand: true });
-      (this.layout_manager as Clutter.BoxLayout).homogeneous = true;
+      super({ clip_to_allocation: true, x_expand: true, visible: power.open });
+      this.row = powerButtons(session, onAction);
+      this.add_child(this.row);
+      const unsubscribe = power.onChange(() => this.setOpen(power.open));
+      this.connectObject('destroy', unsubscribe, this);
+    }
 
-      const buttons = POWER_BUTTONS.map(({ action, label, glyph }) => {
-        const color = action === 'power-off' ? derivedColors.powerOffText : colors.text;
-        const button = powerButton(label, glyph, color, () => onAction(action));
-        this.add_child(button);
-        return { action, button };
-      });
-      const syncAvailable = (): void =>
-        buttons.forEach(({ action, button }) => (button.visible = session.canRun(action)));
-      const syncOpen = (): void => {
-        this.visible = power.open;
-      };
-      syncAvailable();
-      syncOpen();
-
-      const unsubscribeSession = session.onChange(syncAvailable);
-      const unsubscribePower = power.onChange(syncOpen);
-      this.connectObject(
-        'destroy',
-        () => {
-          unsubscribeSession();
-          unsubscribePower();
+    private setOpen(open: boolean): void {
+      this.remove_all_transitions();
+      // Fechada, a moldura está invisível e nunca `mapped`: vale a do pai.
+      if (!this.get_parent()?.mapped) {
+        this.height = -1;
+        this.visible = open;
+        return;
+      }
+      if (open && !this.visible) {
+        this.height = 0;
+        this.visible = true;
+      }
+      const [, natural] = this.row.get_preferred_height(-1);
+      this.ease({
+        height: open ? natural : 0,
+        duration: effects.islandSpring.durationMs,
+        mode: Clutter.AnimationMode.EASE_OUT_BACK,
+        onStopped: (isFinished: boolean) => {
+          if (!isFinished) return;
+          this.height = -1;
+          this.visible = open;
         },
-        this,
-      );
+      });
+    }
+
+    override vfunc_get_preferred_width(forHeight: number): [number, number] {
+      return this.row.get_preferred_width(forHeight);
+    }
+
+    override vfunc_get_preferred_height(forWidth: number): [number, number] {
+      return this.row.get_preferred_height(forWidth);
+    }
+
+    // A linha fica no tamanho final, no topo: o `BinLayout` a espremeria
+    // até a altura da moldura (CLAMP em `clutter_actor_allocate_align_fill`,
+    // mutter 50.4).
+    override vfunc_allocate(box: Clutter.ActorBox): void {
+      this.set_allocation(box);
+      const [, height] = this.row.get_preferred_height(box.get_width());
+      const childBox = new Clutter.ActorBox();
+      childBox.set_size(box.get_width(), height);
+      this.row.allocate(childBox);
     }
   },
 );
