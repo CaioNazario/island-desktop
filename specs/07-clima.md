@@ -40,11 +40,11 @@ Uma única vez (flag `weather-hint-shown` no GSettings), a Island emite uma noti
 | tempestade | `ph-cloud-lightning` | `ph-cloud-lightning` |
 | neve / granizo | `ph-snowflake` | `ph-snowflake` |
 
-O mapeamento é uma função pura em `src/core/weather-icon.ts`.
+O mapeamento é uma função pura em `src/core/weatherIcon.ts`.
 
 ## Critérios de aceite
 
-- [ ] Testes de `weather-icon.ts` cobrem todas as condições e dia/noite.
+- [ ] Testes de `weatherIcon.ts` cobrem todas as condições e dia/noite.
 - [ ] Com cidade nas preferências, a ilha mostra ícone + temperatura dessa cidade.
 - [ ] Sem cidade, sem locations do GNOME e com localização desligada: a ilha mostra só hora e dia, e a notificação de dica aparece uma única vez.
 - [ ] Trocar a cidade nas preferências atualiza a ilha sem reiniciar a extensão.
