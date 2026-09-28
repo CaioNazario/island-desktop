@@ -92,24 +92,27 @@ export interface NetBytes {
 export function parseNetDev(netDev: string): NetBytes {
   const sum = { rx: 0, tx: 0 };
   for (const line of netDev.split('\n')) {
-    const colon = line.indexOf(':');
-    if (colon < 0) continue;
-    const name = line.slice(0, colon).trim();
-    if (!isPhysicalInterface(name)) continue;
-    const fields = line
-      .slice(colon + 1)
-      .trim()
-      .split(/\s+/)
-      .map(Number);
-    const rx = fields[0];
-    const tx = fields[8];
-    if (rx === undefined || tx === undefined || !Number.isFinite(rx) || !Number.isFinite(tx)) {
-      continue;
-    }
-    sum.rx += rx;
-    sum.tx += tx;
+    const counters = parseNetDevLine(line);
+    if (!counters) continue;
+    sum.rx += counters.rx;
+    sum.tx += counters.tx;
   }
   return sum;
+}
+
+// `iface: rx_bytes … (8 campos de recepção) tx_bytes …`; cabeçalho e
+// interface virtual dão `null`.
+function parseNetDevLine(line: string): NetBytes | null {
+  const colon = line.indexOf(':');
+  if (colon < 0 || !isPhysicalInterface(line.slice(0, colon).trim())) return null;
+  const fields = line
+    .slice(colon + 1)
+    .trim()
+    .split(/\s+/)
+    .map(Number);
+  const [rx, tx] = [fields[0], fields[8]];
+  if (rx === undefined || tx === undefined) return null;
+  return Number.isFinite(rx) && Number.isFinite(tx) ? { rx, tx } : null;
 }
 
 export interface NetRates {
@@ -138,55 +141,44 @@ export interface HardwareReading {
 }
 
 export function hardwareBlocks(reading: HardwareReading): HardwareBlock[] {
-  const cpu = Math.round(clampPercent(reading.cpu));
-  const blocks: HardwareBlock[] = [
-    {
-      id: 'cpu',
-      label: 'CPU',
-      value: `${cpu}%`,
-      tone: cpu >= CPU_BUSY ? 'busy' : 'normal',
-      tooltip: `CPU ${cpu}%`,
-    },
-    {
-      id: 'ram',
-      label: 'RAM',
-      value: `${oneDecimal(reading.memory.usedBytes / GIB)}G`,
-      tone: 'normal',
-      tooltip: `RAM ${oneDecimal(reading.memory.usedBytes / GIB)} / ${oneDecimal(
-        reading.memory.totalBytes / GIB,
-      )} GB`,
-    },
-  ];
-  if (reading.gpu !== null) {
-    const gpu = Math.round(clampPercent(reading.gpu));
-    blocks.push({
-      id: 'gpu',
-      label: 'GPU',
-      value: `${gpu}%`,
-      tone: 'normal',
-      tooltip: `GPU ${gpu}%`,
-    });
-  }
-  if (reading.temp !== null) {
-    const temp = Math.round(reading.temp);
-    blocks.push({
-      id: 'temp',
-      label: 'TEMP',
-      value: `${temp}°`,
-      tone: temp >= TEMP_HOT ? 'hot' : 'normal',
-      tooltip: `Temperatura ${temp}°C`,
-    });
-  }
-  const down = megabytes(reading.net.downBytesPerSecond);
-  const up = Math.round(reading.net.upBytesPerSecond / KB);
-  blocks.push({
-    id: 'net',
-    label: 'NET',
-    value: `↓${down}`,
-    tone: 'normal',
-    tooltip: `Rede ↓${down} MB/s ↑${up} KB/s`,
-  });
-  return blocks;
+  return [
+    cpuBlock(reading.cpu),
+    ramBlock(reading.memory),
+    reading.gpu === null ? null : gpuBlock(reading.gpu),
+    reading.temp === null ? null : tempBlock(reading.temp),
+    netBlock(reading.net),
+  ].filter((block) => block !== null);
+}
+
+function cpuBlock(percent: number): HardwareBlock {
+  const cpu = Math.round(clampPercent(percent));
+  const tone = cpu >= CPU_BUSY ? 'busy' : 'normal';
+  return { id: 'cpu', label: 'CPU', value: `${cpu}%`, tone, tooltip: `CPU ${cpu}%` };
+}
+
+function ramBlock(memory: Memory): HardwareBlock {
+  const used = oneDecimal(memory.usedBytes / GIB);
+  const total = oneDecimal(memory.totalBytes / GIB);
+  const tooltip = `RAM ${used} / ${total} GB`;
+  return { id: 'ram', label: 'RAM', value: `${used}G`, tone: 'normal', tooltip };
+}
+
+function gpuBlock(percent: number): HardwareBlock {
+  const gpu = Math.round(clampPercent(percent));
+  return { id: 'gpu', label: 'GPU', value: `${gpu}%`, tone: 'normal', tooltip: `GPU ${gpu}%` };
+}
+
+function tempBlock(celsius: number): HardwareBlock {
+  const temp = Math.round(celsius);
+  const tone = temp >= TEMP_HOT ? 'hot' : 'normal';
+  return { id: 'temp', label: 'TEMP', value: `${temp}°`, tone, tooltip: `Temperatura ${temp}°C` };
+}
+
+function netBlock(net: NetRates): HardwareBlock {
+  const down = megabytes(net.downBytesPerSecond);
+  const up = Math.round(net.upBytesPerSecond / KB);
+  const tooltip = `Rede ↓${down} MB/s ↑${up} KB/s`;
+  return { id: 'net', label: 'NET', value: `↓${down}`, tone: 'normal', tooltip };
 }
 
 function clampPercent(value: number): number {
