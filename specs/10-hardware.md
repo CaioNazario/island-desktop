@@ -8,16 +8,15 @@ Cinco blocos de duas linhas, gap 2px, sem entrelinha:
 - Rótulo: 8.5px/500, `letter-spacing .08em`, `neutral-500`.
 - Valor: 11.5px/500, dígitos tabulares.
 - Largura fixa por bloco, medida para o valor mais largo possível, para a barra não "pular": CPU `100%`, RAM `99.9G`, GPU `100%`, TEMP `100°`, NET `↓99.9`.
-- Tooltip no hover (500ms de atraso) com o detalhe; estilo Nocturne (fundo `bg`, anel `neutral-800`, 11px), não o tooltip do sistema.
-- Clique não faz nada.
+- Sem tooltip; clique não faz nada.
 
-| Bloco | Valor | Cor | Tooltip |
-|---|---|---|---|
-| CPU | `12%` | `accent-300` se ≥60%, senão `text` | `CPU 12%` |
-| RAM | `7.2G` (usada, GiB, 1 casa) | `text` | `RAM 7.2 / 15.3 GB` (usada / total, GiB, 1 casa) |
-| GPU | `8%` | `text` | `GPU 8%` |
-| TEMP | `54°` | `#f75d59` se ≥70°, senão `text` | `Temperatura 54°C` |
-| NET | `↓1.2` (MB/s, 1 casa; ≥100 sem casa) | `text` | `Rede ↓1.2 MB/s ↑86 KB/s` |
+| Bloco | Valor | Cor |
+|---|---|---|
+| CPU | `12%` | `accent-300` se ≥60%, senão `text` |
+| RAM | `7.2G` (usada, GiB, 1 casa) | `text` |
+| GPU | `8%` | `text` |
+| TEMP | `54°` | `#f75d59` se ≥70°, senão `text` |
+| NET | `↓1.2` (MB/s, 1 casa; ≥100 sem casa) | `text` |
 
 Os limiares, a formatação e os cálculos por delta ficam em `src/core/hardware.ts`. Leitura de arquivos em `src/system/hardware.ts`, sempre assíncrona.
 
@@ -34,7 +33,7 @@ Amostragem a cada **1s**.
   3. `xe`: mesma conta com `/sys/class/drm/card*/device/tile0/gt0/gtidle/idle_residency_ms`
   4. nenhuma (inclui NVIDIA, fora da v1) → o bloco GPU some
 - **TEMP**, primeira que existir em `/sys/class/hwmon/*`: `coretemp` (`Package id 0`) → `k10temp` (`Tctl`) → `/sys/class/thermal/thermal_zone*` do tipo `x86_pkg_temp` → some.
-- **NET**: delta de `/proc/net/dev` somando interfaces físicas (exclui `lo`, `docker*`, `veth*`, `br-*`, `virbr*`, `tun*`, `wg*`). Download em MB/s, upload em KB/s.
+- **NET**: delta de `/proc/net/dev` somando interfaces físicas (exclui `lo`, `docker*`, `veth*`, `br-*`, `virbr*`, `tun*`, `wg*`). Só download, em MB/s.
 
 ## Largura mínima
 
