@@ -13,9 +13,10 @@ Origem: `design/props.json` (`clickAction`). `battery` e `charging` são control
 | `weather-hint-shown` | `b` | `false` | spec 07 (interna, sem UI) |
 | `ai-claude-enabled` | `b` | `true` | spec 12 |
 | `ai-codex-enabled` | `b` | `true` | spec 12 |
-| `toggle-quick` | `as` | `['<Super>s']` | spec 03 |
 
 A extensão reage a `changed::<chave>` sem reiniciar.
+
+O atalho de controles rápidos não é preferência: a Island usa o `toggle-quick-settings` do próprio Shell (`Super+S`, spec 03).
 
 ## Janela de preferências (`prefs.ts`, GTK4 + libadwaita)
 
@@ -28,8 +29,6 @@ Roda em outro processo e só conversa com a extensão via GSettings. Textos em p
   - Botão "Limpar" volta à cadeia de fallback
 - **Uso de IA**
   - Um switch por provedor (Claude, Codex) + estado da credencial: "Encontrada", "Não encontrada: rode `claude`", "Expirada"
-- **Atalhos**
-  - Atalho de controles rápidos (padrão `Super+S`), editável
 
 A notificação de dica do clima (spec 07) abre esta janela direto na página Clima.
 
