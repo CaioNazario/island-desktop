@@ -216,10 +216,7 @@ export class BarManager {
   /** Modos fixos e o cartão central tomam o foco de teclado (specs/03-ilha.md). */
   private syncGrab(): void {
     const shouldGrab = this.state.cardOpen || isFixedMode(this.state.mode);
-    const targetBar = this.bars[this.targetMonitorIndex];
-    // O cartão fica fora da ilha: com ele aberto, o grab é dele, e o
-    // clique na ilha vira "clique fora", que fecha tudo.
-    const targetActor = (this.state.cardOpen ? targetBar?.card : targetBar?.island) ?? null;
+    const targetActor = this.bars[this.targetMonitorIndex]?.island ?? null;
     const wantedActor = shouldGrab ? targetActor : null;
 
     if (wantedActor === this.grabbedActor) return;

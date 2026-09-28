@@ -34,8 +34,8 @@ Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entr
 
 ## Cartão central
 
-- Abre ao clicar na ilha em `compact` quando "Clique na ilha abre" = **Calendário e música** (padrão, spec 13). Clicar de novo na ilha, Esc ou clique fora fecha.
-- 420px, centralizado, `top: 38px`. Sai de trás da ilha: o fundo começa com o tamanho, o raio e a posição da ilha compacta (240×30, raio 15, sobre ela) e cresce até 420×altura, raio 22, `top: 38px` em 400ms `EASE_OUT_BACK`; o conteúdo, já no tamanho final e cortado pelo fundo, entra com opacidade 220ms (atraso 80ms). Fechar faz o inverso e volta para trás da ilha.
+- Abre ao clicar na ilha em `compact` quando "Clique na ilha abre" = **Calendário e música** (padrão, spec 13). Esc ou clique fora fecha; clicar dentro do cartão é do conteúdo, como nos modos fixos.
+- A ilha se expande no cartão, como num modo: vai a 420×altura do conteúdo, raio 22, com a mola e o crossfade da ilha (spec 03, "Animação"); o relógio sai e o cartão entra. Diverge do design de propósito: lá o cartão abre separado, em `top: 38px`, abaixo da ilha compacta, que não muda.
 - Raio 22, fundo `bg`, anel `neutral-800`, sem o blur, a sombra escura e o brilho do design (spec 03, "Animação"). Padding 18px.
 - **Seção de música**: capa 56×56 raio 12, artista 14px/500, título 12.5px `neutral-400`, ícone da fonte 22px `accent-400` alinhado ao topo. Progresso (margin-top 12px): barra 3px + `pos / duração` 10.5px `neutral-500`. Controles centralizados, gap 18px: 36/40/36 com ícones 17/24/17.
 - Divisor: 1px, gradiente transparente → `neutral-800` (15%–85%) → transparente, sangrando até as bordas do cartão (margin 14px −18px).

@@ -78,6 +78,14 @@ export const CalendarGrid = GObject.registerClass(
       this.add_child(this.weeksGrid);
     }
 
+    /** Quanto a grade ainda cresce (negativo: encolhe) até o fim da animação. */
+    get pendingHeight(): number {
+      const grid = this.weeksGrid;
+      const [, settled] = grid.layout_manager.get_preferred_height(grid, -1);
+      const [, current] = grid.get_preferred_height(-1);
+      return settled - current;
+    }
+
     // Semana ↔ Mês (e meses de 5 ↔ 6 semanas) anima a altura das semanas;
     // o que vem abaixo acompanha. Fora da tela, troca direto.
     setWeeks(weeks: readonly CalendarDay[][]): void {

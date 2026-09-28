@@ -4,7 +4,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import { formatClock, formatDay } from '../core/clock.js';
-import { getSize, type IslandState, type Mode, type SizeContext } from '../core/island.js';
+import { getSize, type IslandState, type Size, type SizeContext } from '../core/island.js';
 import type { SystemBluetooth } from '../system/bluetooth.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
@@ -16,12 +16,14 @@ import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BtView, type BtViewActor } from './btView.js';
 import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
+import { CenterCard, type CenterCardActor } from './centerCard.js';
 import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
 import { brightnessIconName, volumeIconName } from './icons.js';
 import {
   hideLayer,
   IslandSurface,
   type IslandSurfaceActor,
+  type LayerId,
   modeLayer,
   showLayer,
 } from './modeLayer.js';
@@ -72,11 +74,12 @@ export const Island = GObject.registerClass(
     private readonly notifRow: NotificationRowActor;
     private readonly stackView: StackViewActor;
     private readonly calendarView: CalendarModeViewActor;
-    private readonly layers: ReadonlyMap<Mode, St.Widget>;
+    private readonly card: CenterCardActor;
+    private readonly layers: ReadonlyMap<LayerId, St.Widget>;
     private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
-    private contentMode: Mode = 'compact';
+    private contentMode: LayerId = 'compact';
 
     constructor(
       state: IslandState,
@@ -172,7 +175,11 @@ export const Island = GObject.registerClass(
         onSizeChanged: () => this.resize(),
       });
 
-      this.layers = new Map<Mode, St.Widget>([
+      this.card = new CenterCard(system.music, system.calendar, {
+        onSizeChanged: () => this.resize(),
+      });
+
+      this.layers = new Map<LayerId, St.Widget>([
         ['compact', modeLayer(this.clockLabel)],
         ['notif', modeLayer(notif.content)],
         ['stack', modeLayer(this.stackView)],
@@ -183,6 +190,7 @@ export const Island = GObject.registerClass(
         ['quick', modeLayer(quickContent(this.quickRow, system.session, controls))],
         ['wifi', modeLayer(this.wifiView)],
         ['bt', modeLayer(this.btView)],
+        ['card', modeLayer(this.card)],
       ]);
       this.syncLayerSize('compact');
       this.surface.add_child(this.layers.get('compact')!);
@@ -192,9 +200,16 @@ export const Island = GObject.registerClass(
 
       // Gesto, não `button-press-event`: um ator que devolve EVENT_STOP no
       // press cancela os gestos da cadeia, inclusive o `ClickGesture` dos
-      // `St.Button` do conteúdo (tiles, switch).
+      // `St.Button` do conteúdo (tiles, switch). Com o cartão aberto, o clique
+      // é do conteúdo dele: fecha só por Esc ou clique fora.
       const clickGesture = new Clutter.ClickGesture();
-      clickGesture.connectObject('recognize', () => this.onIslandClick(), this);
+      clickGesture.connectObject(
+        'recognize',
+        () => {
+          if (this.contentMode !== 'card') this.onIslandClick();
+        },
+        this,
+      );
       this.add_action(clickGesture);
 
       this.connectObject(
@@ -262,12 +277,12 @@ export const Island = GObject.registerClass(
     /** Chamado pelo `BarManager` a cada mudança de modo ou de monitor-alvo. */
     render(isTargetMonitor: boolean): void {
       this.isTargetMonitor = isTargetMonitor;
-      const mode = isTargetMonitor ? this.state.mode : 'compact';
+      const mode = this.layerFor(isTargetMonitor);
       this.power.sync();
       this.showContentFor(mode);
       // A linha de energia muda a altura sem trocar de modo.
       this.resize();
-      this.syncExpanded(mode !== 'compact' || (isTargetMonitor && this.state.cardOpen));
+      this.syncExpanded(mode !== 'compact');
       // "Cursor de mão só em `compact` e `notif`" (specs/03-ilha.md): nos
       // outros modos, cliques são do conteúdo.
       this.set_cursor_type(
@@ -275,6 +290,12 @@ export const Island = GObject.registerClass(
           ? Clutter.CursorType.POINTER
           : Clutter.CursorType.DEFAULT,
       );
+    }
+
+    // O cartão central é a ilha expandida: só o monitor-alvo o mostra.
+    private layerFor(isTargetMonitor: boolean): LayerId {
+      if (!isTargetMonitor) return 'compact';
+      return this.state.cardOpen ? 'card' : this.state.mode;
     }
 
     // "opacidade 1 quando a ilha não está em `compact` ou o cartão central está
@@ -290,7 +311,12 @@ export const Island = GObject.registerClass(
     /** O conteúdo do modo atual mudou de altura (energia, senha do `wifi`, rádio do `bt`). */
     private resize(): void {
       this.syncLayerSize(this.contentMode);
-      this.applySize(getSize(this.contentMode, this.sizeContext()), true);
+      this.applySize(this.sizeFor(this.contentMode), true);
+    }
+
+    private sizeFor(mode: LayerId): Size {
+      if (mode === 'card') return this.card.islandSize(ISLAND_RING);
+      return getSize(mode, this.sizeContext());
     }
 
     private sizeContext(): SizeContext {
@@ -306,7 +332,7 @@ export const Island = GObject.registerClass(
       };
     }
 
-    private showContentFor(mode: Mode): void {
+    private showContentFor(mode: LayerId): void {
       if (mode === this.contentMode) return;
       const previous = this.contentMode;
       this.contentMode = mode;
@@ -316,6 +342,7 @@ export const Island = GObject.registerClass(
       if (outgoing) hideLayer(this.surface, outgoing, previous);
       // Antes de medir a camada, e fora da tela: volta a Semana sem animar.
       if (mode === 'calendar') this.calendarView.reset();
+      if (mode === 'card') this.card.reset();
       const incoming = this.layers.get(mode);
       if (incoming) {
         this.syncLayerSize(mode);
@@ -327,8 +354,8 @@ export const Island = GObject.registerClass(
     }
 
     // As camadas ficam dentro do anel da `surface`.
-    private syncLayerSize(mode: Mode): void {
-      const size = getSize(mode, this.sizeContext());
+    private syncLayerSize(mode: LayerId): void {
+      const size = this.sizeFor(mode);
       this.layers.get(mode)?.set_size(size.width - 2 * ISLAND_RING, size.height - 2 * ISLAND_RING);
     }
 
@@ -337,10 +364,7 @@ export const Island = GObject.registerClass(
       this.clockLabel.text = `${formatClock(now)} · ${formatDay(now)}`;
     }
 
-    private applySize(
-      size: { width: number; height: number; radius: number },
-      animate: boolean,
-    ): void {
+    private applySize(size: Size, animate: boolean): void {
       if (!animate) {
         this.set_size(size.width, size.height);
         this.surface.radius = size.radius;

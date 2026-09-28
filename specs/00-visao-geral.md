@@ -15,7 +15,7 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 | **Modo** | Estado da ilha: `compact`, `notif`, `stack`, `music`, `volume`, `brightness`, `calendar`, `quick`, `wifi`, `bt`, `ai` |
 | **Modo transitório** | Fecha sozinho após um timer: `notif`, `music`, `volume`, `brightness` |
 | **Modo fixo** | Fica até clique fora, Esc ou novo gatilho: `stack`, `calendar`, `quick`, `wifi`, `bt`, `ai` |
-| **Cartão central** | Painel abaixo da ilha com música + calendário (spec 05) |
+| **Cartão central** | Ilha expandida com música + calendário (spec 05) |
 | **Banner** | Notificação que desce abaixo da ilha quando ela está ocupada (spec 04) |
 | **Linha de energia** | Fileira Suspender/Reiniciar/Desligar/Sair/Bloquear (spec 09) |
 

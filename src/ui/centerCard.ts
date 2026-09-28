@@ -10,7 +10,7 @@ import {
   type CalendarView,
   type TodayEvent,
 } from '../core/calendar.js';
-import { getSize } from '../core/island.js';
+import type { Size } from '../core/island.js';
 import { artistLine, formatTrackTime, progressFraction, sourceGlyph } from '../core/music.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import type { MusicSource } from '../system/mpris.js';
@@ -25,13 +25,9 @@ import { phosphor } from './icons.js';
 import { MusicControls, MusicCover, MusicProgressBar } from './musicView.js';
 import { colors, effects } from './tokens.js';
 
-export const CENTER_CARD_WIDTH = 420;
-/** `top: 38px` no design: distância do topo da barra. */
-export const CENTER_CARD_TOP = 38;
-const CARD_RADIUS = 22;
+const CENTER_CARD_WIDTH = 420;
+const CENTER_CARD_RADIUS = 22;
 const CARD_PADDING = 18;
-const CARD_RING = 1;
-const CONTENT_WIDTH = CENTER_CARD_WIDTH - 2 * CARD_RING;
 
 function singleLine(label: St.Label): St.Label {
   label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
@@ -192,6 +188,7 @@ function eventRow(event: TodayEvent): St.BoxLayout {
 const CardCalendarSection = GObject.registerClass(
   class CardCalendarSection extends St.BoxLayout {
     private readonly events: CalendarEventsSource;
+    private readonly onSizeChanged: () => void;
     private readonly toggle: CalendarViewToggleActor;
     private readonly monthLabel: St.Label;
     private readonly grid: CalendarGridActor;
@@ -200,12 +197,13 @@ const CardCalendarSection = GObject.registerClass(
     private view: CalendarView = 'week';
     private monthOffset = 0;
 
-    constructor(events: CalendarEventsSource) {
+    constructor(events: CalendarEventsSource, onSizeChanged: () => void) {
       super({
         orientation: Clutter.Orientation.VERTICAL,
         style: `padding: 0 ${CARD_PADDING}px;`,
       });
       this.events = events;
+      this.onSizeChanged = onSizeChanged;
 
       const header = new St.BoxLayout({ style: 'spacing: 8px; margin-bottom: 10px;' });
       header.add_child(
@@ -227,6 +225,7 @@ const CardCalendarSection = GObject.registerClass(
       this.toggle = new CalendarViewToggle(24, () => {
         this.view = this.view === 'week' ? 'month' : 'week';
         this.sync();
+        this.onSizeChanged();
       });
       header.add_child(this.toggle);
       this.add_child(header);
@@ -251,7 +250,7 @@ const CardCalendarSection = GObject.registerClass(
           pillWidth: 26,
           pillHeight: 22,
         },
-        effects.cardSpring.durationMs,
+        effects.islandSpring.durationMs,
       );
       this.add_child(this.grid);
 
@@ -261,9 +260,16 @@ const CardCalendarSection = GObject.registerClass(
       });
       this.add_child(this.eventList);
 
-      this.unsubscribe = events.onChange(() => this.sync());
+      this.unsubscribe = events.onChange(() => {
+        this.sync();
+        this.onSizeChanged();
+      });
       this.sync();
       this.connectObject('destroy', () => this.unsubscribe(), this);
+    }
+
+    get pendingHeight(): number {
+      return this.grid.pendingHeight;
     }
 
     /** Reabrir o cartão volta a Semana, no mês atual. */
@@ -276,6 +282,7 @@ const CardCalendarSection = GObject.registerClass(
     private moveMonth(step: number): void {
       this.monthOffset += step;
       this.sync();
+      this.onSizeChanged();
     }
 
     private sync(): void {
@@ -297,198 +304,46 @@ type CardMusicSectionActor = InstanceType<typeof CardMusicSection>;
 type CardCalendarSectionActor = InstanceType<typeof CardCalendarSection>;
 
 export interface CenterCardOptions {
-  onEscape: () => void;
-  /** Clique fora do cartão com ele segurando o grab: fecha tudo. */
-  onPressOutside: () => void;
-  /** Clique em outro ator da barra que trata o próprio clique sob o grab (banner). */
-  claimPressUnderGrab: (target: Clutter.Actor) => boolean;
+  /** A música apareceu ou sumiu, ou o calendário mudou de altura. */
+  onSizeChanged: () => void;
 }
 
-// Casca do cartão: pinta fundo, anel e raio e corta o conteúdo. Enquanto a
-// casca cresce a partir da ilha, o conteúdo fica no tamanho final,
-// centralizado no topo: o `BinLayout` espremeria um filho maior que o pai
-// (CLAMP em `clutter_actor_allocate_align_fill`, mutter 50.4).
-const CardShell = GObject.registerClass(
-  {
-    Properties: {
-      // Animável com `ease_property`, como o raio da ilha.
-      radius: GObject.ParamSpec.double(
-        'radius',
-        null,
-        null,
-        GObject.ParamFlags.READWRITE,
-        0,
-        Number.MAX_SAFE_INTEGER,
-        0,
-      ),
-    },
-  },
-  class CardShell extends St.Widget {
-    private readonly body: Clutter.Actor;
-    private radiusPx = -1;
-
-    constructor(body: Clutter.Actor) {
-      super({
-        clip_to_allocation: true,
-        x_expand: true,
-        y_expand: true,
-        x_align: Clutter.ActorAlign.CENTER,
-        y_align: Clutter.ActorAlign.START,
-      });
-      this.body = body;
-      this.add_child(body);
-      this.radius = CARD_RADIUS;
-    }
-
-    get radius(): number {
-      return this.radiusPx;
-    }
-
-    set radius(radius: number) {
-      if (this.radiusPx === radius) return;
-      this.radiusPx = radius;
-      this.style = `
-        border-radius: ${radius}px;
-        background-color: ${colors.bg};
-        border: ${CARD_RING}px solid ${colors.neutral800};
-      `;
-      this.notify('radius');
-    }
-
-    override vfunc_get_preferred_width(_forHeight: number): [number, number] {
-      return [CENTER_CARD_WIDTH, CENTER_CARD_WIDTH];
-    }
-
-    override vfunc_get_preferred_height(_forWidth: number): [number, number] {
-      const [min, natural] = this.body.get_preferred_height(CONTENT_WIDTH);
-      return [min + 2 * CARD_RING, natural + 2 * CARD_RING];
-    }
-
-    override vfunc_allocate(box: Clutter.ActorBox): void {
-      this.set_allocation(box);
-      const [, height] = this.body.get_preferred_height(CONTENT_WIDTH);
-      const childBox = new Clutter.ActorBox();
-      childBox.set_origin((box.get_width() - CONTENT_WIDTH) / 2, CARD_RING);
-      childBox.set_size(CONTENT_WIDTH, height);
-      this.body.allocate(childBox);
-    }
-  },
-);
-
-type CardShellActor = InstanceType<typeof CardShell>;
-
-// Cartão central (specs/05-musica.md "Cartão central"): abre abaixo da ilha
-// compacta, que não muda de tamanho. Sai de trás dela: a casca começa com o
-// tamanho e a posição da ilha compacta e cresce até o tamanho do cartão.
+// Cartão central (specs/05-musica.md "Cartão central"): a ilha se expande
+// nele como num modo. Música · divisor · calendário, como no design; nada
+// tocando, a seção de música e o divisor somem.
 export const CenterCard = GObject.registerClass(
-  class CenterCard extends St.Widget {
-    private readonly options: CenterCardOptions;
+  class CenterCard extends St.BoxLayout {
     private readonly calendar: CardCalendarSectionActor;
-    private readonly shell: CardShellActor;
-    private readonly body: St.BoxLayout;
-    private isOpen = false;
 
     constructor(music: MusicSource, events: CalendarEventsSource, options: CenterCardOptions) {
       super({
-        layout_manager: new Clutter.BinLayout(),
-        reactive: true,
-        can_focus: true,
-        width: CENTER_CARD_WIDTH,
-        visible: false,
-      });
-      this.options = options;
-
-      this.body = new St.BoxLayout({
         orientation: Clutter.Orientation.VERTICAL,
         style: `padding: ${CARD_PADDING}px 0;`,
+        y_align: Clutter.ActorAlign.START,
       });
-      // Música · divisor · calendário, como no design. Nada tocando: seção
-      // de música e divisor somem (specs/05-musica.md).
       const musicSection: CardMusicSectionActor = new CardMusicSection(music);
       const divider = sectionDivider();
       musicSection.bind_property('visible', divider, 'visible', GObject.BindingFlags.SYNC_CREATE);
-      this.calendar = new CardCalendarSection(events);
-      this.body.add_child(musicSection);
-      this.body.add_child(divider);
-      this.body.add_child(this.calendar);
-
-      this.shell = new CardShell(this.body);
-      this.add_child(this.shell);
-
-      this.connectObject(
-        'captured-event',
-        (_actor: St.Widget, event: Clutter.Event) => this.onCapturedEvent(event),
-        'key-press-event',
-        (_actor: St.Widget, event: Clutter.Event) => {
-          if (event.get_key_symbol() !== Clutter.KEY_Escape) return Clutter.EVENT_PROPAGATE;
-          this.options.onEscape();
-          return Clutter.EVENT_STOP;
-        },
-        this,
-      );
+      musicSection.connectObject('notify::visible', () => options.onSizeChanged(), this);
+      this.calendar = new CardCalendarSection(events, options.onSizeChanged);
+      this.add_child(musicSection);
+      this.add_child(divider);
+      this.add_child(this.calendar);
     }
 
-    // Com o grab modal, o clique fora do cartão é entregue a ele: fecha
-    // tudo, inclusive o clique na ilha ("clicar de novo na ilha fecha").
-    // STOP para não chegar à janela embaixo (specs/02-barra.md).
-    private onCapturedEvent(event: Clutter.Event): boolean {
-      const type = event.type();
-      if (type !== Clutter.EventType.BUTTON_PRESS && type !== Clutter.EventType.TOUCH_BEGIN)
-        return Clutter.EVENT_PROPAGATE;
-      const target = global.stage.get_event_actor(event);
-      if (target && this.contains(target)) return Clutter.EVENT_PROPAGATE;
-      if (target && this.options.claimPressUnderGrab(target)) return Clutter.EVENT_STOP;
-      this.options.onPressOutside();
-      return Clutter.EVENT_STOP;
+    /** Reabrir o cartão volta a Semana, no mês atual. */
+    reset(): void {
+      this.calendar.reset();
     }
 
-    setOpen(open: boolean): void {
-      if (open === this.isOpen) return;
-      this.isOpen = open;
-      const { shell, body } = this;
-      shell.remove_all_transitions();
-      body.remove_all_transitions();
-      if (open) this.calendar.reset();
-
-      const island = getSize('compact');
-      if (open && !this.visible) {
-        shell.set_size(island.width, island.height);
-        shell.radius = island.radius;
-        shell.translationY = -CENTER_CARD_TOP;
-        body.opacity = 0;
-        this.visible = true;
-      } else {
-        // Interrompido no meio: parte do tamanho atual.
-        shell.set_size(shell.width, shell.height);
-      }
-
-      const [, bodyHeight] = body.get_preferred_height(CONTENT_WIDTH);
-      const spring = {
-        duration: effects.cardSpring.durationMs,
-        mode: Clutter.AnimationMode.EASE_OUT_BACK,
-      };
-      shell.ease({
-        ...(open
-          ? { width: CENTER_CARD_WIDTH, height: bodyHeight + 2 * CARD_RING, translationY: 0 }
-          : { width: island.width, height: island.height, translationY: -CENTER_CARD_TOP }),
-        ...spring,
-        onStopped: (isFinished: boolean) => {
-          if (!isFinished) return;
-          if (open) {
-            // Volta ao tamanho natural: Mês/Semana e a música mudam a altura.
-            shell.set_size(-1, -1);
-          } else {
-            this.visible = false;
-          }
-        },
-      });
-      shell.ease_property('radius', open ? CARD_RADIUS : island.radius, spring);
-      body.ease({
-        opacity: open ? 255 : 0,
-        delay: effects.contentCrossfade.delayMs,
-        duration: effects.contentCrossfade.durationMs,
-        mode: Clutter.AnimationMode.EASE,
-      });
+    /**
+     * Tamanho da ilha com o cartão, anel incluso. A altura conta a grade do
+     * calendário onde a animação Semana ↔ Mês vai parar.
+     */
+    islandSize(ring: number): Size {
+      const [, content] = this.get_preferred_height(CENTER_CARD_WIDTH - 2 * ring);
+      const height = content + this.calendar.pendingHeight + 2 * ring;
+      return { width: CENTER_CARD_WIDTH, height, radius: CENTER_CARD_RADIUS };
     }
   },
 );

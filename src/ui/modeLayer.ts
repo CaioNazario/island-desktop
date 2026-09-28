@@ -5,6 +5,9 @@ import St from 'gi://St';
 import type { Mode } from '../core/island.js';
 import { colors, effects } from './tokens.js';
 
+/** O que a ilha mostra: um modo ou o cartão central (specs/05-musica.md). */
+export type LayerId = Mode | 'card';
+
 // Layout da `surface` da ilha: cada camada no seu tamanho preferido,
 // centrada no topo, mesmo maior que a ilha. O `BinLayout` espremeria a
 // camada até o tamanho da ilha durante a animação (CLAMP em
@@ -96,7 +99,7 @@ export function modeLayer(content: Clutter.Actor): St.Widget {
   return layer;
 }
 
-function hiddenTransform(mode: Mode): {
+function hiddenTransform(mode: LayerId): {
   scaleX: number;
   scaleY: number;
   translationY: number;
@@ -110,7 +113,7 @@ function hiddenTransform(mode: Mode): {
 // Crossfade (specs/03-ilha.md "Animação"): a camada que entra vai a
 // opacidade 1 em 220ms com atraso de 80ms e escala 0.94→1 em 300ms; a que
 // sai faz o inverso.
-export function showLayer(surface: St.Widget, layer: St.Widget, mode: Mode): void {
+export function showLayer(surface: St.Widget, layer: St.Widget, mode: LayerId): void {
   layer.remove_all_transitions();
   if (layer.get_parent() === null) {
     surface.add_child(layer);
@@ -134,7 +137,7 @@ export function showLayer(surface: St.Widget, layer: St.Widget, mode: Mode): voi
   });
 }
 
-export function hideLayer(surface: St.Widget, layer: St.Widget, mode: Mode): void {
+export function hideLayer(surface: St.Widget, layer: St.Widget, mode: LayerId): void {
   layer.remove_all_transitions();
   layer.ease({
     opacity: 0,
