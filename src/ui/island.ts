@@ -349,17 +349,19 @@ export const Island = GObject.registerClass(
       if (mode === this.contentMode) return;
       const previous = this.contentMode;
       this.contentMode = mode;
+      const tiles = (id: LayerId) => id === 'quick' || id === 'wifi' || id === 'bt';
+      const instant = tiles(previous) && tiles(mode);
 
       // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
       const outgoing = this.layers.get(previous);
-      if (outgoing) hideLayer(this.surface, outgoing, previous);
+      if (outgoing) hideLayer(this.surface, outgoing, previous, instant);
       // Antes de medir a camada, e fora da tela: volta a Semana sem animar.
       if (mode === 'calendar') this.calendarView.reset();
       if (mode === 'card') this.card.reset();
       const incoming = this.layers.get(mode);
       if (incoming) {
         this.syncLayerSize(mode);
-        showLayer(this.surface, incoming, mode);
+        showLayer(this.surface, incoming, mode, instant);
       }
       if (previous === 'bt') this.btView.onClose();
       if (mode === 'wifi') this.wifiView.onOpen();

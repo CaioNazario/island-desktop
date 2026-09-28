@@ -112,8 +112,14 @@ function hiddenTransform(mode: LayerId): {
 
 // Crossfade (specs/03-ilha.md "Animação"): a camada que entra vai a
 // opacidade 1 em 220ms com atraso de 80ms e escala 0.94→1 em 300ms; a que
-// sai faz o inverso.
-export function showLayer(surface: St.Widget, layer: St.Widget, mode: LayerId): void {
+// sai faz o inverso. Entre `quick`, `wifi` e `bt` a troca é instantânea:
+// os três repetem a fileira de tiles no topo e só a ilha anima.
+export function showLayer(
+  surface: St.Widget,
+  layer: St.Widget,
+  mode: LayerId,
+  instant: boolean,
+): void {
   layer.remove_all_transitions();
   if (layer.get_parent() === null) {
     surface.add_child(layer);
@@ -121,6 +127,10 @@ export function showLayer(surface: St.Widget, layer: St.Widget, mode: LayerId): 
     Object.assign(layer, hiddenTransform(mode));
   } else {
     surface.set_child_above_sibling(layer, null);
+  }
+  if (instant) {
+    Object.assign(layer, { opacity: 255, scaleX: 1, scaleY: 1, translationY: 0 });
+    return;
   }
   layer.ease({
     opacity: 255,
@@ -137,8 +147,17 @@ export function showLayer(surface: St.Widget, layer: St.Widget, mode: LayerId): 
   });
 }
 
-export function hideLayer(surface: St.Widget, layer: St.Widget, mode: LayerId): void {
+export function hideLayer(
+  surface: St.Widget,
+  layer: St.Widget,
+  mode: LayerId,
+  instant: boolean,
+): void {
   layer.remove_all_transitions();
+  if (instant) {
+    surface.remove_child(layer);
+    return;
+  }
   layer.ease({
     opacity: 0,
     delay: effects.contentCrossfade.delayMs,

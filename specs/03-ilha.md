@@ -39,6 +39,7 @@ Os tempos dos transitórios são mais curtos que o `TRANSIENT` do design (4200/4
 
 - Largura e altura: 460ms na mola `cubic-bezier(.3,1.2,.4,1)` (spec 01), em toda mudança de tamanho: troca de modo, voltar a `compact`, linha de energia, senha do `wifi`, rádio do `bt`. Raio: 460ms ease.
 - Cada modo é uma camada própria, centrada no topo da ilha, com o tamanho do seu modo. Troca de modo = crossfade: a camada que entra vai a opacidade 1 em 220ms com atraso de 80ms e escala 0.94→1 (300ms); a que sai faz o inverso. A camada `notif` entra de `translateY(-18px) scale(.96)`.
+- Entre `quick`, `wifi` e `bt`, em qualquer direção, a troca de camada é instantânea, sem fade nem escala: os três repetem a fileira de tiles no topo e só a ilha anima a altura. Abrir `wifi`/`bt` direto da barra (vindo de `compact` ou outro modo) usa o crossfade normal.
 - Linha de acento: 36×2 no topo central, `accent`, raio inferior 2px; opacidade 1 quando a ilha não está em `compact` ou o cartão central está aberto (300ms).
 - Contorno: só o anel 1px `neutral-800` (`border` da superfície), expandida ou compacta. A sombra escura e o brilho `accent` do design saíram de propósito: no Shell eles aparecem como um halo quadrado em volta da ilha.
 - Cursor de mão só em `compact` e `notif`.
