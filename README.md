@@ -1,128 +1,499 @@
-# Island
+Island
 
-Extensão do GNOME Shell que troca o painel superior por três pílulas flutuantes. A do meio, a **ilha**, muda de tamanho conforme o contexto, no estilo Dynamic Island, e concentra notificações, música, volume, brilho, calendário e controles rápidos.
+Uma extensão do GNOME Shell que substitui o painel superior por três pílulas flutuantes.
 
-![A barra com as três pílulas e os modos da ilha: notificação, volume, controles rápidos com a linha de energia, cartão central, lista de notificações, uso de IA, Wi‑Fi e Bluetooth](docs/screenshots/overview.png)
+A pílula central — a Island — funciona como uma Dynamic Island para o desktop: muda de tamanho conforme o contexto e concentra notificações, música, volume, brilho, calendário, controles rápidos e outras informações do sistema.
 
-## O que tem
+Screenshots
 
-- **Ilha central**: relógio, dia e clima quando está compacta; expande para notificações, música, volume/brilho, calendário, controles rápidos, Wi‑Fi (com senha) e Bluetooth.
-- **Notificações**: aparecem na ilha e ficam numa lista. Notificações do Chrome/Brave/Chromium mostram o serviço de origem (WhatsApp, Discord, YouTube…); no Firefox isso não funciona, porque ele não informa a origem. Tem modo não perturbe.
-- **Música**: qualquer player MPRIS (Spotify, navegador, etc.), com capa e controles.
-- **Cartão central**: música + calendário da semana ou do mês, com os eventos das contas do GNOME.
-- **Clima**: cidade das preferências, localizações do GNOME ou Geoclue.
-- **Controles rápidos** (`Super+S`): volume, brilho, Wi‑Fi, Bluetooth, modo noturno, não perturbe, Configurações e linha de energia (suspender, reiniciar, desligar, sair, bloquear).
-- **Hardware**: CPU, RAM, GPU (Intel/AMD), temperatura e rede.
-- **Bateria**: nível e carregamento.
-- **Uso de IA**: limites de uso do Claude e do Codex, lidos das credenciais dos CLIs.
+Visão geral
 
-## Como funciona
 
-A ilha tem um **modo** por vez. Há dois tipos:
 
-- **Transitórios** (`notif`, `music`, `volume`, `brightness`): abrem sozinhos por um evento e fecham depois de alguns segundos. Passar o mouse por cima segura a ilha aberta.
-- **Fixos** (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`): abrem por clique ou atalho e ficam até clique fora, `Esc` ou outro gatilho.
+Barra e modos
 
-Eventos automáticos nunca atropelam o que você abriu: com um modo fixo aberto, uma notificação vira um banner abaixo da ilha e trocar de faixa não abre a música.
 
-Clicar na ilha compacta abre o cartão central (ou o calendário, conforme as preferências). Clicar numa notificação abre a lista.
 
-A máquina de estados fica em `src/core/` (TypeScript puro, testado com Vitest). `src/system/` fala com o sistema (MPRIS, NetworkManager, BlueZ, UPower, EDS, GWeather), e `src/ui/` só desenha o estado com St/Clutter.
+Cartão central
 
-## Requisitos
 
-- GNOME Shell 50 em Wayland. Só é validado no Arch, mas o código não depende de nada específico do Arch.
-- Para compilar: Node.js 22, npm e `glib-compile-schemas` (vem com a GLib).
-- Opcionais, conforme o recurso:
-  - Calendário: `evolution-data-server` com uma conta configurada no GNOME
-  - Clima: `libgweather-4` e, sem cidade configurada, Geoclue com a localização ligada
-  - Uso de IA: login feito no [Claude Code](https://claude.com/claude-code) (`~/.claude/.credentials.json`) e/ou no Codex CLI (`~/.codex/auth.json`)
 
-## Instalação
+Notificações
 
-```sh
+
+
+
+
+Volume
+
+
+
+Wi-Fi
+
+
+
+Bluetooth
+
+
+
+Controles de energia
+
+
+
+Uso de IA
+
+
+
+✦ Recursos
+
+Island
+
+Quando compacta, a Island mostra:
+
+Relógio
+
+Dia da semana
+
+Clima
+
+Quando expandida, pode exibir:
+
+Notificações
+
+Música e controles de reprodução
+
+Volume e brilho
+
+Calendário
+
+Controles rápidos
+
+Wi-Fi
+
+Bluetooth
+
+Uso de IA
+
+A Island possui diferentes modos de exibição e só mantém um modo ativo por vez.
+
+Notificações
+
+As notificações aparecem diretamente na Island e também podem ser consultadas em uma lista.
+
+No Chrome, Brave e outros navegadores Chromium, notificações web exibem o serviço de origem — por exemplo, WhatsApp, Discord ou YouTube.
+
+Isso não funciona no Firefox porque o navegador não fornece essa informação ao GNOME Shell.
+
+Também há suporte a Não perturbe.
+
+Música
+
+Compatível com qualquer player que implemente MPRIS, incluindo Spotify e players executados no navegador.
+
+Exibe:
+
+Capa do álbum
+
+Título
+
+Artista
+
+Controles de reprodução
+
+Cartão central
+
+O cartão central combina:
+
+Música em reprodução
+
+Calendário da semana ou do mês
+
+Eventos das contas configuradas no GNOME
+
+O calendário pode ser aberto ao clicar na Island compacta, dependendo da preferência configurada.
+
+Clima
+
+O clima pode ser obtido a partir de:
+
+Cidade definida nas preferências da extensão
+
+Localizações configuradas no GNOME
+
+Geoclue, quando nenhuma cidade estiver configurada
+
+Controles rápidos
+
+Abra com Super+S.
+
+Inclui:
+
+Volume
+
+Brilho
+
+Wi-Fi
+
+Bluetooth
+
+Modo noturno
+
+Não perturbe
+
+Configurações
+
+Linha de energia:
+
+Suspender
+
+Reiniciar
+
+Desligar
+
+Sair
+
+Bloquear
+
+Hardware
+
+Informações sobre:
+
+CPU
+
+RAM
+
+GPU Intel/AMD
+
+Temperatura
+
+Rede
+
+Bateria
+
+Exibe o nível da bateria e o estado de carregamento.
+
+Uso de IA
+
+A Island pode mostrar os limites de uso do Claude e do Codex, utilizando as credenciais já existentes dos respectivos CLIs.
+
+Veja Uso de IA: leia antes antes de ativar esse recurso.
+
+Como funciona
+
+A Island possui dois tipos de modos.
+
+Transitórios
+
+São ativados automaticamente por eventos e desaparecem após alguns segundos.
+
+notif
+
+music
+
+volume
+
+brightness
+
+Passar o mouse sobre a Island mantém o modo aberto.
+
+Fixos
+
+São abertos por clique ou atalho e permanecem visíveis até que o usuário:
+
+Clique fora
+
+Pressione Esc
+
+Acione outro gatilho
+
+Modos fixos:
+
+stack
+
+calendar
+
+quick
+
+wifi
+
+bt
+
+ai
+
+Eventos não interrompem o que você abriu
+
+Eventos automáticos respeitam o modo fixo atualmente aberto.
+
+Por exemplo:
+
+Uma notificação não substitui um calendário aberto. Ela aparece como um banner abaixo da Island.
+
+Trocar de música não abre automaticamente o modo de música enquanto outro modo fixo estiver aberto.
+
+Isso evita que a interface fique pulando de um estado para outro enquanto você está usando algum controle.
+
+Interações
+
+Clique na Island compacta: abre o cartão central ou o calendário, conforme configurado.
+
+Clique em uma notificação: abre a lista de notificações.
+
+Super+S: abre os controles rápidos.
+
+Esc: fecha o modo fixo atual.
+
+Arquitetura
+
+O projeto separa estado, integração com o sistema e interface:
+
+src/
+├── core/       # Máquina de estados e regras de comportamento
+├── system/     # Integrações com o sistema
+└── ui/         # Renderização da interface
+
+src/core/
+
+Contém a máquina de estados da Island.
+
+É escrita em TypeScript puro e testada com Vitest.
+
+src/system/
+
+Responsável pela comunicação com serviços e APIs do sistema, incluindo:
+
+MPRIS
+
+NetworkManager
+
+BlueZ
+
+UPower
+
+Evolution Data Server
+
+GWeather
+
+src/ui/
+
+Responsável apenas pela apresentação do estado usando St/Clutter do GNOME Shell.
+
+Requisitos
+
+GNOME Shell 50
+
+Wayland
+
+Node.js 22
+
+npm
+
+glib-compile-schemas
+
+A extensão é validada no Arch Linux, mas o código não depende de componentes específicos do Arch.
+
+Recursos opcionais
+
+Calendário
+
+Requer o Evolution Data Server com uma conta configurada no GNOME.
+
+Clima
+
+Requer libgweather-4.
+
+Se nenhuma cidade estiver configurada, a extensão pode usar o Geoclue, desde que a localização esteja habilitada.
+
+Uso de IA
+
+Requer login em um ou ambos:
+
+Claude Code — ~/.claude/.credentials.json
+
+Codex CLI — ~/.codex/auth.json
+
+Instalação
+
 git clone https://github.com/CaioNazario/island-desktop.git
 cd island-desktop
+
 npm ci
 ./install.sh
-```
 
-O `install.sh` compila e copia a extensão para `~/.local/share/gnome-shell/extensions/island@caionazario.dev`. Depois:
+O install.sh compila a extensão e a instala em:
 
-1. Faça logout e login (o Wayland não recarrega extensões em quente).
-2. Ative a extensão:
+~/.local/share/gnome-shell/extensions/island@caionazario.dev
 
-   ```sh
-   gnome-extensions enable island@caionazario.dev
-   ```
+No Wayland, o GNOME Shell não recarrega extensões em quente. Depois da instalação, faça logout e login.
 
-Preferências (ação do clique na ilha, cidade do clima, provedores de IA):
+Em seguida, ative a extensão:
 
-```sh
+gnome-extensions enable island@caionazario.dev
+
+Para abrir as preferências:
+
 gnome-extensions prefs island@caionazario.dev
-```
 
-### Atualizar
+Nas preferências é possível configurar, entre outras coisas:
 
-```sh
+A ação do clique na Island
+
+Cidade do clima
+
+Provedores de IA
+
+Atualização
+
 git pull
 npm ci
 ./install.sh
-```
 
-E faça logout/login.
+Depois, faça logout e login novamente.
 
-### Desinstalar
+Desinstalação
 
-```sh
 gnome-extensions disable island@caionazario.dev
 ./install.sh --uninstall
-```
 
-Ao desativar a extensão, o painel padrão do GNOME volta.
+Ao desativar a extensão, o painel padrão do GNOME Shell volta a funcionar normalmente.
 
-## Uso de IA: leia antes
+Uso de IA: leia antes
 
-A pílula de uso de IA não usa nenhuma API oficial:
+A pílula de uso de IA não utiliza APIs oficiais de uso.
 
-- Lê o token OAuth de `~/.claude/.credentials.json` (Claude Code) e de `~/.codex/auth.json` (Codex CLI).
-- Com esse token, chama endpoints de uso **não documentados** da Anthropic e da OpenAI. O do Claude só responde com o User-Agent do `claude-cli`, então a extensão se identifica como ele.
-- Nunca escreve nos arquivos de credencial e nunca renova token. Quando o CLI renova, a extensão relê o arquivo.
-- Os endpoints podem mudar ou sumir a qualquer momento. Se a resposta vier num formato inesperado, o cartão mostra erro, e o resto da extensão continua funcionando.
+Quando ativados, os provedores funcionam da seguinte maneira:
 
-Se não quiser nada disso, desligue os provedores nas preferências. Sem credencial, a pílula mostra só "IA".
+A extensão lê o token OAuth existente em:
 
-## Limitações
+~/.claude/.credentials.json
 
-- Só GNOME Shell 50 e Wayland. Validado apenas no Arch.
-- GPU NVIDIA não aparece no bloco de hardware (só Intel e AMD).
-- Notificações do Firefox não mostram o serviço web de origem, porque o Firefox não manda essa informação.
-- Sem tema claro, sem botões de ação nas notificações, sem bandeja AppIndicator e sem troca de layout de teclado na barra.
-- Sem botão Atividades e sem auto-ocultar: a barra sempre reserva o topo.
-- Não está no extensions.gnome.org; a instalação é só pelo `install.sh`.
+~/.codex/auth.json
 
-## Desenvolvimento
+Utiliza esse token para consultar endpoints de uso não documentados da Anthropic e da OpenAI.
 
-```sh
+O endpoint do Claude exige o User-Agent do Claude CLI, então a extensão se identifica como o CLI.
+
+A extensão:
+
+Nunca modifica os arquivos de credenciais.
+
+Nunca renova os tokens.
+
+Relê as credenciais quando o CLI atualiza o arquivo.
+
+Esses endpoints não são APIs públicas e podem mudar ou deixar de existir a qualquer momento.
+
+Se a resposta recebida estiver em um formato inesperado, o cartão de IA mostra um erro sem afetar o restante da extensão.
+
+Se preferir não utilizar esse recurso, desative os provedores de IA nas preferências.
+
+Sem uma credencial válida, a pílula continua disponível, mas mostra apenas "IA".
+
+Limitações
+
+Atualmente:
+
+Apenas GNOME Shell 50.
+
+Apenas Wayland.
+
+Validado oficialmente apenas no Arch Linux.
+
+GPUs NVIDIA não aparecem no bloco de hardware.
+
+Notificações do Firefox não mostram o serviço web de origem.
+
+Não há tema claro.
+
+Notificações ainda não possuem botões de ação.
+
+Não há suporte a AppIndicator/System Tray.
+
+Não há troca de layout do teclado pela barra.
+
+O botão Atividades não faz parte da barra.
+
+A barra não possui auto-ocultar e sempre reserva o espaço superior.
+
+A extensão ainda não está disponível no extensions.gnome.org.
+
+A instalação é feita pelo install.sh.
+
+Desenvolvimento
+
+Instale as dependências:
+
 npm ci
-make test    # Vitest
-make lint    # ESLint, Prettier e tsc
-make build   # compila para dist/
-make dev     # abre um GNOME Shell aninhado (--devkit)
-```
 
-O Shell aninhado do `make dev` carrega a extensão instalada, não o `dist/`: rode `./install.sh` antes pra ele pegar a versão atual.
+Testes
 
-O comportamento está especificado em [`specs/`](specs/) (comece pelo [`00-visao-geral.md`](specs/00-visao-geral.md)), e o visual de referência em [`design/`](design/). As convenções do projeto estão no [`AGENTS.md`](AGENTS.md).
+make test
 
-Para diagnóstico, existe um log de debug desligado por padrão:
+Executa os testes do Vitest.
 
-```sh
-touch ~/.cache/island-debug   # liga (vale depois de logout/login)
+Lint e tipos
+
+make lint
+
+Executa:
+
+ESLint
+
+Prettier
+
+TypeScript (tsc)
+
+Build
+
+make build
+
+Gera a versão compilada em:
+
+dist/
+
+GNOME Shell aninhado
+
+make dev
+
+Abre um GNOME Shell aninhado usando o modo --devkit.
+
+O Shell aninhado carrega a versão instalada da extensão, e não diretamente o conteúdo de dist/.
+
+Depois de alterar o código, rode ./install.sh antes de executar make dev.
+
+Especificações e design
+
+O comportamento da extensão está documentado em specs/.
+
+Comece por:
+
+specs/00-visao-geral.md
+
+As referências visuais estão em:
+
+design/
+
+As convenções de desenvolvimento estão em:
+
+AGENTS.md
+
+Debug
+
+O log de debug é desativado por padrão.
+
+Para ativá-lo:
+
+touch ~/.cache/island-debug
+
+É necessário fazer logout e login para que a alteração seja aplicada.
+
+Depois, consulte os logs:
+
 journalctl -b -o cat /usr/bin/gnome-shell | grep ISLANDDBG
-rm ~/.cache/island-debug      # desliga
-```
 
-## Licença
+Para desativar:
 
-[GPL-3.0-or-later](LICENSE).
+rm ~/.cache/island-debug
+
+Licença
+
+GPL-3.0-or-later
