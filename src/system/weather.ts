@@ -6,6 +6,13 @@ import { getLoginManager } from 'resource:///org/gnome/shell/misc/loginManager.j
 
 import { isFresh, type WeatherReading } from '../core/weather.js';
 import { weatherGlyph } from '../core/weatherIcon.js';
+import {
+  GNOME_WEATHER_SCHEMAS,
+  LOCATION_SCHEMA,
+  lookupSettings,
+  readGnomeLocation,
+  readPreferredLocation,
+} from './weatherLocation.js';
 
 export interface WeatherSource {
   /** Leitura com até 3h; `null` some com o clima da ilha. */
@@ -22,18 +29,9 @@ const UPDATE_INTERVAL_SECONDS = 30 * 60;
 const APPLICATION_ID = 'dev.caionazario.Island';
 const CONTACT_INFO = 'https://github.com/CaioNazario/island-desktop';
 
-// Passo 2 da cadeia: as cidades do clima do Shell e do app GNOME Weather.
-const GNOME_WEATHER_SCHEMAS = ['org.gnome.shell.weather', 'org.gnome.Weather'];
-const LOCATION_SCHEMA = 'org.gnome.system.location';
-
 // O `geoclue.conf` libera este id com `system=true`: é o que o próprio Shell
 // usa (js/misc/weather.js), e a extensão roda no processo dele.
 const GEOCLUE_DESKTOP_ID = 'org.gnome.Shell';
-
-function lookupSettings(schemaId: string): Gio.Settings | null {
-  const schema = Gio.SettingsSchemaSource.get_default()?.lookup(schemaId, true);
-  return schema ? new Gio.Settings({ settings_schema: schema }) : null;
-}
 
 // Clima via GWeather/MET Norway (specs/07-clima.md), com a cadeia
 // preferência → cidades do GNOME → Geoclue → nada.
@@ -118,13 +116,13 @@ export class SystemWeather implements WeatherSource {
 
   // Resolve a cadeia na ordem, parando na primeira que der resultado.
   private resolve(): void {
-    const preferred = this.preferredLocation();
+    const preferred = readPreferredLocation(this.world, this.settings);
     if (preferred) {
       this.stopGeoclue();
       this.setLocation(preferred);
       return;
     }
-    const gnome = this.gnomeLocation();
+    const gnome = readGnomeLocation(this.world, this.gnomeSettings);
     if (gnome) {
       this.stopGeoclue();
       this.setLocation(gnome);
@@ -136,33 +134,6 @@ export class SystemWeather implements WeatherSource {
     }
     this.stopGeoclue();
     this.setLocation(null);
-  }
-
-  private preferredLocation(): GWeather.Location | null {
-    // `v` guardando o `serialize()` da cidade; o padrão `@mv nothing` é vazio.
-    const stored = this.settings.get_value('weather-location').get_variant();
-    if (stored.is_of_type(new GLib.VariantType('mv'))) return null;
-    return this.deserialize(stored);
-  }
-
-  private gnomeLocation(): GWeather.Location | null {
-    for (const s of this.gnomeSettings) {
-      const locations = s.get_value('locations').deep_unpack() as GLib.Variant[];
-      for (const serialized of locations) {
-        const location = this.deserialize(serialized);
-        if (location) return location;
-      }
-    }
-    return null;
-  }
-
-  private deserialize(serialized: GLib.Variant): GWeather.Location | null {
-    try {
-      return this.world?.deserialize(serialized) ?? null;
-    } catch (e) {
-      console.error(`Island: invalid weather location: ${(e as Error).message}`);
-      return null;
-    }
   }
 
   private startGeoclue(): void {
