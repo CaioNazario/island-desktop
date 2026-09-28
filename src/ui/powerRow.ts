@@ -6,7 +6,8 @@ import type { IslandState } from '../core/island.js';
 import type { PowerAction, SystemSession } from '../system/session.js';
 import type { ControlsRowActor, ControlsRowOptions } from './controlsRow.js';
 import { phosphor } from './icons.js';
-import { colors, derivedColors, effects } from './tokens.js';
+import { easeSpring } from './spring.js';
+import { colors, derivedColors } from './tokens.js';
 
 export interface PowerToggle {
   readonly open: boolean;
@@ -103,50 +104,68 @@ function powerButtons(
   return row;
 }
 
-// Abre e fecha no tempo da mola da ilha: a moldura corta a linha, presa no topo,
-// e cresce de 0 a 48px. Em `quick` acompanha a borda da ilha; em `wifi` e
-// `bt`, onde fica entre os controles e a lista, empurra a lista junto.
+// Ocupa o espaço na hora (specs/09-sessao-energia.md) e a ilha cresce na mola.
+// Em `wifi`/`bt`, a lista abaixo desliza os 48px na mesma mola, e a linha só
+// aparece acima do topo da lista: a lista é transparente e passaria por cima
+// dos botões. Em `quick` não há nada abaixo e a ilha corta a linha.
 export const PowerRow = GObject.registerClass(
   class PowerRow extends St.Widget {
     private readonly row: St.BoxLayout;
+    private open: boolean;
+    private trackingList = false;
 
     constructor(
       session: SystemSession,
       power: PowerToggle,
       onAction: (action: PowerAction) => void,
     ) {
-      super({ clip_to_allocation: true, x_expand: true, visible: power.open });
+      super({ x_expand: true });
       this.row = powerButtons(session, onAction);
       this.add_child(this.row);
+      this.open = power.open;
+      this.syncClip();
       const unsubscribe = power.onChange(() => this.setOpen(power.open));
       this.connectObject('destroy', unsubscribe, this);
     }
 
+    private get rowHeight(): number {
+      return this.row.get_preferred_height(-1)[1];
+    }
+
+    private below(): Clutter.Actor[] {
+      const actors: Clutter.Actor[] = [];
+      for (let next = this.get_next_sibling(); next; next = next.get_next_sibling())
+        actors.push(next);
+      return actors;
+    }
+
     private setOpen(open: boolean): void {
-      this.remove_all_transitions();
-      // Fechada, a moldura está invisível e nunca `mapped`: vale a do pai.
-      if (!this.get_parent()?.mapped) {
-        this.height = -1;
-        this.visible = open;
-        return;
+      if (open === this.open) return;
+      this.open = open;
+      this.queue_relayout();
+      const below = this.below();
+      if (!this.trackingList && below[0]) {
+        below[0].connectObject('notify::translation-y', () => this.syncClip(), this);
+        this.trackingList = true;
       }
-      if (open && !this.visible) {
-        this.height = 0;
-        this.visible = true;
+      // O layout pula a lista na hora; a translação desfaz o pulo e volta a 0.
+      const jump = open ? this.rowHeight : -this.rowHeight;
+      for (const actor of below) {
+        actor.remove_transition('translation-y');
+        actor.translationY = this.mapped ? actor.translationY - jump : 0;
+        if (this.mapped) easeSpring(actor, { translationY: 0 });
       }
-      const [, natural] = this.row.get_preferred_height(-1);
-      this.ease({
-        height: open ? natural : 0,
-        duration: effects.islandSpring.durationMs,
-        // Sem repique: fechando, abaixo de 0 a lista subiria para dentro dos
-        // tiles; abrindo, a linha e a borda da ilha passam do tamanho.
-        mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
-        onStopped: (isFinished: boolean) => {
-          if (!isFinished) return;
-          this.height = -1;
-          this.visible = open;
-        },
-      });
+      this.syncClip();
+    }
+
+    // Parte visível = do topo da linha até o topo da lista.
+    private syncClip(): void {
+      const height = this.rowHeight;
+      const listTop = this.get_next_sibling()?.translationY ?? 0;
+      const visible = Math.min(height, Math.max(0, (this.open ? height : 0) + listTop));
+      this.row.visible = visible > 0;
+      if (visible >= height) this.row.remove_clip();
+      else this.row.set_clip(0, 0, this.width, visible);
     }
 
     override vfunc_get_preferred_width(forHeight: number): [number, number] {
@@ -154,12 +173,12 @@ export const PowerRow = GObject.registerClass(
     }
 
     override vfunc_get_preferred_height(forWidth: number): [number, number] {
+      if (!this.open) return [0, 0];
       return this.row.get_preferred_height(forWidth);
     }
 
-    // A linha fica no tamanho final, no topo: o `BinLayout` a espremeria
-    // até a altura da moldura (CLAMP em `clutter_actor_allocate_align_fill`,
-    // mutter 50.4).
+    // Fechando, a linha segue no tamanho dela, pra fora da moldura de 0px,
+    // enquanto a lista sobe por cima.
     override vfunc_allocate(box: Clutter.ActorBox): void {
       this.set_allocation(box);
       const [, height] = this.row.get_preferred_height(box.get_width());
