@@ -370,8 +370,9 @@ export const Island = GObject.registerClass(
       if (mode === 'card') this.card.reset();
       const incoming = this.layers.get(mode);
       if (incoming) {
-        this.syncLayerSize(mode);
+        // Medir só na tela: fora do stage o St mede sem CSS (e avisa no log).
         showLayer(this.surface, incoming, mode, instant);
+        this.syncLayerSize(mode);
       }
       if (previous === 'bt') this.btView.onClose();
       if (mode === 'wifi') this.wifiView.onOpen();
