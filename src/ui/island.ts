@@ -282,9 +282,10 @@ export const Island = GObject.registerClass(
       this.isTargetMonitor = isTargetMonitor;
       const mode = this.layerFor(isTargetMonitor);
       this.power.sync();
+      const previous = this.contentMode;
       const entered = this.showContentFor(mode);
       // A linha de energia muda a altura sem trocar de modo.
-      this.resize(entered ? openSpring(mode) : ISLAND_SPRING);
+      this.resize(entered ? openSpring(mode, previous) : ISLAND_SPRING);
       this.syncExpanded(mode !== 'compact');
       // "Cursor de mão só em `compact` e `notif`" (specs/03-ilha.md): nos
       // outros modos, cliques são do conteúdo.

@@ -127,11 +127,13 @@ export const ISLAND_EASE: Spring = {
 };
 
 /** Mola da ilha ao entrar no modo (specs/03-ilha.md "Animação"). */
-export function openSpring(mode: LayerId): Spring {
+export function openSpring(mode: LayerId, previous: LayerId): Spring {
   // Fechar sem repique: abaixo do compacto a altura passa de 0 e a ilha volta
   // por um quadro ao tamanho preferido, o do modo que saiu.
   if (mode === 'compact') return ISLAND_EASE;
-  if (mode !== 'wifi' && mode !== 'bt') return ISLAND_SPRING;
+  // Sair de `wifi`/`bt` pelo tile encolhe os mesmos ~240px da abertura.
+  const radio = (id: LayerId) => id === 'wifi' || id === 'bt';
+  if (!radio(mode) && !radio(previous)) return ISLAND_SPRING;
   return { duration: effects.radioOpen.durationMs, mode: Clutter.AnimationMode.EASE_OUT_CUBIC };
 }
 
