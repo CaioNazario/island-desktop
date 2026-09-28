@@ -24,8 +24,11 @@ import {
   IslandSurface,
   type IslandSurfaceActor,
   type LayerId,
+  ISLAND_SPRING,
   modeLayer,
+  openSpring,
   showLayer,
+  type Spring,
 } from './modeLayer.js';
 import { MusicModeRow } from './musicView.js';
 import { notifContent, type NotificationRowActor } from './notificationRow.js';
@@ -195,7 +198,7 @@ export const Island = GObject.registerClass(
       this.syncLayerSize('compact');
       this.surface.add_child(this.layers.get('compact')!);
 
-      this.applySize(getSize('compact'), false);
+      this.applySize(getSize('compact'), null);
       this.updateClock();
 
       // Gesto, não `button-press-event`: um ator que devolve EVENT_STOP no
@@ -279,9 +282,9 @@ export const Island = GObject.registerClass(
       this.isTargetMonitor = isTargetMonitor;
       const mode = this.layerFor(isTargetMonitor);
       this.power.sync();
-      this.showContentFor(mode);
+      const entered = this.showContentFor(mode);
       // A linha de energia muda a altura sem trocar de modo.
-      this.resize();
+      this.resize(entered ? openSpring(mode) : ISLAND_SPRING);
       this.syncExpanded(mode !== 'compact');
       // "Cursor de mão só em `compact` e `notif`" (specs/03-ilha.md): nos
       // outros modos, cliques são do conteúdo.
@@ -309,9 +312,9 @@ export const Island = GObject.registerClass(
     }
 
     /** O conteúdo do modo atual mudou de altura (energia, senha do `wifi`, rádio do `bt`). */
-    private resize(): void {
+    private resize(spring: Spring = ISLAND_SPRING): void {
       this.syncLayerSize(this.contentMode);
-      this.applySize(this.sizeFor(this.contentMode), true);
+      this.applySize(this.sizeFor(this.contentMode), spring);
     }
 
     private sizeFor(mode: LayerId): Size {
@@ -332,8 +335,8 @@ export const Island = GObject.registerClass(
       };
     }
 
-    private showContentFor(mode: LayerId): void {
-      if (mode === this.contentMode) return;
+    private showContentFor(mode: LayerId): boolean {
+      if (mode === this.contentMode) return false;
       const previous = this.contentMode;
       this.contentMode = mode;
 
@@ -351,6 +354,7 @@ export const Island = GObject.registerClass(
       if (previous === 'bt') this.btView.onClose();
       if (mode === 'wifi') this.wifiView.onOpen();
       if (mode === 'bt') this.btView.onOpen();
+      return true;
     }
 
     // As camadas ficam dentro do anel da `surface`.
@@ -364,20 +368,16 @@ export const Island = GObject.registerClass(
       this.clockLabel.text = `${formatClock(now)} · ${formatDay(now)}`;
     }
 
-    private applySize(size: Size, animate: boolean): void {
-      if (!animate) {
+    private applySize(size: Size, spring: Spring | null): void {
+      if (!spring) {
         this.set_size(size.width, size.height);
         this.surface.radius = size.radius;
         return;
       }
-      this.ease({
-        width: size.width,
-        height: size.height,
-        duration: effects.islandSpring.durationMs,
-        mode: Clutter.AnimationMode.EASE_OUT_BACK,
-      });
+      this.ease({ width: size.width, height: size.height, ...spring });
+      // "raio: ease", na duração da mola.
       this.surface.ease_property('radius', size.radius, {
-        duration: effects.islandRadius.durationMs,
+        duration: spring.duration,
         mode: Clutter.AnimationMode.EASE,
       });
     }
