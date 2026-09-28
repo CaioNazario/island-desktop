@@ -23,7 +23,7 @@ Os limiares, a formatação e os cálculos por delta ficam em `src/core/hardware
 
 ## Fontes
 
-Amostragem a cada **1s** (exceto quando indicado).
+Amostragem a cada **1s**.
 
 - **CPU**: delta de `/proc/stat` (linha `cpu`), `1 − Δidle/Δtotal`, onde idle inclui `iowait`.
 - **RAM**: `/proc/meminfo`, `MemTotal − MemAvailable`.
@@ -31,8 +31,7 @@ Amostragem a cada **1s** (exceto quando indicado).
   1. `amdgpu`: `/sys/class/drm/card*/device/gpu_busy_percent`
   2. `i915`: `100 − Δrc6_residency_ms / Δt_ms × 100` de `/sys/class/drm/card*/power/rc6_residency_ms`
   3. `xe`: mesma conta com `/sys/class/drm/card*/device/tile0/gt0/gtidle/idle_residency_ms`
-  4. NVIDIA: `nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits`, se o binário existir, a cada **5s** (é subprocesso)
-  5. nenhuma → o bloco GPU some
+  4. nenhuma (inclui NVIDIA, fora da v1) → o bloco GPU some
 - **TEMP**, primeira que existir em `/sys/class/hwmon/*`: `coretemp` (`Package id 0`) → `k10temp` (`Tctl`) → `/sys/class/thermal/thermal_zone*` do tipo `x86_pkg_temp` → some.
 - **NET**: delta de `/proc/net/dev` somando interfaces físicas (exclui `lo`, `docker*`, `veth*`, `br-*`, `virbr*`, `tun*`, `wg*`). Download em MB/s, upload em KB/s.
 

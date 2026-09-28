@@ -54,6 +54,7 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 - Ubuntu/outras distros testadas (o código não assume Arch, mas só o Arch é validado)
 - Publicação no extensions.gnome.org (instalação via `install.sh`)
 - Tema claro, botões de ação em notificações, bandeja AppIndicator, troca de layout de teclado
+- GPU NVIDIA no bloco de hardware (sem máquina para validar o `nvidia-smi`)
 
 ## Critérios de aceite globais
 
