@@ -41,8 +41,8 @@ A ordem em que os blocos somem por falta de espaço está na spec 02: NET → GP
 
 ## Critérios de aceite
 
-- [ ] Testes de `hardware.ts` cobrem: cálculo de CPU por delta, RC6 → %, limiares de cor, formatação de RAM/NET, largura máxima de cada valor.
-- [ ] Em Intel i915 (máquina de referência) o bloco GPU bate com `100 − rc6` do `intel_gpu_top`.
-- [ ] Sem GPU reconhecida, o bloco GPU some e os outros não se mexem.
-- [ ] A barra não muda de largura quando os valores oscilam.
-- [ ] A amostragem não gera I/O síncrono no main loop.
+- [x] Testes de `hardware.ts` cobrem: cálculo de CPU por delta, RC6 → %, limiares de cor, formatação de RAM/NET, largura máxima de cada valor.
+- [x] Em Intel i915 (máquina de referência) o bloco GPU bate com `100 − rc6` do `intel_gpu_top`.
+- [x] Sem GPU reconhecida, o bloco GPU some e os outros não se mexem.
+- [x] A barra não muda de largura quando os valores oscilam.
+- [x] A amostragem não gera I/O síncrono no main loop.
