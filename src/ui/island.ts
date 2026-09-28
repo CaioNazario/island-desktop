@@ -17,6 +17,7 @@ import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { WeatherSource } from '../system/weather.js';
 import type { SystemWifi } from '../system/wifi.js';
+import { AiModeView, type AiModeViewActor } from './aiView.js';
 import { BtView, type BtViewActor } from './btView.js';
 import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
 import { CenterCard, type CenterCardActor } from './centerCard.js';
@@ -89,6 +90,7 @@ export const Island = GObject.registerClass(
     private readonly stackView: StackViewActor;
     private readonly calendarView: CalendarModeViewActor;
     private readonly card: CenterCardActor;
+    private readonly aiView: AiModeViewActor;
     private readonly layers: ReadonlyMap<LayerId, St.Widget>;
     private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
@@ -207,6 +209,10 @@ export const Island = GObject.registerClass(
         onSizeChanged: () => this.resize(),
       });
 
+      this.aiView = new AiModeView(system.aiUsage, {
+        onSizeChanged: () => this.resize(),
+      });
+
       this.layers = new Map<LayerId, St.Widget>([
         ['compact', modeLayer(compact)],
         ['notif', modeLayer(notif.content)],
@@ -218,6 +224,7 @@ export const Island = GObject.registerClass(
         ['quick', modeLayer(quickContent(this.quickRow, system.session, controls))],
         ['wifi', modeLayer(this.wifiView)],
         ['bt', modeLayer(this.btView)],
+        ['ai', modeLayer(this.aiView)],
         ['card', modeLayer(this.card)],
       ]);
       this.syncLayerSize('compact');
@@ -292,6 +299,7 @@ export const Island = GObject.registerClass(
           this.updateClock();
           this.notifRow.refreshTime();
           this.stackView.refreshTimes();
+          this.aiView.refreshTimes();
           return GLib.SOURCE_CONTINUE;
         },
       );
@@ -378,6 +386,7 @@ export const Island = GObject.registerClass(
         wifiPasswordField: this.wifiView.passwordField,
         btOn: this.btView.radioIsOn,
         btEnergyOpen: powerOpen,
+        providerCount: this.aiView.providerCount,
       };
     }
 
@@ -403,6 +412,7 @@ export const Island = GObject.registerClass(
       if (previous === 'bt') this.btView.onClose();
       if (mode === 'wifi') this.wifiView.onOpen();
       if (mode === 'bt') this.btView.onOpen();
+      if (mode === 'ai') this.aiView.onOpen();
     }
 
     // As camadas ficam dentro do anel da `surface`.
