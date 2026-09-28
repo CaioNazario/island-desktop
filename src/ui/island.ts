@@ -7,6 +7,7 @@ import { formatClock, formatDay } from '../core/clock.js';
 import { getSize, type IslandState, type Size, type SizeContext } from '../core/island.js';
 import type { SystemBluetooth } from '../system/bluetooth.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
+import { debugLog } from '../system/debugLog.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { MusicSource } from '../system/mpris.js';
@@ -233,11 +234,13 @@ export const Island = GObject.registerClass(
           return Clutter.EVENT_STOP;
         },
         'enter-event',
-        () => {
+        (_actor: St.Widget, event: Clutter.Event) => {
+          debugLog(this.crossingLog('enter', event));
           if (this.isTargetMonitor) this.state.hoverStart();
         },
         'leave-event',
-        () => {
+        (_actor: St.Widget, event: Clutter.Event) => {
+          debugLog(this.crossingLog('leave', event));
           if (this.isTargetMonitor) this.state.hoverEnd();
         },
         'key-press-event',
@@ -282,6 +285,9 @@ export const Island = GObject.registerClass(
     render(isTargetMonitor: boolean): void {
       this.isTargetMonitor = isTargetMonitor;
       const mode = this.layerFor(isTargetMonitor);
+      debugLog(
+        `render target=${isTargetMonitor} mode=${this.state.mode} card=${this.state.cardOpen} content=${this.contentMode} -> ${mode}`,
+      );
       this.power.sync();
       const previous = this.contentMode;
       const entered = this.showContentFor(mode);
@@ -295,6 +301,13 @@ export const Island = GObject.registerClass(
           ? Clutter.CursorType.POINTER
           : Clutter.CursorType.DEFAULT,
       );
+    }
+
+    private crossingLog(kind: string, event: Clutter.Event): string {
+      const [x, y] = event.get_coords();
+      const source = global.stage.get_event_actor(event);
+      const [ix, iy] = this.get_transformed_position();
+      return `${kind} target=${this.isTargetMonitor} actor=${source?.constructor.name ?? 'null'} pointer=${Math.round(x)},${Math.round(y)} island=${Math.round(ix ?? 0)},${Math.round(iy ?? 0)} ${Math.round(this.width)}x${Math.round(this.height)}`;
     }
 
     // O cartão central é a ilha expandida: só o monitor-alvo o mostra.

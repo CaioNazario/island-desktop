@@ -2,6 +2,8 @@ import Gio from 'gi://Gio';
 import { InjectionManager } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import { callerStack, debugLog } from './debugLog.js';
+
 type OsdKind = 'volume' | 'brightness' | null;
 
 function kindOf(icon: unknown): OsdKind {
@@ -43,6 +45,8 @@ export class OsdRedirect {
         (original: PatchableMethod) =>
           function (this: unknown, ...args: unknown[]) {
             const icon = methodName === 'showOne' ? args[1] : args[0];
+            const iconName = icon instanceof Gio.ThemedIcon ? icon.names[0] : String(icon);
+            debugLog(`osd ${methodName} icon=${iconName} at ${callerStack()}`);
             redirect(icon, () => original.apply(this, args));
           },
       );

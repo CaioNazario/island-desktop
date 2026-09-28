@@ -12,6 +12,7 @@ import { SystemBrightness } from '../system/brightness.js';
 import { SystemCalendarEvents } from '../system/calendarEvents.js';
 import { SystemMpris } from '../system/mpris.js';
 import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
+import { callerStack, debugLog, syncDebugLog } from '../system/debugLog.js';
 import { OsdRedirect } from '../system/osd.js';
 import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
@@ -53,10 +54,12 @@ export class BarManager {
   private readonly unsubscribeTrack: () => void;
 
   constructor(settings: Gio.Settings) {
+    syncDebugLog();
     this.state = new IslandState(new GLibScheduler(), {
       islandClickOpens: () =>
         settings.get_string('click-action') === 'calendar' ? 'calendar' : 'card',
       onChange: () => this.render(),
+      log: (message, caller) => debugLog(caller ? `${message} at ${callerStack(3)}` : message),
     });
     this.system = {
       volume: new SystemVolume(),
@@ -99,6 +102,7 @@ export class BarManager {
    * (regra 4 da spec 03), então nem tenta trocar de monitor-alvo.
    */
   private triggerVolumeKey(): void {
+    debugLog(this.keyLog('triggerVolumeKey'));
     if (this.state.cardOpen || isFixedMode(this.state.mode)) return;
     this.targetMonitorIndex = this.focusedMonitorIndex();
     this.state.volumeKey();
@@ -107,10 +111,16 @@ export class BarManager {
 
   /** Tecla de brilho: mesma regra da tecla de volume acima. */
   private triggerBrightnessKey(): void {
+    debugLog(this.keyLog('triggerBrightnessKey'));
     if (this.state.cardOpen || isFixedMode(this.state.mode)) return;
     this.targetMonitorIndex = this.focusedMonitorIndex();
     this.state.brightnessKey();
     this.render();
+  }
+
+  private keyLog(name: string): string {
+    const { mode, cardOpen } = this.state;
+    return `${name} mode=${mode} card=${cardOpen} focusedMon=${this.focusedMonitorIndex()} target=${this.targetMonitorIndex} bars=${this.bars.length}`;
   }
 
   /** Roteamento de notificação nova (specs/04-notificacoes.md). */

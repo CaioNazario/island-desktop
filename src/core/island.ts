@@ -109,12 +109,15 @@ export interface IslandStateOptions {
   islandClickOpens?: () => IslandClickOpens;
   /** Chamado sempre que `mode` ou `cardOpen` muda, para a UI se re-sincronizar. */
   onChange?: () => void;
+  /** Diagnóstico do timer; `caller` monta a pilha só quando o log está ligado. */
+  log?: (message: string, caller?: boolean) => void;
 }
 
 export class IslandState {
   private readonly scheduler: Scheduler;
   private readonly islandClickOpens: () => IslandClickOpens;
   private readonly onChange: () => void;
+  private readonly log: (message: string, caller?: boolean) => void;
   private _mode: Mode = 'compact';
   private _cardOpen = false;
   private _powerOpen = false;
@@ -127,6 +130,7 @@ export class IslandState {
     this.scheduler = scheduler;
     this.islandClickOpens = options.islandClickOpens ?? (() => 'card');
     this.onChange = options.onChange ?? (() => {});
+    this.log = options.log ?? (() => {});
   }
 
   get mode(): Mode {
@@ -161,7 +165,10 @@ export class IslandState {
   /** Evento automático (notificação, troca de faixa): regra 3. */
   openAutomatic(mode: Mode): boolean {
     if (this._cardOpen) return false;
-    if (this._mode !== 'compact' && !isTransient(this._mode)) return false;
+    if (this._mode !== 'compact' && !isTransient(this._mode)) {
+      this.log(`openAutomatic ${mode} refused mode=${this._mode}`);
+      return false;
+    }
     this.setMode(mode);
     return true;
   }
@@ -206,21 +213,25 @@ export class IslandState {
 
   /** Regra 7: hover cancela o timer; sair do hover rearma. */
   hoverStart(): void {
+    this.log(`hoverStart mode=${this._mode}`);
     this.hovering = true;
     this.clearTimer();
   }
 
   hoverEnd(): void {
+    this.log(`hoverEnd mode=${this._mode}`);
     this.hovering = false;
     this.arm(this._mode);
   }
 
   /** Regra 8: interação com slider cancela o timer durante o arraste. */
   dragStart(): void {
+    this.log(`dragStart mode=${this._mode}`, true);
     this.clearTimer();
   }
 
   dragEnd(): void {
+    this.log(`dragEnd mode=${this._mode}`);
     this.arm(this._mode);
   }
 
@@ -238,6 +249,7 @@ export class IslandState {
   }
 
   closeAll(): void {
+    this.log(`closeAll mode=${this._mode}`, true);
     this.clearTimer();
     this._mode = 'compact';
     this._cardOpen = false;
@@ -246,6 +258,7 @@ export class IslandState {
   }
 
   private setMode(mode: Mode): void {
+    this.log(`setMode ${this._mode} -> ${mode}`);
     this.clearTimer();
     this._mode = mode;
     this._cardOpen = false;
@@ -257,10 +270,12 @@ export class IslandState {
   private arm(mode: Mode): void {
     this.clearTimer();
     const ms = mode === 'notif' && this.notifFromBrowser ? BROWSER_NOTIF_MS : TRANSIENT_MS[mode];
+    this.log(`arm ${mode} ms=${ms} hovering=${this.hovering} sticky=${this.notifSticky}`);
     if (ms === undefined || this.hovering) return;
     if (mode === 'notif' && this.notifSticky) return;
     this.timerId = this.scheduler.setTimeout(() => {
       this.timerId = null;
+      this.log(`fired ${mode} now=${this._mode}`);
       if (this._mode === mode) {
         this._mode = 'compact';
         this.onChange();
@@ -270,6 +285,7 @@ export class IslandState {
 
   private clearTimer(): void {
     if (this.timerId !== null) {
+      this.log(`clearTimer mode=${this._mode}`, true);
       this.scheduler.clearTimeout(this.timerId);
       this.timerId = null;
     }
