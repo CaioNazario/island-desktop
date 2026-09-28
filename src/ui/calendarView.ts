@@ -91,7 +91,8 @@ export const CalendarGrid = GObject.registerClass(
     // o que vem abaixo acompanha. Fora da tela, troca direto.
     setWeeks(weeks: readonly CalendarDay[][]): void {
       const grid = this.weeksGrid;
-      const from = grid.height;
+      // Ler `height` fora da tela faz o St medir sem CSS (e avisar no log).
+      const from = grid.mapped ? grid.height : null;
       grid.remove_all_transitions();
       grid.height = -1;
 
@@ -101,7 +102,7 @@ export const CalendarGrid = GObject.registerClass(
         week.forEach((day, column) => layout.attach(this.dayCell(day), column, row, 1, 1)),
       );
 
-      if (!grid.mapped) return;
+      if (from === null) return;
       const [, to] = grid.get_preferred_height(-1);
       if (to === from) return;
       grid.height = from;
