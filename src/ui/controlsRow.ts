@@ -133,7 +133,7 @@ export const ControlsRow = GObject.registerClass(
       return session.onChange(() => (button.visible = session.settingsAvailable));
     }
 
-    // Aberto: `#932b2a` / `neutral-100`.
+    // Aberto: `powerOpenBg` / `neutral-100`.
     private addPowerButton(power: PowerToggle): () => void {
       const button = new RoundButton(
         powerIconName,

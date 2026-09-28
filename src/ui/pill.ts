@@ -17,7 +17,7 @@ export const Pill = GObject.registerClass(
         style: `
           background-color: ${colors.bg};
           border-radius: ${layout.pillRadius}px;
-          border: ${layout.pillRingWidth}px solid #3f424d;
+          border: ${layout.pillRingWidth}px solid ${colors.neutral800};
           padding: 0 ${layout.pillPaddingH}px;
         `,
         ...params,

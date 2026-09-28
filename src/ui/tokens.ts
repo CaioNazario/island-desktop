@@ -45,6 +45,7 @@ export const derivedColors = {
   btnGhostActive: 'rgba(145,132,217,0.18)',
 
   divider: 'rgba(233,233,237,0.16)', // text 16%
+  dividerFadeEnd: 'rgba(63,66,77,0)', // neutral-800 0%, ponta dos divisores em degradê
 } as const;
 
 export const typography = {

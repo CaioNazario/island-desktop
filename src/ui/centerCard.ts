@@ -23,7 +23,7 @@ import {
 } from './calendarView.js';
 import { phosphor } from './icons.js';
 import { MusicControls, MusicCover, MusicProgressBar } from './musicView.js';
-import { colors, effects } from './tokens.js';
+import { colors, derivedColors, effects } from './tokens.js';
 
 const CENTER_CARD_WIDTH = 420;
 const CENTER_CARD_RADIUS = 22;
@@ -139,17 +139,16 @@ const CardMusicSection = GObject.registerClass(
 // cores: são três faixas.
 function sectionDivider(): St.BoxLayout {
   const fadeWidth = Math.round(CENTER_CARD_WIDTH * 0.15);
-  const transparent = 'rgba(63,66,77,0)';
   const fade = (from: string, to: string) =>
     new St.Widget({
       style: `width: ${fadeWidth}px; background-gradient-direction: horizontal; background-gradient-start: ${from}; background-gradient-end: ${to};`,
     });
   const divider = new St.BoxLayout({ style: 'height: 1px; margin: 14px 0;' });
-  divider.add_child(fade(transparent, colors.neutral800));
+  divider.add_child(fade(derivedColors.dividerFadeEnd, colors.neutral800));
   divider.add_child(
     new St.Widget({ style: `background-color: ${colors.neutral800};`, x_expand: true }),
   );
-  divider.add_child(fade(colors.neutral800, transparent));
+  divider.add_child(fade(colors.neutral800, derivedColors.dividerFadeEnd));
   return divider;
 }
 

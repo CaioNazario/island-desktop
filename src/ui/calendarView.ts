@@ -17,7 +17,7 @@ import { getSize } from '../core/island.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import { phosphor } from './icons.js';
 import { easeSpring } from './spring.js';
-import { colors, effects } from './tokens.js';
+import { colors, derivedColors, effects } from './tokens.js';
 
 // Peças do calendário compartilhadas pela seção do cartão central e pelo modo
 // `calendar` (specs/06-calendario.md): as medidas mudam, o comportamento não.
@@ -230,12 +230,14 @@ const ModeColumnDivider = GObject.registerClass(
 
     constructor() {
       super({ orientation: Clutter.Orientation.VERTICAL, style: 'width: 1px;' });
-      const transparent = 'rgba(63,66,77,0)';
       const fade = (from: string, to: string) =>
         new St.Widget({
           style: `background-gradient-direction: vertical; background-gradient-start: ${from}; background-gradient-end: ${to};`,
         });
-      this.fades = [fade(transparent, colors.neutral800), fade(colors.neutral800, transparent)];
+      this.fades = [
+        fade(derivedColors.dividerFadeEnd, colors.neutral800),
+        fade(colors.neutral800, derivedColors.dividerFadeEnd),
+      ];
       this.add_child(this.fades[0]!);
       this.add_child(
         new St.Widget({ style: `background-color: ${colors.neutral800};`, y_expand: true }),

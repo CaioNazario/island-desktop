@@ -33,6 +33,7 @@ St não entende `oklch()` nem `color-mix()`. Valores convertidos:
 | `.btn-primary:hover` / `:active` | `accent` 12% / 22% | `rgba(145,132,217,0.12)` / `0.22` |
 | `.btn-ghost:hover` / `:active` | `accent` 10% / 18% | `rgba(145,132,217,0.10)` / `0.18` |
 | Divisor | `text` 16% | `rgba(233,233,237,0.16)` |
+| Ponta dos divisores em degradê | `neutral-800` 0% | `rgba(63,66,77,0)` |
 
 ## Tipografia
 

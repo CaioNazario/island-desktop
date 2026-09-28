@@ -45,7 +45,7 @@ const CLOCK_TICK_SECONDS = 15;
 const ISLAND_RING = 1;
 
 const COMPACT_TEXT_STYLE = `
-  color: #e9e9ed;
+  color: ${colors.text};
   font-weight: 500;
   font-size: 13px;
   font-feature-settings: "tnum";
