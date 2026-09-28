@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  credentialState,
   formatPercent,
   formatSessionReset,
   formatWeeklyReset,
@@ -152,6 +153,23 @@ describe('isExpired', () => {
 
   it('never expires without a date (the 401 decides)', () => {
     expect(isExpired({ ...credential, expiresAt: null }, Number.MAX_SAFE_INTEGER)).toBe(false);
+  });
+});
+
+describe('credentialState', () => {
+  const credential = { token: 't', accountId: null, plan: null };
+
+  it('is missing without a credential', () => {
+    expect(credentialState(null, 0)).toBe('missing');
+  });
+
+  it('is expired past the expiry date', () => {
+    expect(credentialState({ ...credential, expiresAt: 1000 }, 1000)).toBe('expired');
+  });
+
+  it('is found otherwise', () => {
+    expect(credentialState({ ...credential, expiresAt: 1000 }, 999)).toBe('found');
+    expect(credentialState({ ...credential, expiresAt: null }, 999)).toBe('found');
   });
 });
 

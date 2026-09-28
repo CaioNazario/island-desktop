@@ -30,7 +30,7 @@ Roda em outro processo e só conversa com a extensão via GSettings. Textos em p
   - Botão "Limpar", só com cidade escolhida aqui: volta à cadeia de fallback
   - Busca de cidade própria (o GWeather 4 não tem mais o `GWeatherLocationEntry`): sem acento nem caixa, cada palavra casa com o começo de uma palavra do nome, estado ou país; até 20 resultados
 - **Uso de IA**
-  - Um switch por provedor (Claude, Codex) + estado da credencial: "Encontrada", "Não encontrada: rode `claude`", "Expirada"
+  - Um switch por provedor (Claude, Codex) + estado da credencial: "Encontrada", "Não encontrada: faça login no Claude", "Expirada" (só pela data do arquivo; o 401 da spec 12 não chega aqui)
 
 A notificação de dica do clima (spec 07) abre esta janela direto na página Clima. O `openPreferences()` do Shell não escolhe página, então a extensão grava `weather` em `prefs-page` antes de abrir; a janela mostra a página e zera a chave (também com a janela já aberta).
 

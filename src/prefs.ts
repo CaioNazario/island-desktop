@@ -2,6 +2,7 @@ import type Adw from 'gi://Adw';
 import type Gio from 'gi://Gio';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
+import { buildAiPage } from './prefs/aiPage.js';
 import { buildGeneralPage } from './prefs/generalPage.js';
 import { connectWhileOpen } from './prefs/lifetime.js';
 import { buildWeatherPage } from './prefs/weatherPage.js';
@@ -29,6 +30,7 @@ export default class IslandPreferences extends ExtensionPreferences {
     const settings = this.getSettings();
     window.add(buildGeneralPage(settings, window));
     window.add(buildWeatherPage(settings, window));
+    window.add(buildAiPage(settings, window));
     followRequestedPage(settings, window);
     return Promise.resolve();
   }

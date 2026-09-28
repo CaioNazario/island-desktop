@@ -165,6 +165,14 @@ export function isExpired(credential: Credential, now: number): boolean {
   return credential.expiresAt !== null && credential.expiresAt <= now;
 }
 
+/** Estado mostrado nas preferências; lá não há 401, só a data do arquivo. */
+export type CredentialState = 'found' | 'missing' | 'expired';
+
+export function credentialState(credential: Credential | null, now: number): CredentialState {
+  if (!credential) return 'missing';
+  return isExpired(credential, now) ? 'expired' : 'found';
+}
+
 function claudeWindow(value: unknown): UsageWindow | null {
   if (!isObject(value)) return null;
   const used = percent(value.utilization);
