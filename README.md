@@ -2,14 +2,7 @@
 
 Extensão do GNOME Shell que troca o painel superior por três pílulas flutuantes. A do meio, a **ilha**, muda de tamanho conforme o contexto, no estilo Dynamic Island, e concentra notificações, música, volume, brilho, calendário e controles rápidos.
 
-![Barra com as três pílulas](docs/screenshots/bar.png)
-
-| | |
-|---|---|
-| ![Notificação na ilha](docs/screenshots/notification.png) | ![Volume](docs/screenshots/volume.png) |
-| ![Cartão central com música e calendário](docs/screenshots/center-card.png) | ![Lista de notificações](docs/screenshots/notifications.png) |
-| ![Uso de IA](docs/screenshots/ai-usage.png) | ![Controles rápidos com a linha de energia](docs/screenshots/power.png) |
-| ![Wi‑Fi](docs/screenshots/wifi.png) | ![Bluetooth](docs/screenshots/bluetooth.png) |
+![A barra com as três pílulas e os modos da ilha: notificação, volume, controles rápidos com a linha de energia, cartão central, lista de notificações, uso de IA, Wi‑Fi e Bluetooth](docs/screenshots/overview.png)
 
 ## O que tem
 
