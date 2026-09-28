@@ -10,7 +10,7 @@ import type { NotificationFeed } from '../system/notifications.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BarButton, type BarButtonActor } from './barButton.js';
-import { HardwareGroup } from './hardwareGroup.js';
+import { HardwareGroup, type HardwareGroupActor } from './hardwareGroup.js';
 import {
   batteryLevelIconName,
   caretIconName,
@@ -153,9 +153,12 @@ export interface RightPillSources {
 // botões à direita, com gap 2px.
 export const RightPill = GObject.registerClass(
   class RightPill extends Pill {
+    private readonly hardware: HardwareGroupActor;
+
     constructor(sources: RightPillSources, onTrigger: (mode: Mode) => void) {
       super();
-      this.add_child(new HardwareGroup(sources.hardware));
+      this.hardware = new HardwareGroup(sources.hardware);
+      this.add_child(this.hardware);
 
       const onOpenQuick = (): void => onTrigger('quick');
       const buttons = new St.BoxLayout({
@@ -178,5 +181,12 @@ export const RightPill = GObject.registerClass(
       );
       this.add_child(buttons);
     }
+
+    /** Quanto a pílula está mais larga do que ficaria com a ilha no maior modo. */
+    set hardwareSlack(slack: number) {
+      this.hardware.slack = slack;
+    }
   },
 );
+
+export type RightPillActor = InstanceType<typeof RightPill>;

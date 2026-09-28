@@ -4,6 +4,7 @@ import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 import {
+  fittingBlocks,
   WIDEST_VALUE,
   type HardwareBlock,
   type HardwareBlockId,
@@ -105,18 +106,28 @@ const HardwareBlockView = GObject.registerClass(
 
 type HardwareBlockViewActor = InstanceType<typeof HardwareBlockView>;
 
+const GAP = 10;
+
 // Grupo de hardware da pílula direita (specs/02-barra.md, item 1): encostado
 // à esquerda, padding 0 10px, gap 10px. Bloco sem leitura (sem GPU ou sensor,
-// ou antes da segunda amostra) fica escondido.
+// ou antes da segunda amostra) fica escondido. Sem espaço com a ilha no maior
+// modo, somem NET → GPU → TEMP; o corte usa essa largura e não a atual para
+// os blocos não piscarem quando a ilha abre e fecha. Bloco cortado é alocado
+// depois da borda e some pelo clip, sem mexer em `visible` dentro do allocate.
 export const HardwareGroup = GObject.registerClass(
-  class HardwareGroup extends St.BoxLayout {
+  class HardwareGroup extends St.Widget {
+    /** Quanto o grupo está mais largo do que ficaria com a ilha no maior modo. */
+    slack = 0;
     private readonly views = new Map<HardwareBlockId, HardwareBlockViewActor>();
 
     constructor(source: HardwareSource) {
       super({
-        style: 'spacing: 10px; padding: 0 10px;',
+        style: 'padding: 0 10px;',
+        clip_to_allocation: true,
         x_expand: true,
-        x_align: Clutter.ActorAlign.START,
+        // FILL: o allocate precisa da vaga inteira para medir o espaço; com
+        // START a alocação vira a largura natural e o corte tira tudo.
+        x_align: Clutter.ActorAlign.FILL,
         y_align: Clutter.ActorAlign.CENTER,
       });
       for (const id of BLOCK_ORDER) {
@@ -131,6 +142,55 @@ export const HardwareGroup = GObject.registerClass(
       this.connectObject('destroy', () => unsubscribe(), this);
     }
 
+    override vfunc_get_preferred_width(_forHeight: number): [number, number] {
+      const ids = this.readingIds();
+      const min = this.rowWidth(fittingBlocks(ids, (id) => this.widthOf(id), 0, GAP));
+      const natural = this.rowWidth(ids);
+      return this.get_theme_node().adjust_preferred_width(min, natural);
+    }
+
+    override vfunc_get_preferred_height(_forWidth: number): [number, number] {
+      let height = 0;
+      for (const id of this.readingIds()) {
+        height = Math.max(height, this.views.get(id)!.get_preferred_height(-1)[1]);
+      }
+      return this.get_theme_node().adjust_preferred_height(height, height);
+    }
+
+    override vfunc_allocate(box: Clutter.ActorBox): void {
+      this.set_allocation(box);
+      const content = this.get_theme_node().get_content_box(box);
+      const ids = this.readingIds();
+      const budget = content.get_width() - this.slack;
+      const shown = new Set(fittingBlocks(ids, (id) => this.widthOf(id), budget, GAP));
+      const childBox = new Clutter.ActorBox();
+      let x = content.x1;
+      for (const id of ids) {
+        const view = this.views.get(id)!;
+        const [, width] = view.get_preferred_width(-1);
+        const [, height] = view.get_preferred_height(width);
+        childBox.x1 = shown.has(id) ? x : box.get_width();
+        childBox.x2 = childBox.x1 + width;
+        childBox.y1 = Math.round(content.y1 + (content.get_height() - height) / 2);
+        childBox.y2 = childBox.y1 + height;
+        view.allocate(childBox);
+        if (shown.has(id)) x += width + GAP;
+      }
+    }
+
+    private readingIds(): HardwareBlockId[] {
+      return BLOCK_ORDER.filter((id) => this.views.get(id)!.visible);
+    }
+
+    private widthOf(id: HardwareBlockId): number {
+      return this.views.get(id)!.get_preferred_width(-1)[1];
+    }
+
+    private rowWidth(ids: readonly HardwareBlockId[]): number {
+      const blocks = ids.reduce((sum, id) => sum + this.widthOf(id), 0);
+      return blocks + GAP * Math.max(0, ids.length - 1);
+    }
+
     private sync(blocks: readonly HardwareBlock[]): void {
       const byId = new Map(blocks.map((block) => [block.id, block]));
       for (const [id, view] of this.views) {
@@ -141,3 +201,5 @@ export const HardwareGroup = GObject.registerClass(
     }
   },
 );
+
+export type HardwareGroupActor = InstanceType<typeof HardwareGroup>;

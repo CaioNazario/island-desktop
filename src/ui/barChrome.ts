@@ -3,14 +3,18 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import type { IslandState, Mode } from '../core/island.js';
+import { MAX_ISLAND_WIDTH, type IslandState, type Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
 import type { HardwareSource } from '../system/hardware.js';
 import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } from './banner.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
-import { RightPill } from './rightPill.js';
+import { RightPill, type RightPillActor } from './rightPill.js';
 import { layout } from './tokens.js';
+
+function sideWidthFor(allocWidth: number, islandWidth: number): number {
+  return Math.max(0, (allocWidth - 2 * layout.sideMargin - 2 * layout.pillGap - islandWidth) / 2);
+}
 
 // Container das três pílulas (specs/02-barra.md): pílulas laterais dividem
 // igualmente o espaço que sobra da ilha; a ilha cresce para baixo sem mover
@@ -20,13 +24,13 @@ const BarChrome = GObject.registerClass(
   class BarChrome extends St.Widget {
     private readonly leftPill: PillActor;
     private readonly island: IslandActor;
-    private readonly rightPill: PillActor;
+    private readonly rightPill: RightPillActor;
     private readonly banner: BannerActor;
 
     constructor(
       leftPill: PillActor,
       island: IslandActor,
-      rightPill: PillActor,
+      rightPill: RightPillActor,
       banner: BannerActor,
     ) {
       super({ reactive: false });
@@ -61,10 +65,7 @@ const BarChrome = GObject.registerClass(
       const allocWidth = box.x2 - box.x1;
       const islandWidth = this.island.width;
       const islandHeight = this.island.height;
-      const sideWidth = Math.max(
-        0,
-        (allocWidth - 2 * layout.sideMargin - 2 * layout.pillGap - islandWidth) / 2,
-      );
+      const sideWidth = sideWidthFor(allocWidth, islandWidth);
 
       const childBox = new Clutter.ActorBox();
 
@@ -84,6 +85,7 @@ const BarChrome = GObject.registerClass(
       childBox.x2 = allocWidth - layout.sideMargin;
       childBox.y1 = 0;
       childBox.y2 = layout.barHeight;
+      this.rightPill.hardwareSlack = sideWidth - sideWidthFor(allocWidth, MAX_ISLAND_WIDTH);
       this.rightPill.allocate(childBox);
 
       // "`top` = altura atual da ilha + 8px (acompanha a ilha com a mesma
