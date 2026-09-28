@@ -7,7 +7,7 @@ import type { NotificationEntry } from '../system/notifications.js';
 import { NotificationRow, type NotificationRowActor } from './notificationRow.js';
 import { colors, effects } from './tokens.js';
 
-const BANNER_MS = 4000;
+const BANNER_MS = 2600;
 export const BANNER_WIDTH = 380;
 export const BANNER_HEIGHT = 58;
 /** Distância entre a base da ilha e o banner. */
@@ -65,7 +65,7 @@ export const Banner = GObject.registerClass(
       this.connectObject('destroy', () => this.clearTimer(), this);
     }
 
-    /** Mostra (ou troca) a notificação e rearma os 4000ms. */
+    /** Mostra (ou troca) a notificação e rearma os 2600ms. */
     present(entry: NotificationEntry): void {
       this.row.setEntry(entry);
       this.clearTimer();

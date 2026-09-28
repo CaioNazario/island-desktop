@@ -126,7 +126,7 @@ describe('IslandState', () => {
     const scheduler = new FakeScheduler();
     const state = new IslandState(scheduler);
     state.openAutomatic('notif');
-    scheduler.advance(4200);
+    scheduler.advance(2500);
     expect(state.mode).toBe('compact');
   });
 
@@ -135,7 +135,7 @@ describe('IslandState', () => {
     const state = new IslandState(scheduler);
     state.openAutomatic('notif');
     state.openFromTrigger('wifi');
-    scheduler.advance(4200);
+    scheduler.advance(2500);
     expect(state.mode).toBe('wifi');
   });
 
@@ -144,7 +144,7 @@ describe('IslandState', () => {
     const state = new IslandState(scheduler);
     state.openAutomatic('notif');
 
-    scheduler.advance(3000);
+    scheduler.advance(2000);
     state.hoverStart();
     expect(scheduler.pendingCount).toBe(0);
 
@@ -152,7 +152,7 @@ describe('IslandState', () => {
     expect(state.mode).toBe('notif');
 
     state.hoverEnd();
-    scheduler.advance(4199);
+    scheduler.advance(2499);
     expect(state.mode).toBe('notif');
     scheduler.advance(1);
     expect(state.mode).toBe('compact');
@@ -171,7 +171,7 @@ describe('IslandState', () => {
     expect(state.mode).toBe('volume');
 
     state.dragEnd();
-    scheduler.advance(2599);
+    scheduler.advance(1499);
     expect(state.mode).toBe('volume');
     scheduler.advance(1);
     expect(state.mode).toBe('compact');
@@ -193,12 +193,12 @@ describe('IslandState', () => {
     expect(state.escape(false)).toBe('noop');
   });
 
-  it('spec 04: notificação abre notif e fecha em 4200ms', () => {
+  it('spec 04: notificação abre notif e fecha em 2500ms', () => {
     const scheduler = new FakeScheduler();
     const state = new IslandState(scheduler);
     state.openNotification(false);
     expect(state.mode).toBe('notif');
-    scheduler.advance(4200);
+    scheduler.advance(2500);
     expect(state.mode).toBe('compact');
   });
 
@@ -206,11 +206,11 @@ describe('IslandState', () => {
     const scheduler = new FakeScheduler();
     const state = new IslandState(scheduler);
     state.openNotification(false);
-    scheduler.advance(3000);
+    scheduler.advance(2000);
     state.openNotification(false);
-    scheduler.advance(3000);
+    scheduler.advance(2000);
     expect(state.mode).toBe('notif');
-    scheduler.advance(1200);
+    scheduler.advance(500);
     expect(state.mode).toBe('compact');
   });
 
@@ -232,7 +232,7 @@ describe('IslandState', () => {
     const state = new IslandState(scheduler);
     state.openNotification(true);
     state.openNotification(false);
-    scheduler.advance(4200);
+    scheduler.advance(2500);
     expect(state.mode).toBe('compact');
   });
 
@@ -253,7 +253,7 @@ describe('IslandState', () => {
     state.openFromTrigger('music'); // transitório
     expect(changes).toBe(3);
 
-    scheduler.advance(4500); // timer expira, volta a compact
+    scheduler.advance(2500); // timer expira, volta a compact
     expect(changes).toBe(4);
 
     expect(state.escape(false)).toBe('noop'); // já em compact

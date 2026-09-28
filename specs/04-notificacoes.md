@@ -30,7 +30,7 @@ Regra pura em `src/core/notificationSource.ts`, com a tabela como constante no m
 
 | Estado da ilha | Resultado |
 |---|---|
-| `compact` sem cartão aberto | abre `notif` (4200ms) |
+| `compact` sem cartão aberto | abre `notif` (2500ms) |
 | `notif` | troca o conteúdo pela nova e rearma o timer |
 | `stack` | entra no topo da lista com fundo `accent-900` por 2500ms (transição 600ms) |
 | qualquer outro modo, ou cartão central aberto | **banner** abaixo da ilha; nada aberto é substituído |
@@ -64,7 +64,7 @@ Padding 0 12px, gap 12px:
 
 - 380px de largura, centralizado, `top` = altura atual da ilha + 8px (acompanha a ilha com a mesma mola). 58px de altura, raio 22, fundo `bg`, anel `neutral-800`, sem a sombra escura e o brilho do design (spec 03, "Animação").
 - Mesmo conteúdo do `notif` (bloco 34×34, ícone 19px, × 24×24).
-- Entra de `translateY(-16px)`, fica 4000ms. Clique abre `stack`; × dispensa só o banner.
+- Entra de `translateY(-16px)`, fica 2600ms. Clique abre `stack`; × dispensa só o banner.
 
 ## Tempo relativo
 

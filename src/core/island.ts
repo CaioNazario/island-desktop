@@ -16,10 +16,10 @@ export type Mode =
   | 'ai';
 
 const TRANSIENT_MS: Partial<Record<Mode, number>> = {
-  notif: 4200,
-  music: 4500,
-  volume: 2600,
-  brightness: 2600,
+  notif: 2500,
+  music: 2500,
+  volume: 1500,
+  brightness: 1500,
 };
 
 /** Modos com a linha de controles, onde fica o botão Energia (specs/09-sessao-energia.md). */

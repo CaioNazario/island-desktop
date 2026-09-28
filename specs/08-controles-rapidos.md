@@ -31,13 +31,13 @@ Origem: `design/markup.html` 92–101 (`volume`), 134–157 (`quick`), 158–215
 
 - Fonte: `Gvc.MixerControl` do Shell (saída padrão). Máximo 100%, sem amplificação.
 - Ícone (`ph-fill`): mudo ou 0 → `ph-speaker-x`; <40 → `ph-speaker-low`; senão `ph-speaker-high`.
-- **Modo `volume`** (320×50, 2600ms): padding 0 18px, gap 14px: ícone 18px · slider · valor `70%` (34px, alinhado à direita, 12px `neutral-300`).
+- **Modo `volume`** (320×50, 1500ms): padding 0 18px, gap 14px: ícone 18px · slider · valor `70%` (34px, alinhado à direita, 12px `neutral-300`).
 - Abre pelo ícone de volume da barra ou pela tecla de volume/mudo (regra 4 da spec 03).
 
 ## Brilho
 
 - Fonte: o mesmo mecanismo que o slider de brilho nativo do Shell 50.x usa (confirmar no código-fonte antes de implementar).
-- **Modo `brightness`** (320×50, 2600ms): clone do `volume` com `ph ph-sun`. Abre pela tecla de brilho.
+- **Modo `brightness`** (320×50, 1500ms): clone do `volume` com `ph ph-sun`. Abre pela tecla de brilho.
 
 ## Teclas de mídia
 

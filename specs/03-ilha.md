@@ -9,16 +9,18 @@ A máquina de estados vive em `src/core/island.ts` (pura, testada). A UI só ren
 | Modo | L × A (px) | Raio | Tipo | Spec |
 |---|---|---|---|---|
 | `compact` | 240 × 30 | 15 | — | abaixo |
-| `notif` | 400 × 62 | 22 | transitório 4200ms | 04 |
+| `notif` | 400 × 62 | 22 | transitório 2500ms | 04 |
 | `stack` | 400 × (56 + min(6, n)·52), vazia 56 + 72 | 24 | fixo | 04 |
-| `music` | 500 × 82 | 26 | transitório 4500ms | 05 |
-| `volume` | 320 × 50 | 25 | transitório 2600ms | 08 |
-| `brightness` | 320 × 50 | 25 | transitório 2600ms | 08 |
+| `music` | 500 × 82 | 26 | transitório 2500ms | 05 |
+| `volume` | 320 × 50 | 25 | transitório 1500ms | 08 |
+| `brightness` | 320 × 50 | 25 | transitório 1500ms | 08 |
 | `calendar` | 480 × 150 (semana) / 214 (mês) | 24 | fixo | 06 |
 | `quick` | 520 × 58, com linha de energia 106 | 29 | fixo | 08, 09 |
 | `wifi` | 520 × 292 (+48 energia, +58 senha, +76 senha com erro) | 26 | fixo | 08 |
 | `bt` | 520 × 348 (BT ligado) / 300 (desligado), +48 energia | 26 | fixo | 08 |
 | `ai` | 480 × (24 + 32 + p·108 − 6), p = provedores | 24 | fixo | 12 |
+
+Os tempos dos transitórios são mais curtos que o `TRANSIENT` do design (4200/4500/2600ms) por decisão do usuário.
 
 `brightness` não existe no design: é um clone de `volume` com ícone `ph ph-sun` e o valor do brilho.
 
@@ -73,5 +75,5 @@ Modos fixos e o cartão central tomam o foco de teclado (grab modal, como os men
 - [ ] Uma notificação chegando com `wifi` aberto não altera a ilha (vira banner, spec 04).
 - [ ] Trocar de faixa com `calendar` aberto não abre `music`.
 - [ ] Segurar `Super+S` não faz a ilha piscar.
-- [ ] Com o mouse sobre a ilha em `notif`, ela não fecha; ao sair, fecha 4200ms depois.
+- [ ] Com o mouse sobre a ilha em `notif`, ela não fecha; ao sair, fecha 2500ms depois.
 - [ ] Esc com o campo de senha focado fecha só o painel de senha; um segundo Esc fecha a ilha.

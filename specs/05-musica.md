@@ -25,7 +25,7 @@ O Phosphor não tem logo do Firefox, então ele fica com a nota.
 
 Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entrega. A Island não sabe qual site é: sem companion de navegador na v1.
 
-## Modo `music` (500×82, transitório 4500ms)
+## Modo `music` (500×82, transitório 2500ms)
 
 - **Gatilho**: troca de faixa (`mpris:trackid` ou título muda; o Firefox manda sempre o mesmo `trackid`) com o player atual tocando, respeitando a regra 3 da spec 03. Compara com a última faixa vista tocando naquele player: o Spotify web pausa, troca de faixa e só então volta a tocar, e retomar a mesma faixa não dispara. Descobrir um player já tocando na primeira leitura não dispara; um player novo que já chega tocando dispara.
 - Padding 0 14px, gap 14px: capa 56×56 raio 12 · bloco de texto · controles · ícone da fonte 22px `accent-400`.
