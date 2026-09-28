@@ -61,6 +61,6 @@ St não entende `oklch()` nem `color-mix()`. Valores convertidos:
 
 ## Critérios de aceite
 
-- [ ] Cada cor usada na UI vem da tabela de tokens (nenhum hex solto fora dela).
-- [ ] Captura de tela da ilha em cada modo, lado a lado com o design, bate em medidas (±1px), cores e ícones.
-- [ ] Todo elemento interativo tem estados hover, pressed e foco visíveis.
+- [x] Cada cor usada na UI vem da tabela de tokens (nenhum hex solto fora dela).
+- [x] Captura de tela da ilha em cada modo, lado a lado com o design, bate em medidas (±1px), cores e ícones.
+- [x] Todo elemento interativo tem estados hover, pressed e foco visíveis.
