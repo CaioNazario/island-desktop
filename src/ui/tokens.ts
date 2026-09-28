@@ -95,6 +95,5 @@ export const effects = {
     notifHiddenScale: 0.96,
     notifHiddenOffsetY: -18,
   },
-  autoHide: { durationMs: 320, easing: 'EASE_OUT_CUBIC' },
   focusRingWidthPx: 2,
 } as const;
