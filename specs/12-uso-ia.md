@@ -26,7 +26,7 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 
 - A Island **nunca** escreve nos arquivos de credencial e **nunca** renova token.
 - `Gio.FileMonitor` nos dois arquivos: quando o CLI renova o token, a Island relê e atualiza.
-- Arquivo ausente → cartão mostra, no lugar das barras, "Rode `claude` para entrar" / "Rode `codex login` para entrar".
+- Arquivo ausente → cartão mostra, no lugar das barras, "Faça login no Claude" / "Faça login no Codex", e o provedor some do botão na pílula esquerda.
 - Token expirado (pela data ou HTTP 401) → mantém os últimos valores do cache e mostra "Abra o Claude Code para renovar" / "Abra o Codex para renovar".
 
 ## Atualização
@@ -48,9 +48,9 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 ## Botão na pílula esquerda
 
 - Padding 0 10px, gap 12px entre provedores; fundo `neutral-900` com `ai` aberto; hover `neutral-900`.
-- Por provedor visível (gap 6px): ícone 13px `neutral-300` · mini barra 26×4 raio 2 (`neutral-800` + preenchimento da **sessão**, transição 600ms) · `62%` 11.5px/500 alinhado à direita, largura fixa.
+- Por provedor logado (gap 6px): ícone 13px `neutral-300` · mini barra 26×4 raio 2 (`neutral-800` + preenchimento da **sessão**, transição 600ms) · `62%` 11.5px/500 alinhado à direita, largura fixa.
 - Tooltip por provedor: `Claude · sessão 62% · semanal 41%`.
-- Nenhum provedor visível (ambos desligados nas preferências): `ph ph-sparkle` 14px + "IA" 12px `neutral-400`.
+- Nenhum provedor logado (sem credencial ou desligado nas preferências): `ph ph-sparkle` 14px + "IA" 12px `neutral-400`.
 - Clique abre `ai`.
 
 ## Modo `ai` (480 × (24 + 32 + p·108 − 6))
@@ -66,6 +66,6 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 
 - [ ] Testes de `aiUsage.ts`: parse dos dois payloads, janelas do Codex fora de ordem, campos ausentes, formatação de "Reinicia", faixas de cor.
 - [ ] Nenhuma escrita em `~/.claude` ou `~/.codex` durante a execução (verificável por `inotifywait`).
-- [ ] Sem `~/.codex/auth.json`, o cartão do Codex mostra "Rode `codex login` para entrar" e o do Claude funciona normalmente.
+- [ ] Sem `~/.codex/auth.json`, o cartão do Codex mostra "Faça login no Codex", o Codex some do botão na pílula e o Claude funciona normalmente.
 - [ ] Rodar o Claude Code (que renova o token) faz o cartão sair do estado expirado sem reiniciar a extensão.
 - [ ] Resposta HTTP malformada não gera exceção no log do Shell.
