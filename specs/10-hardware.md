@@ -30,6 +30,7 @@ Amostragem a cada **1s**.
 - **GPU**, primeira que existir:
   1. `amdgpu`: `/sys/class/drm/card*/device/gpu_busy_percent`
   2. `i915`: `100 − Δrc6_residency_ms / Δt_ms × 100` de `/sys/class/drm/card*/power/rc6_residency_ms`
+     - RC6 mede o tempo em que a GPU está acordada, não ocupada: em repouso o valor fica acima do `Render/3D` do `intel_gpu_top`. Ocupação por engine só existe no PMU do i915 (`perf_event_open`, fora do alcance da extensão).
   3. `xe`: mesma conta com `/sys/class/drm/card*/device/tile0/gt0/gtidle/idle_residency_ms`
   4. nenhuma (inclui NVIDIA, fora da v1) → o bloco GPU some
 - **TEMP**, primeira que existir em `/sys/class/hwmon/*`: `coretemp` (`Package id 0`) → `k10temp` (`Tctl`) → `/sys/class/thermal/thermal_zone*` do tipo `x86_pkg_temp` → some.
@@ -42,7 +43,7 @@ A ordem em que os blocos somem por falta de espaço está na spec 02: NET → GP
 ## Critérios de aceite
 
 - [ ] Testes de `hardware.ts` cobrem: cálculo de CPU por delta, RC6 → %, limiares de cor, formatação de RAM/NET, largura máxima de cada valor.
-- [ ] Em Intel i915 (máquina de referência) o bloco GPU mostra uso coerente com `intel_gpu_top`.
+- [ ] Em Intel i915 (máquina de referência) o bloco GPU bate com `100 − rc6` do `intel_gpu_top`.
 - [ ] Sem GPU reconhecida, o bloco GPU some e os outros não se mexem.
 - [ ] A barra não muda de largura quando os valores oscilam.
 - [ ] A amostragem não gera I/O síncrono no main loop.
