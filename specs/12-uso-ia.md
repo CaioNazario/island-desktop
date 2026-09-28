@@ -19,7 +19,7 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 | Sessão (5h) | `five_hour.utilization` (0–100), `five_hour.resets_at` (ISO) | janela com `limit_window_seconds = 18000` em `rate_limit.primary_window`/`secondary_window`: `used_percent`, `reset_at` (unix) |
 | Semanal | `seven_day.utilization`, `seven_day.resets_at` | janela com `limit_window_seconds = 604800` |
 
-- O parse de cada resposta é função pura em `src/core/ai-usage.ts`, testada com payloads de exemplo (os do ai-usagebar servem de fixture). Classificar as janelas do Codex por `limit_window_seconds`, nunca pela posição.
+- O parse de cada resposta é função pura em `src/core/aiUsage.ts`, testada com payloads de exemplo (os do ai-usagebar servem de fixture). Classificar as janelas do Codex por `limit_window_seconds`, nunca pela posição.
 - **Risco aceito**: os dois endpoints são não documentados e o do Claude exige User-Agent do `claude-cli`. Podem quebrar a qualquer momento. Resposta com formato inesperado vira estado de erro no cartão, nunca exceção.
 
 ## Credenciais: somente leitura
@@ -64,7 +64,7 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 
 ## Critérios de aceite
 
-- [ ] Testes de `ai-usage.ts`: parse dos dois payloads, janelas do Codex fora de ordem, campos ausentes, formatação de "Reinicia", faixas de cor.
+- [ ] Testes de `aiUsage.ts`: parse dos dois payloads, janelas do Codex fora de ordem, campos ausentes, formatação de "Reinicia", faixas de cor.
 - [ ] Nenhuma escrita em `~/.claude` ou `~/.codex` durante a execução (verificável por `inotifywait`).
 - [ ] Sem `~/.codex/auth.json`, o cartão do Codex mostra "Rode `codex login` para entrar" e o do Claude funciona normalmente.
 - [ ] Rodar o Claude Code (que renova o token) faz o cartão sair do estado expirado sem reiniciar a extensão.
