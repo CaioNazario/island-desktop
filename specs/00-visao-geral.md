@@ -24,7 +24,7 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 | # | Spec | Cobre |
 |---|---|---|
 | 01 | [design-tokens](01-design-tokens.md) | Cores, tipografia, ícones, equivalentes St |
-| 02 | [barra](02-barra.md) | Pílulas, monitores, tela cheia, overview, auto-ocultar, struts |
+| 02 | [barra](02-barra.md) | Pílulas, monitores, tela cheia, overview, struts |
 | 03 | [ilha](03-ilha.md) | Máquina de estados, tamanhos, animação, timers, hover, Esc/clique fora |
 | 04 | [notificacoes](04-notificacoes.md) | Captura, identificação de serviço web, roteamento, DND, lista |
 | 05 | [musica](05-musica.md) | MPRIS, modo música, cartão central |
@@ -54,6 +54,7 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 - Ubuntu/outras distros testadas (o código não assume Arch, mas só o Arch é validado)
 - Publicação no extensions.gnome.org (instalação via `install.sh`)
 - Tema claro, botões de ação em notificações, bandeja AppIndicator, troca de layout de teclado
+- Auto-ocultar a barra (`autoHide` do design): a barra sempre reserva o topo
 - GPU NVIDIA no bloco de hardware (sem máquina para validar o `nvidia-smi`)
 
 ## Critérios de aceite globais

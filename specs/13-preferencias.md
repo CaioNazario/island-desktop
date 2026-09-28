@@ -1,6 +1,6 @@
 # 13 · Preferências
 
-Origem: `design/props.json` (`clickAction`, `autoHide`). `battery` e `charging` são controles de demonstração do protótipo e **não** viram preferência.
+Origem: `design/props.json` (`clickAction`). `battery` e `charging` são controles de demonstração do protótipo e **não** viram preferência; `autoHide` está fora de escopo (spec 00).
 
 ## Schema GSettings
 
@@ -9,7 +9,6 @@ Origem: `design/props.json` (`clickAction`, `autoHide`). `battery` e `charging` 
 | Chave | Tipo | Padrão | Usada em |
 |---|---|---|---|
 | `click-action` | enum `center-card` \| `calendar` | `center-card` | spec 03 (clique na ilha compacta) |
-| `auto-hide` | `b` | `false` | spec 02 |
 | `weather-location` | `v` (localização GWeather serializada) | vazio | spec 07 |
 | `weather-hint-shown` | `b` | `false` | spec 07 (interna, sem UI) |
 | `ai-claude-enabled` | `b` | `true` | spec 12 |
@@ -24,7 +23,6 @@ Roda em outro processo e só conversa com a extensão via GSettings. Textos em p
 
 - **Geral**
   - "Clique na ilha abre": Calendário e música (cartão) · Calendário compacto (ilha)
-  - "Ocultar automaticamente": a barra some e reaparece ao encostar o mouse no topo
 - **Clima**
   - Busca de cidade (`GWeather.Location`), mostrando a cidade atual e de onde ela veio (preferência, GNOME ou localização automática)
   - Botão "Limpar" volta à cadeia de fallback

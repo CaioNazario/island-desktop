@@ -45,13 +45,9 @@ Clicar num gatilho cujo modo já está aberto fecha a ilha (`openFromBar`).
 - Overview: a barra continua visível e funcional.
 - Tela de bloqueio: a extensão está desabilitada (o GNOME chama `disable()`), nada da Island aparece.
 
-## Espaço reservado (struts) e auto-ocultar
+## Espaço reservado (struts)
 
-- Auto-ocultar **desligado** (padrão): a barra reserva 30px no topo de cada monitor; janela maximizada começa em y=30.
-- Auto-ocultar **ligado**: a barra não reserva espaço e flutua sobre as janelas.
-  - Some com `translateY(-60px)` quando: nenhum modo expandido e nenhum cartão aberto.
-  - Uma faixa invisível de 6px no topo revela a barra ao encostar o ponteiro; ela some de novo quando o ponteiro sai da linha da barra.
-  - Animação 320ms `EASE_OUT_CUBIC`.
+A barra reserva 30px no topo de cada monitor; janela maximizada começa em y=30. O auto-ocultar do design (`hidden`/`barY`) está fora de escopo (spec 00).
 
 ## Clique fora
 
@@ -60,8 +56,7 @@ Com modo fixo (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`) ou cartão cent
 ## Critérios de aceite
 
 - [ ] As duas laterais têm sempre a mesma largura e a ilha fica centralizada no monitor.
-- [ ] Com auto-ocultar desligado, maximizar uma janela a deixa encostada em y=30 sem sobrepor a barra.
-- [ ] Com auto-ocultar ligado, a barra aparece ao encostar no topo, some ao sair e não some enquanto um modo está aberto.
+- [ ] Maximizar uma janela a deixa encostada em y=30 sem sobrepor a barra.
 - [ ] Em 1280px lógicos com a ilha em `wifi` (520px), nenhum texto da barra é cortado.
 - [ ] Conectar/desconectar um segundo monitor cria/remove a barra dele sem reiniciar a extensão.
 - [ ] Uma janela em tela cheia esconde a barra só no monitor dela.
