@@ -231,14 +231,6 @@ export function formatPercent(percent: number): string {
   return `${Math.round(percent)}%`;
 }
 
-const windowPercent = (window: UsageWindow | null | undefined): string =>
-  window ? formatPercent(window.percent) : '—';
-
-/** Tooltip do botão na pílula: `Claude · sessão 62% · semanal 41%`. */
-export function usageTooltip(name: string, usage: Usage | null): string {
-  return `${name} · sessão ${windowPercent(usage?.session)} · semanal ${windowPercent(usage?.weekly)}`;
-}
-
 /** "em 2h 14min", "em 45min". Nunca "em 0min": o que falta arredonda para cima. */
 export function formatSessionReset(resetsAt: number, now: number): string {
   const minutes = Math.max(1, Math.ceil((resetsAt - now) / 60000));

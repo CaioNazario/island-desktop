@@ -2,13 +2,12 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-import { formatPercent, type ProviderId, usageLevel, usageTooltip } from '../core/aiUsage.js';
+import { formatPercent, type ProviderId, usageLevel } from '../core/aiUsage.js';
 import type { AiUsageSource, ProviderSnapshot } from '../system/aiUsage.js';
 import { BarButton } from './barButton.js';
 import { phosphor } from './icons.js';
 import { aiIconName, LEVEL_COLORS, PROVIDER_META } from './aiProvider.js';
 import { colors } from './tokens.js';
-import { Tooltip } from './tooltip.js';
 
 const MINI_BAR = { width: 26, height: 4, radius: 2 };
 const FILL_MS = 600;
@@ -20,19 +19,9 @@ const ProviderItem = GObject.registerClass(
   class ProviderItem extends St.BoxLayout {
     private readonly fill: St.Widget;
     private readonly percentLabel: St.Label;
-    private readonly tooltip: Tooltip;
-    private readonly providerName: string;
 
     constructor(id: ProviderId) {
-      // `reactive` só para o hover do tooltip; o clique sobe para o botão.
-      super({
-        style: 'spacing: 6px;',
-        reactive: true,
-        track_hover: true,
-        y_align: Clutter.ActorAlign.CENTER,
-      });
-      this.providerName = PROVIDER_META[id].name;
-      this.tooltip = new Tooltip(this);
+      super({ style: 'spacing: 6px;', y_align: Clutter.ActorAlign.CENTER });
       this.add_child(
         new St.Icon({
           gicon: phosphor(PROVIDER_META[id].icon),
@@ -81,7 +70,6 @@ const ProviderItem = GObject.registerClass(
         duration: FILL_MS,
         mode: Clutter.AnimationMode.EASE,
       });
-      this.tooltip.text = usageTooltip(this.providerName, provider.usage);
     }
   },
 );

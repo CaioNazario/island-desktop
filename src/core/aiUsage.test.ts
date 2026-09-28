@@ -13,7 +13,6 @@ import {
   parseCodexCredentials,
   parseCodexUsage,
   usageLevel,
-  usageTooltip,
   type FetchOutcome,
   type PollSchedule,
 } from './aiUsage.js';
@@ -298,23 +297,6 @@ describe('formatPercent', () => {
   it('rounds to an integer', () => {
     expect(formatPercent(61.5)).toBe('62%');
     expect(formatPercent(0)).toBe('0%');
-  });
-});
-
-describe('usageTooltip', () => {
-  it('shows both windows', () => {
-    const usage = {
-      session: { percent: 62, resetsAt: null },
-      weekly: { percent: 41.4, resetsAt: null },
-      plan: null,
-    };
-    expect(usageTooltip('Claude', usage)).toBe('Claude · sessão 62% · semanal 41%');
-  });
-
-  it('uses a dash for a missing window', () => {
-    const usage = { session: null, weekly: { percent: 66, resetsAt: null }, plan: null };
-    expect(usageTooltip('Codex', usage)).toBe('Codex · sessão — · semanal 66%');
-    expect(usageTooltip('Codex', null)).toBe('Codex · sessão — · semanal —');
   });
 });
 
