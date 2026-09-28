@@ -5,6 +5,7 @@ import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 import type { WeatherSource } from './weather.js';
 
 const SHOWN_KEY = 'weather-hint-shown';
+const PREFS_PAGE_KEY = 'prefs-page';
 
 // Primeira execução sem localização (specs/07-clima.md): uma única vez, a
 // Island avisa que falta a cidade; o clique abre as preferências.
@@ -42,8 +43,12 @@ export class WeatherHint {
       source,
       title: 'Configure sua cidade para ver o clima',
     });
-    const openPreferences = this.openPreferences;
-    notification.connect('activated', () => openPreferences());
+    const { settings, openPreferences } = this;
+    notification.connect('activated', () => {
+      // O `openPreferences()` não escolhe página; a janela lê esta chave.
+      settings.set_string(PREFS_PAGE_KEY, 'weather');
+      openPreferences();
+    });
     source.addNotification(notification);
   }
 }

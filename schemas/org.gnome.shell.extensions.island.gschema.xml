@@ -26,5 +26,10 @@
       <default>true</default>
       <summary>Mostrar o uso do Codex</summary>
     </key>
+    <key name="prefs-page" type="s">
+      <default>''</default>
+      <summary>Página a abrir nas preferências</summary>
+      <description>Interna: a extensão grava o nome da página antes de abrir a janela, que mostra essa página e zera a chave.</description>
+    </key>
   </schema>
 </schemalist>

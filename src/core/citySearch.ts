@@ -3,7 +3,7 @@
 // `CityCandidate` e a comparação fica aqui.
 
 export const CITY_SEARCH_LIMIT = 20;
-const MIN_QUERY_LENGTH = 2;
+export const CITY_QUERY_MIN_LENGTH = 2;
 
 export interface CityCandidate<L> {
   name: string;
@@ -45,7 +45,7 @@ const byNameThenRegion = <L>(a: IndexedCity<L>, b: IndexedCity<L>): number =>
  */
 export function searchCities<L>(index: IndexedCity<L>[], query: string): CityCandidate<L>[] {
   const needle = normalize(query);
-  if (needle.length < MIN_QUERY_LENGTH) return [];
+  if (needle.length < CITY_QUERY_MIN_LENGTH) return [];
   const queryWords = splitWords(needle);
   const matches = index.filter((c) =>
     queryWords.every((q) => c.words.some((w) => w.startsWith(q))),

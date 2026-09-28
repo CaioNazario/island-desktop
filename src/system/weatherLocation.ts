@@ -38,6 +38,14 @@ export function readPreferredLocation(
   return deserializeLocation(world, stored);
 }
 
+export function writePreferredLocation(settings: Gio.Settings, location: GWeather.Location): void {
+  settings.set_value(PREFERRED_KEY, new GLib.Variant('v', location.serialize()));
+}
+
+export function clearPreferredLocation(settings: Gio.Settings): void {
+  settings.reset(PREFERRED_KEY);
+}
+
 export function readGnomeLocation(
   world: GWeather.Location | null,
   gnomeSettings: Gio.Settings[],
