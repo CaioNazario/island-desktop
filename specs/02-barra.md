@@ -55,9 +55,9 @@ Com modo fixo (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`) ou cartão cent
 
 ## Critérios de aceite
 
-- [ ] As duas laterais têm sempre a mesma largura e a ilha fica centralizada no monitor.
-- [ ] Maximizar uma janela a deixa encostada em y=30 sem sobrepor a barra.
-- [ ] Em 1280px lógicos com a ilha em `wifi` (520px), nenhum texto da barra é cortado.
-- [ ] Conectar/desconectar um segundo monitor cria/remove a barra dele sem reiniciar a extensão.
-- [ ] Uma janela em tela cheia esconde a barra só no monitor dela.
-- [ ] Clique fora de um modo fixo fecha a ilha e não ativa a janela clicada.
+- [x] As duas laterais têm sempre a mesma largura e a ilha fica centralizada no monitor.
+- [x] Maximizar uma janela a deixa encostada em y=30 sem sobrepor a barra.
+- [x] Em 1280px lógicos com a ilha em `wifi` (520px), nenhum texto da barra é cortado.
+- [x] Conectar/desconectar um segundo monitor cria/remove a barra dele sem reiniciar a extensão.
+- [x] Uma janela em tela cheia esconde a barra só no monitor dela.
+- [x] Clique fora de um modo fixo fecha a ilha e não ativa a janela clicada.
