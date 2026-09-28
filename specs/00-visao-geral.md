@@ -59,7 +59,7 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 
 ## Critérios de aceite globais
 
-- [ ] Lock/unlock de tela 20 vezes seguidas: nenhum ator, signal ou timeout vaza (Looking Glass/`journalctl` limpos) e o painel original do GNOME nunca aparece durante a sessão desbloqueada.
-- [ ] Desabilitar a extensão devolve o painel padrão do GNOME funcionando.
-- [ ] Nenhuma exceção não tratada chega ao Shell em uso normal.
-- [ ] Animações da ilha sem queda perceptível de quadros a 60Hz.
+- [x] Lock/unlock de tela 20 vezes seguidas: nenhum ator, signal ou timeout vaza (Looking Glass/`journalctl` limpos) e o painel original do GNOME nunca aparece durante a sessão desbloqueada.
+- [x] Desabilitar a extensão devolve o painel padrão do GNOME funcionando.
+- [x] Nenhuma exceção não tratada chega ao Shell em uso normal.
+- [x] Animações da ilha sem queda perceptível de quadros a 60Hz.
