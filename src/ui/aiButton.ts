@@ -71,7 +71,7 @@ const ProviderItem = GObject.registerClass(
     }
 
     display(provider: ProviderSnapshot): void {
-      const session = provider.status === 'missing' ? null : provider.usage?.session;
+      const session = provider.usage?.session;
       const level = LEVEL_COLORS[usageLevel(session?.percent ?? 0)];
       this.percentLabel.text = session ? formatPercent(session.percent) : '—';
       this.percentLabel.style = `${PERCENT_STYLE} color: ${session ? level.text : colors.neutral500};`;
@@ -81,10 +81,7 @@ const ProviderItem = GObject.registerClass(
         duration: FILL_MS,
         mode: Clutter.AnimationMode.EASE,
       });
-      this.tooltip.text = usageTooltip(
-        this.providerName,
-        provider.status === 'missing' ? null : provider.usage,
-      );
+      this.tooltip.text = usageTooltip(this.providerName, provider.usage);
     }
   },
 );
@@ -92,7 +89,7 @@ const ProviderItem = GObject.registerClass(
 type ProviderItemActor = InstanceType<typeof ProviderItem>;
 
 // Botão de IA na pílula esquerda (specs/12-uso-ia.md): padding 0 10px, gap
-// 12px entre provedores. Sem provedor ligado, `sparkle` + "IA".
+// 12px entre provedores logados. Sem nenhum, `sparkle` + "IA".
 export const AiButton = GObject.registerClass(
   class AiButton extends BarButton {
     private readonly source: AiUsageSource;
@@ -134,12 +131,13 @@ export const AiButton = GObject.registerClass(
 
     private sync(): void {
       const providers = this.source.providers;
+      const loggedIn = providers.filter((p) => p.status !== 'missing');
       for (const [id, item] of this.items) {
-        const provider = providers.find((p) => p.id === id);
+        const provider = loggedIn.find((p) => p.id === id);
         item.visible = provider !== undefined;
         if (provider) item.display(provider);
       }
-      this.placeholder.visible = providers.length === 0;
+      this.placeholder.visible = loggedIn.length === 0;
     }
   },
 );
