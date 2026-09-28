@@ -10,6 +10,7 @@ import {
   type CalendarView,
   type TodayEvent,
 } from '../core/calendar.js';
+import { getSize } from '../core/island.js';
 import { artistLine, formatTrackTime, progressFraction, sourceGlyph } from '../core/music.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import type { MusicSource } from '../system/mpris.js';
@@ -29,9 +30,8 @@ export const CENTER_CARD_WIDTH = 420;
 export const CENTER_CARD_TOP = 38;
 const CARD_RADIUS = 22;
 const CARD_PADDING = 18;
-// Entra de `translateY(-10px) scale(.96)`, origem no topo (specs/05-musica.md).
-const HIDDEN_OFFSET_Y = -10;
-const HIDDEN_SCALE = 0.96;
+const CARD_RING = 1;
+const CONTENT_WIDTH = CENTER_CARD_WIDTH - 2 * CARD_RING;
 
 function singleLine(label: St.Label): St.Label {
   label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
@@ -304,12 +304,88 @@ export interface CenterCardOptions {
   claimPressUnderGrab: (target: Clutter.Actor) => boolean;
 }
 
+// Casca do cartão: pinta fundo, anel e raio e corta o conteúdo. Enquanto a
+// casca cresce a partir da ilha, o conteúdo fica no tamanho final,
+// centralizado no topo: o `BinLayout` espremeria um filho maior que o pai
+// (CLAMP em `clutter_actor_allocate_align_fill`, mutter 50.4).
+const CardShell = GObject.registerClass(
+  {
+    Properties: {
+      // Animável com `ease_property`, como o raio da ilha.
+      radius: GObject.ParamSpec.double(
+        'radius',
+        null,
+        null,
+        GObject.ParamFlags.READWRITE,
+        0,
+        Number.MAX_SAFE_INTEGER,
+        0,
+      ),
+    },
+  },
+  class CardShell extends St.Widget {
+    private readonly body: Clutter.Actor;
+    private radiusPx = -1;
+
+    constructor(body: Clutter.Actor) {
+      super({
+        clip_to_allocation: true,
+        x_expand: true,
+        y_expand: true,
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.START,
+      });
+      this.body = body;
+      this.add_child(body);
+      this.radius = CARD_RADIUS;
+    }
+
+    get radius(): number {
+      return this.radiusPx;
+    }
+
+    set radius(radius: number) {
+      if (this.radiusPx === radius) return;
+      this.radiusPx = radius;
+      this.style = `
+        border-radius: ${radius}px;
+        background-color: ${colors.bg};
+        border: ${CARD_RING}px solid ${colors.neutral800};
+      `;
+      this.notify('radius');
+    }
+
+    override vfunc_get_preferred_width(_forHeight: number): [number, number] {
+      return [CENTER_CARD_WIDTH, CENTER_CARD_WIDTH];
+    }
+
+    override vfunc_get_preferred_height(_forWidth: number): [number, number] {
+      const [min, natural] = this.body.get_preferred_height(CONTENT_WIDTH);
+      return [min + 2 * CARD_RING, natural + 2 * CARD_RING];
+    }
+
+    override vfunc_allocate(box: Clutter.ActorBox): void {
+      this.set_allocation(box);
+      const [, height] = this.body.get_preferred_height(CONTENT_WIDTH);
+      const childBox = new Clutter.ActorBox();
+      childBox.set_origin((box.get_width() - CONTENT_WIDTH) / 2, CARD_RING);
+      childBox.set_size(CONTENT_WIDTH, height);
+      this.body.allocate(childBox);
+    }
+  },
+);
+
+type CardShellActor = InstanceType<typeof CardShell>;
+
 // Cartão central (specs/05-musica.md "Cartão central"): abre abaixo da ilha
-// compacta, que não muda de tamanho.
+// compacta, que não muda de tamanho. Sai de trás dela: a casca começa com o
+// tamanho e a posição da ilha compacta e cresce até o tamanho do cartão.
 export const CenterCard = GObject.registerClass(
   class CenterCard extends St.Widget {
     private readonly options: CenterCardOptions;
     private readonly calendar: CardCalendarSectionActor;
+    private readonly shell: CardShellActor;
+    private readonly body: St.BoxLayout;
     private isOpen = false;
 
     constructor(music: MusicSource, events: CalendarEventsSource, options: CenterCardOptions) {
@@ -319,21 +395,12 @@ export const CenterCard = GObject.registerClass(
         can_focus: true,
         width: CENTER_CARD_WIDTH,
         visible: false,
-        opacity: 0,
       });
       this.options = options;
-      this.set_pivot_point(0.5, 0);
 
-      const surface = new St.BoxLayout({
+      this.body = new St.BoxLayout({
         orientation: Clutter.Orientation.VERTICAL,
-        x_expand: true,
-        y_expand: true,
-        style: `
-          padding: ${CARD_PADDING}px 0;
-          border-radius: ${CARD_RADIUS}px;
-          background-color: ${colors.bg};
-          border: 1px solid ${colors.neutral800};
-        `,
+        style: `padding: ${CARD_PADDING}px 0;`,
       });
       // Música · divisor · calendário, como no design. Nada tocando: seção
       // de música e divisor somem (specs/05-musica.md).
@@ -341,11 +408,12 @@ export const CenterCard = GObject.registerClass(
       const divider = sectionDivider();
       musicSection.bind_property('visible', divider, 'visible', GObject.BindingFlags.SYNC_CREATE);
       this.calendar = new CardCalendarSection(events);
-      surface.add_child(musicSection);
-      surface.add_child(divider);
-      surface.add_child(this.calendar);
+      this.body.add_child(musicSection);
+      this.body.add_child(divider);
+      this.body.add_child(this.calendar);
 
-      this.add_child(surface);
+      this.shell = new CardShell(this.body);
+      this.add_child(this.shell);
 
       this.connectObject(
         'captured-event',
@@ -377,32 +445,52 @@ export const CenterCard = GObject.registerClass(
     setOpen(open: boolean): void {
       if (open === this.isOpen) return;
       this.isOpen = open;
-      this.remove_all_transitions();
+      const { shell, body } = this;
+      shell.remove_all_transitions();
+      body.remove_all_transitions();
       if (open) this.calendar.reset();
+
+      const island = getSize('compact');
       if (open && !this.visible) {
-        this.opacity = 0;
-        Object.assign(this, hiddenTransform());
+        shell.set_size(island.width, island.height);
+        shell.radius = island.radius;
+        shell.translationY = -CENTER_CARD_TOP;
+        body.opacity = 0;
         this.visible = true;
+      } else {
+        // Interrompido no meio: parte do tamanho atual.
+        shell.set_size(shell.width, shell.height);
       }
-      this.ease({
-        opacity: open ? 255 : 0,
-        duration: effects.cardFade.durationMs,
-        mode: Clutter.AnimationMode.EASE,
-        onStopped: (isFinished: boolean) => {
-          if (isFinished && !open) this.visible = false;
-        },
-      });
-      this.ease({
-        ...(open ? { translationY: 0, scaleX: 1, scaleY: 1 } : hiddenTransform()),
+
+      const [, bodyHeight] = body.get_preferred_height(CONTENT_WIDTH);
+      const spring = {
         duration: effects.cardSpring.durationMs,
         mode: Clutter.AnimationMode.EASE_OUT_BACK,
+      };
+      shell.ease({
+        ...(open
+          ? { width: CENTER_CARD_WIDTH, height: bodyHeight + 2 * CARD_RING, translationY: 0 }
+          : { width: island.width, height: island.height, translationY: -CENTER_CARD_TOP }),
+        ...spring,
+        onStopped: (isFinished: boolean) => {
+          if (!isFinished) return;
+          if (open) {
+            // Volta ao tamanho natural: Mês/Semana e a música mudam a altura.
+            shell.set_size(-1, -1);
+          } else {
+            this.visible = false;
+          }
+        },
+      });
+      shell.ease_property('radius', open ? CARD_RADIUS : island.radius, spring);
+      body.ease({
+        opacity: open ? 255 : 0,
+        delay: effects.contentCrossfade.delayMs,
+        duration: effects.contentCrossfade.durationMs,
+        mode: Clutter.AnimationMode.EASE,
       });
     }
   },
 );
-
-function hiddenTransform(): { translationY: number; scaleX: number; scaleY: number } {
-  return { translationY: HIDDEN_OFFSET_Y, scaleX: HIDDEN_SCALE, scaleY: HIDDEN_SCALE };
-}
 
 export type CenterCardActor = InstanceType<typeof CenterCard>;

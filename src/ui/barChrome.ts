@@ -43,10 +43,11 @@ const BarChrome = GObject.registerClass(
       this.card = card;
       this.banner = banner;
       this.add_child(leftPill);
+      // O cartão sai de trás da ilha ao abrir e volta para trás dela ao fechar.
+      this.add_child(card);
       this.add_child(island);
       this.add_child(rightPill);
       // O banner fica por cima do cartão (z-index 35 × 25 no design).
-      this.add_child(card);
       this.add_child(banner);
     }
 
