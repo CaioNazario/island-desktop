@@ -62,6 +62,7 @@ const UsageColumn = GObject.registerClass(
       this.fill = new St.Widget({
         width: 0,
         height: BAR_HEIGHT,
+        x_expand: true,
         x_align: Clutter.ActorAlign.START,
       });
       track.add_child(this.fill);

@@ -49,10 +49,12 @@ const ProviderItem = GObject.registerClass(
         height: MINI_BAR.height,
         y_align: Clutter.ActorAlign.CENTER,
       });
+      // Posição fixa em vez de `x_expand`: o BinLayout só respeita o `x_align`
+      // de filho que expande, e o expand subiria até esticar o botão na pílula.
       this.fill = new St.Widget({
         width: 0,
         height: MINI_BAR.height,
-        x_align: Clutter.ActorAlign.START,
+        x: 0,
       });
       track.add_child(this.fill);
       this.add_child(track);
