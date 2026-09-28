@@ -174,10 +174,13 @@ export class Bar {
       claimPressUnderGrab: (target: Clutter.Actor) => this.banner.handlePressUnderGrab(target),
     });
     const rightPill = new RightPill(
-      battery,
-      system.notifications,
-      () => onTrigger('quick'),
-      () => onTrigger('stack'),
+      {
+        battery,
+        notifications: system.notifications,
+        wifi: system.wifi,
+        volume: system.volume,
+      },
+      onTrigger,
     );
     this.chrome = new BarChrome(leftPill, island, rightPill, this.card, this.banner);
     this.chrome.set_position(monitor.x, monitor.y);

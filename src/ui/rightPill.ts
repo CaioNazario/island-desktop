@@ -3,14 +3,20 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import { batteryDisplay, type BatteryTone } from '../core/battery.js';
+import type { Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
 import type { NotificationFeed } from '../system/notifications.js';
+import type { SystemVolume } from '../system/volume.js';
+import type { SystemWifi } from '../system/wifi.js';
 import { BarButton, type BarButtonActor } from './barButton.js';
 import {
   batteryLevelIconName,
   caretIconName,
   notificationFallbackIconName,
   phosphor,
+  volumeIconName,
+  wifiOffBoldIconName,
+  wifiTileIconName,
 } from './icons.js';
 import { Pill } from './pill.js';
 import { colors, derivedColors } from './tokens.js';
@@ -94,25 +100,69 @@ function bellButton(feed: NotificationFeed, onClick: () => void): BarButtonActor
   return button;
 }
 
+// Botão de ícone 16px `text` que acompanha uma fonte (Wi‑Fi, volume).
+function iconButton(
+  source: { onChange(callback: () => void): () => void },
+  sync: (button: BarButtonActor, icon: St.Icon) => void,
+  onClick: () => void,
+): BarButtonActor {
+  const icon = new St.Icon({ icon_size: 16, style: `color: ${colors.text};` });
+  const button = new BarButton(icon, onClick);
+  const refresh = (): void => sync(button, icon);
+  refresh();
+  const unsubscribe = source.onChange(refresh);
+  button.connectObject('destroy', () => unsubscribe(), button);
+  return button;
+}
+
+// Wi‑Fi (specs/02-barra.md, item 3): `ph-bold ph-wifi-high`, ou
+// `ph-bold ph-wifi-slash` desligado. Sem placa, some como o tile e o modo.
+function wifiButton(wifi: SystemWifi, onClick: () => void): BarButtonActor {
+  return iconButton(
+    wifi,
+    (button, icon) => {
+      button.visible = wifi.available;
+      icon.gicon = phosphor(wifi.radioOn ? wifiTileIconName : wifiOffBoldIconName);
+    },
+    onClick,
+  );
+}
+
+// Volume (specs/02-barra.md, item 4): ícone conforme o nível (spec 08).
+function volumeButton(volume: SystemVolume, onClick: () => void): BarButtonActor {
+  return iconButton(
+    volume,
+    (_button, icon) => {
+      icon.gicon = phosphor(volumeIconName(volume));
+    },
+    onClick,
+  );
+}
+
+export interface RightPillSources {
+  battery: BatterySource;
+  notifications: NotificationFeed;
+  wifi: SystemWifi;
+  volume: SystemVolume;
+}
+
 // Pílula direita (specs/02-barra.md): os botões ficam à direita, com gap 2px;
 // o espaço à esquerda é do grupo de hardware (spec 10).
 export const RightPill = GObject.registerClass(
   class RightPill extends Pill {
-    constructor(
-      battery: BatterySource,
-      feed: NotificationFeed,
-      onOpenQuick: () => void,
-      onOpenStack: () => void,
-    ) {
+    constructor(sources: RightPillSources, onTrigger: (mode: Mode) => void) {
       super();
       this.add_child(new St.Widget({ x_expand: true }));
 
+      const onOpenQuick = (): void => onTrigger('quick');
       const buttons = new St.BoxLayout({
         style: 'spacing: 2px;',
         y_align: Clutter.ActorAlign.CENTER,
       });
-      buttons.add_child(bellButton(feed, onOpenStack));
-      buttons.add_child(batteryButton(battery, onOpenQuick));
+      buttons.add_child(bellButton(sources.notifications, () => onTrigger('stack')));
+      buttons.add_child(wifiButton(sources.wifi, () => onTrigger('wifi')));
+      buttons.add_child(volumeButton(sources.volume, () => onTrigger('volume')));
+      buttons.add_child(batteryButton(sources.battery, onOpenQuick));
       buttons.add_child(
         new BarButton(
           new St.Icon({

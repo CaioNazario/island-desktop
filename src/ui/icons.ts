@@ -40,6 +40,7 @@ export function wifiSignalIconName(level: SignalLevel): string {
 export const wifiTileIconName = 'wifi-high-bold';
 export const wifiIconName = 'wifi-high';
 export const wifiOffIconName = 'wifi-slash';
+export const wifiOffBoldIconName = 'wifi-slash-bold';
 export const lockIconName = 'lock-simple-fill';
 export const keyIconName = 'key';
 export const warningIconName = 'warning-circle';

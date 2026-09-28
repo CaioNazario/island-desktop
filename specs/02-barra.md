@@ -18,7 +18,7 @@ Da esquerda para a direita:
 
 1. Grupo de hardware, alinhado à esquerda (`margin-right: auto`), padding 0 10px, gap 10px. Spec 10.
 2. Sino (`ph-fill ph-bell` 16px) com ponto de não lido 7×7 `accent` + anel 2px `bg`, em `top: 5px; right: 8px`. Abre `stack`.
-3. Wi‑Fi (`ph-bold ph-wifi-high` / `ph-wifi-slash` quando desligado). Abre `wifi`.
+3. Wi‑Fi (`ph-bold ph-wifi-high` / `ph-bold ph-wifi-slash` quando desligado). Abre `wifi`. Sem placa Wi‑Fi, some (como o tile e o modo, spec 08).
 4. Volume (ícone conforme nível, spec 08). Abre `volume`.
 5. Bateria (ícone + %, 13px/500, gap 6px, padding 0 10px). Abre `quick`. Spec 11.
 6. Seta `ph ph-caret-down` 12px `neutral-300`. Abre `quick`.
