@@ -149,7 +149,8 @@ export const PowerRow = GObject.registerClass(
         this.trackingList = true;
       }
       // O layout pula a lista na hora; a translação desfaz o pulo e volta a 0.
-      const jump = open ? this.rowHeight : -this.rowHeight;
+      // Fora da tela não há o que animar nem medir.
+      const jump = this.mapped ? (open ? this.rowHeight : -this.rowHeight) : 0;
       for (const actor of below) {
         actor.remove_transition('translation-y');
         actor.translationY = this.mapped ? actor.translationY - jump : 0;
@@ -160,6 +161,12 @@ export const PowerRow = GObject.registerClass(
 
     // Parte visível = do topo da linha até o topo da lista.
     private syncClip(): void {
+      // Fora da tela o St mede sem CSS (e avisa no log): fica o estado final.
+      if (!this.mapped) {
+        this.row.visible = this.open;
+        this.row.remove_clip();
+        return;
+      }
       const height = this.rowHeight;
       const listTop = this.get_next_sibling()?.translationY ?? 0;
       const visible = Math.min(height, Math.max(0, (this.open ? height : 0) + listTop));
