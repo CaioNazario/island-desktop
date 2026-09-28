@@ -22,6 +22,30 @@ export const WIDEST_VALUE: Record<HardwareBlockId, string> = {
   net: '↓99.9',
 };
 
+// Ordem em que os blocos somem por falta de espaço (specs/02-barra.md, largura
+// mínima). CPU e RAM nunca somem.
+const DROP_ORDER: readonly HardwareBlockId[] = ['net', 'gpu', 'temp'];
+
+/**
+ * Blocos de `ids` que cabem em `budget` px com `gap` entre eles, na ordem de
+ * `ids`. Tira NET → GPU → TEMP até caber; CPU e RAM ficam mesmo sem caber.
+ */
+export function fittingBlocks(
+  ids: readonly HardwareBlockId[],
+  widthOf: (id: HardwareBlockId) => number,
+  budget: number,
+  gap: number,
+): HardwareBlockId[] {
+  const width = (shown: readonly HardwareBlockId[]): number =>
+    shown.reduce((sum, id) => sum + widthOf(id), 0) + gap * Math.max(0, shown.length - 1);
+  let shown = [...ids];
+  for (const dropped of DROP_ORDER) {
+    if (width(shown) <= budget) break;
+    shown = shown.filter((id) => id !== dropped);
+  }
+  return shown;
+}
+
 const CPU_BUSY = 60;
 const TEMP_HOT = 70;
 const GIB = 1024 ** 3;

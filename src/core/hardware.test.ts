@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   busyFromIdleResidency,
   cpuUsage,
+  fittingBlocks,
   hardwareBlocks,
   isPhysicalInterface,
   netRates,
@@ -218,5 +219,45 @@ describe('hardwareBlocks', () => {
         }
       }
     });
+  });
+});
+
+describe('fittingBlocks', () => {
+  const ALL: HardwareBlockId[] = ['cpu', 'ram', 'gpu', 'temp', 'net'];
+  // 5 blocos de 30px com gap 10: 30, 70, 110, 150, 190.
+  const fit = (budget: number, ids = ALL) => fittingBlocks(ids, () => 30, budget, 10);
+
+  it('keeps every block when they fit', () => {
+    expect(fit(190)).toEqual(ALL);
+  });
+
+  it.each([
+    [189, ['cpu', 'ram', 'gpu', 'temp']],
+    [149, ['cpu', 'ram', 'temp']],
+    [109, ['cpu', 'ram']],
+  ])('drops NET → GPU → TEMP to fit %ipx', (budget, ids) => {
+    expect(fit(budget)).toEqual(ids);
+  });
+
+  it('never drops CPU or RAM', () => {
+    expect(fit(0)).toEqual(['cpu', 'ram']);
+  });
+
+  it('keeps TEMP sooner without a GPU', () => {
+    expect(fit(150, ['cpu', 'ram', 'temp', 'net'])).toEqual(['cpu', 'ram', 'temp', 'net']);
+    expect(fit(149, ['cpu', 'ram', 'temp', 'net'])).toEqual(['cpu', 'ram', 'temp']);
+  });
+
+  it('measures each block by its own width', () => {
+    const widths: Record<HardwareBlockId, number> = {
+      cpu: 30,
+      ram: 36,
+      gpu: 30,
+      temp: 30,
+      net: 50,
+    };
+    // Tudo: 176 + 40 = 216; sem NET: 126 + 30 = 156.
+    expect(fittingBlocks(ALL, (id) => widths[id], 215, 10)).toEqual(['cpu', 'ram', 'gpu', 'temp']);
+    expect(fittingBlocks(ALL, (id) => widths[id], 156, 10)).toEqual(['cpu', 'ram', 'gpu', 'temp']);
   });
 });
