@@ -31,5 +31,22 @@
       <summary>Página a abrir nas preferências</summary>
       <description>Interna: a extensão grava o nome da página antes de abrir a janela, que mostra essa página e zera a chave.</description>
     </key>
+    <key name="environments" type="a(ssasas)">
+      <default>[('Padrão', 'house', ['ai'], ['hw']), ('Trabalho', 'briefcase', ['event', 'pomodoro', 'ai'], ['hw', 'github']), ('Estudos', 'book-open', ['progress', 'pomodoro'], ['note']), ('Fim de semana', 'sun-horizon', ['music'], ['countdown'])]</default>
+      <summary>Ambientes</summary>
+      <description>Nome, ícone (glifo Phosphor), widgets da pílula esquerda e da direita. O primeiro é o Padrão.</description>
+    </key>
+    <key name="environment-index" type="u">
+      <default>0</default>
+      <summary>Ambiente ativo</summary>
+    </key>
+    <key name="switch-environment-next" type="as">
+      <default>['&lt;Super&gt;&lt;Control&gt;Right']</default>
+      <summary>Próximo ambiente</summary>
+    </key>
+    <key name="switch-environment-previous" type="as">
+      <default>['&lt;Super&gt;&lt;Control&gt;Left']</default>
+      <summary>Ambiente anterior</summary>
+    </key>
   </schema>
 </schemalist>

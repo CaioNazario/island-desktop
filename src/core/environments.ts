@@ -98,7 +98,7 @@ export function sanitizeEnvironments(stored: readonly StoredEnvironment[]): Envi
   return envs.length > 0 ? envs : defaultEnvironments();
 }
 
-export function toStored(envs: readonly Environment[]): StoredEnvironment[] {
+export function toStored(envs: readonly Environment[]): [string, string, string[], string[]][] {
   return envs.map((env) => [env.name, env.icon, [...env.left], [...env.right]]);
 }
 
