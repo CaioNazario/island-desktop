@@ -419,6 +419,58 @@ describe('IslandState note', () => {
   });
 });
 
+describe('IslandState music fixado', () => {
+  it('spec 05: abre sem timer, fica com hover e sem hover, e o mesmo clique fecha', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.toggleMusicPinned();
+    expect(state.mode).toBe('music');
+    expect(state.musicPinned).toBe(true);
+    expect(state.fixed).toBe(true);
+    expect(scheduler.pendingCount).toBe(0);
+    state.hoverStart();
+    state.hoverEnd();
+    state.keepAlive();
+    scheduler.advance(10_000);
+    expect(state.mode).toBe('music');
+    state.toggleMusicPinned();
+    expect(state.mode).toBe('compact');
+    expect(state.musicPinned).toBe(false);
+  });
+
+  it('spec 05: troca de faixa com ele aberto não reabre nem arma timer', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.toggleMusicPinned();
+    expect(state.openAutomatic('music')).toBe(false);
+    expect(state.openAutomatic('volume')).toBe(false);
+    expect(state.musicPinned).toBe(true);
+    expect(scheduler.pendingCount).toBe(0);
+  });
+
+  it('spec 05: clicar no widget com o music transitório aberto o fixa', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openAutomatic('music');
+    expect(state.fixed).toBe(false);
+    state.toggleMusicPinned();
+    expect(state.musicPinned).toBe(true);
+    scheduler.advance(2500);
+    expect(state.mode).toBe('music');
+  });
+
+  it('spec 05: outro modo depois do fixado volta ao music transitório', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.toggleMusicPinned();
+    state.escape(false);
+    state.openAutomatic('music');
+    expect(state.musicPinned).toBe(false);
+    scheduler.advance(2500);
+    expect(state.mode).toBe('compact');
+  });
+});
+
 describe('isFixedMode', () => {
   it('só stack, calendar, quick, wifi, bt, ai e note tomam foco de teclado', () => {
     expect(isFixedMode('compact')).toBe(false);

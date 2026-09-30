@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { isFixedMode, IslandState, type Mode, type Scheduler } from '../core/island.js';
+import { IslandState, type Mode, type Scheduler } from '../core/island.js';
 import { routeNotification, type IncomingNotification } from '../core/notifications.js';
 import { SystemAiUsage } from '../system/aiUsage.js';
 import { SystemBattery } from '../system/battery.js';
@@ -62,6 +62,7 @@ export class BarManager {
   private readonly unsubscribeBt: () => void;
   private readonly unsubscribeArrival: () => void;
   private readonly unsubscribeTrack: () => void;
+  private readonly unsubscribeMusic: () => void;
   private readonly unsubscribeEnvironments: () => void;
   // Monitor de onde veio a última troca de ambiente pedida na barra.
   private environmentMonitorIndex: number | null = null;
@@ -117,6 +118,10 @@ export class BarManager {
       this.handleNotificationArrival(entry, incoming),
     );
     this.unsubscribeTrack = this.music.onTrackChange(() => this.handleTrackChange());
+    // O player sumir fecha o `music` fixado (specs/05-musica.md).
+    this.unsubscribeMusic = this.music.onChange(() => {
+      if (this.state.musicPinned && this.music.track === null) this.state.closeAll();
+    });
     this.unsubscribeEnvironments = this.environments.onChange((direction) => {
       if (direction) this.handleEnvironmentSwitch();
     });
@@ -133,7 +138,7 @@ export class BarManager {
    */
   private triggerVolumeKey(): void {
     debugLog(this.keyLog('triggerVolumeKey'));
-    if (this.state.cardOpen || isFixedMode(this.state.mode)) return;
+    if (this.state.cardOpen || this.state.fixed) return;
     this.targetMonitorIndex = this.focusedMonitorIndex();
     this.state.volumeKey();
     this.render();
@@ -142,7 +147,7 @@ export class BarManager {
   /** Tecla de brilho: mesma regra da tecla de volume acima. */
   private triggerBrightnessKey(): void {
     debugLog(this.keyLog('triggerBrightnessKey'));
-    if (this.state.cardOpen || isFixedMode(this.state.mode)) return;
+    if (this.state.cardOpen || this.state.fixed) return;
     this.targetMonitorIndex = this.focusedMonitorIndex();
     this.state.brightnessKey();
     this.render();
@@ -239,7 +244,9 @@ export class BarManager {
   /** Gatilho na barra: a ilha daquela barra abre o modo (specs/02-barra.md). */
   private handleBarTrigger(monitorIndex: number, mode: Mode): void {
     this.targetMonitorIndex = monitorIndex;
-    this.state.openFromTrigger(mode);
+    // Da barra, `music` só vem do widget Música, que abre o modo fixado.
+    if (mode === 'music') this.state.toggleMusicPinned();
+    else this.state.openFromTrigger(mode);
     // Abrir a lista pelo sino marca tudo como lido (specs/04-notificacoes.md).
     if (this.state.mode === 'stack') this.notifications.markAllRead();
     this.render();
@@ -285,7 +292,7 @@ export class BarManager {
 
   /** Modos fixos e o cartão central tomam o foco de teclado (specs/03-ilha.md). */
   private syncGrab(): void {
-    const shouldGrab = this.state.cardOpen || isFixedMode(this.state.mode);
+    const shouldGrab = this.state.cardOpen || this.state.fixed;
     const targetActor = this.bars[this.targetMonitorIndex]?.island ?? null;
     const wantedActor = shouldGrab ? targetActor : null;
 
@@ -311,6 +318,7 @@ export class BarManager {
     this.unsubscribeBt();
     this.unsubscribeArrival();
     this.unsubscribeTrack();
+    this.unsubscribeMusic();
     this.unsubscribeEnvironments();
     if (this.grab) {
       Main.popModal(this.grab);

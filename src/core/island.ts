@@ -131,6 +131,7 @@ export class IslandState {
   private _mode: Mode = 'compact';
   private _cardOpen = false;
   private _powerOpen = false;
+  private _musicPinned = false;
   private hovering = false;
   private notifSticky = false;
   private notifFromBrowser = false;
@@ -149,6 +150,25 @@ export class IslandState {
 
   get cardOpen(): boolean {
     return this._cardOpen;
+  }
+
+  /** `music` fixado (specs/05-musica.md): sem timer, conta como modo fixo. */
+  get musicPinned(): boolean {
+    return this._mode === 'music' && this._musicPinned;
+  }
+
+  /** Modo que toma o foco de teclado: os fixos e o `music` fixado. */
+  get fixed(): boolean {
+    return isFixedMode(this._mode) || this.musicPinned;
+  }
+
+  /** Clique no widget Música (specs/16-widgets.md): abre `music` fixado; com ele aberto, fecha. */
+  toggleMusicPinned(): void {
+    if (this.musicPinned) {
+      this.closeAll();
+      return;
+    }
+    this.setMode('music', true);
   }
 
   /** Linha de energia aberta abaixo da linha de controles (specs/09-sessao-energia.md). */
@@ -175,7 +195,7 @@ export class IslandState {
   /** Evento automático (notificação, troca de faixa): regra 3. */
   openAutomatic(mode: Mode): boolean {
     if (this._cardOpen) return false;
-    if (this._mode !== 'compact' && !isTransient(this._mode)) {
+    if (this.fixed || (this._mode !== 'compact' && !isTransient(this._mode))) {
       this.log(`openAutomatic ${mode} refused mode=${this._mode}`);
       return false;
     }
@@ -273,15 +293,17 @@ export class IslandState {
     this.log(`closeAll mode=${this._mode}`, true);
     this.clearTimer();
     this._mode = 'compact';
+    this._musicPinned = false;
     this._cardOpen = false;
     this._powerOpen = false;
     this.onChange();
   }
 
-  private setMode(mode: Mode): void {
-    this.log(`setMode ${this._mode} -> ${mode}`);
+  private setMode(mode: Mode, musicPinned = false): void {
+    this.log(`setMode ${this._mode} -> ${mode}${musicPinned ? ' pinned' : ''}`);
     this.clearTimer();
     this._mode = mode;
+    this._musicPinned = musicPinned;
     this._cardOpen = false;
     this._powerOpen = false;
     this.arm(mode);
@@ -293,6 +315,7 @@ export class IslandState {
     const ms = mode === 'notif' && this.notifFromBrowser ? BROWSER_NOTIF_MS : TRANSIENT_MS[mode];
     this.log(`arm ${mode} ms=${ms} hovering=${this.hovering} sticky=${this.notifSticky}`);
     if (ms === undefined || (this.hovering && mode !== 'env')) return;
+    if (this.musicPinned) return;
     if (mode === 'notif' && this.notifSticky) return;
     this.timerId = this.scheduler.setTimeout(() => {
       this.timerId = null;
