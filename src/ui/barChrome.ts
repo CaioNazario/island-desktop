@@ -153,7 +153,12 @@ export class Bar {
     });
 
     this.state = state;
-    const widgetSources = { aiUsage: system.aiUsage, hardware };
+    const widgetSources = {
+      aiUsage: system.aiUsage,
+      hardware,
+      settings: system.settings,
+      openPreferences: system.openPreferences,
+    };
     this.leftWidgets = new WidgetArea(widgetSources, 'end', onTrigger);
     this.rightWidgets = new WidgetArea(widgetSources, 'start', onTrigger);
     const syncWidgets = (): void => {

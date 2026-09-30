@@ -1,4 +1,5 @@
 import Clutter from 'gi://Clutter';
+import type Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
@@ -67,6 +68,9 @@ export interface IslandSystem {
   weather: WeatherSource;
   aiUsage: AiUsageSource;
   environments: EnvironmentSource;
+  settings: Gio.Settings;
+  /** Abre as preferências na página `page` (specs/13-preferencias.md). */
+  openPreferences: (page: string) => void;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado

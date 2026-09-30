@@ -1,4 +1,5 @@
 import Clutter from 'gi://Clutter';
+import type Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
@@ -7,12 +8,15 @@ import type { Mode } from '../core/island.js';
 import type { AiUsageSource } from '../system/aiUsage.js';
 import type { HardwareSource } from '../system/hardware.js';
 import { AiButton, type AiButtonActor } from './aiButton.js';
+import { countdownWidget } from './countdownWidget.js';
 import { HardwareGroup, type HardwareGroupActor } from './hardwareGroup.js';
 import { progressWidget } from './progressWidget.js';
 
 export interface WidgetSources {
   aiUsage: AiUsageSource;
   hardware: HardwareSource;
+  settings: Gio.Settings;
+  openPreferences: (page: string) => void;
 }
 
 // Área de widgets de uma pílula lateral (specs/16-widgets.md "Pílulas"): os
@@ -89,6 +93,10 @@ export const WidgetArea = GObject.registerClass(
           return this.hardware;
         case 'progress':
           return progressWidget();
+        case 'countdown':
+          return countdownWidget(this.sources.settings, () =>
+            this.sources.openPreferences('widgets'),
+          );
         default:
           return null;
       }

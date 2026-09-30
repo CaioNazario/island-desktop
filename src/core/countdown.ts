@@ -32,3 +32,41 @@ export function toIsoDate({ year, month, day }: CalendarDate): string {
 export function formatDate({ year, month, day }: CalendarDate): string {
   return `${pad(day)}/${pad(month)}/${year}`;
 }
+
+const DAY_MS = 86_400_000;
+
+/** Dias de calendário de `today` (data local) até `target`; negativo se já passou. */
+export function daysUntil(today: Date, target: CalendarDate): number {
+  const from = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const to = Date.UTC(target.year, target.month - 1, target.day);
+  return Math.round((to - from) / DAY_MS);
+}
+
+export interface CountdownView {
+  label: string;
+  /** Sem data: rótulo `neutral-400`, sem sub e com clique. */
+  missingDate: boolean;
+  sub?: string;
+}
+
+function remaining(days: number): string {
+  if (days < 0) return 'encerrada';
+  if (days === 0) return 'hoje';
+  return days === 1 ? '1 dia' : `${days} dias`;
+}
+
+export function countdownView(name: string, dateText: string, today: Date): CountdownView {
+  const date = parseIsoDate(dateText);
+  if (!date) return { label: 'Sem data', missingDate: true };
+  return {
+    label: name.trim() || 'Contagem',
+    missingDate: false,
+    sub: remaining(daysUntil(today, date)),
+  };
+}
+
+/** Milissegundos até a próxima meia-noite local. */
+export function msUntilMidnight(now: Date): number {
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  return midnight.getTime() - now.getTime();
+}

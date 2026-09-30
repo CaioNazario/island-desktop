@@ -94,6 +94,12 @@ export class BarManager {
       weather: this.weather,
       aiUsage: this.aiUsage,
       environments: this.environments,
+      settings,
+      openPreferences: (page) => {
+        // O `openPreferences()` não escolhe página; a janela lê esta chave.
+        settings.set_string('prefs-page', page);
+        openPreferences();
+      },
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),

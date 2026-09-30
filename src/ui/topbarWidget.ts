@@ -35,6 +35,7 @@ export const TopbarWidget = GObject.registerClass(
     private readonly barFill: St.Widget;
     private readonly sub: St.Label;
     private readonly trail: St.Icon;
+    private isClickable = false;
 
     constructor(onClick: (() => void) | null, labelMax = DEFAULT_LABEL_MAX) {
       const content = new St.BoxLayout({
@@ -88,11 +89,23 @@ export const TopbarWidget = GObject.registerClass(
 
       this.connectObject('notify::hover', () => this.refresh(), this);
       if (onClick) {
-        this.connectObject('clicked', () => onClick(), this);
-        this.set_cursor_type(Clutter.CursorType.POINTER);
+        this.connectObject(
+          'clicked',
+          () => {
+            if (this.isClickable) onClick();
+          },
+          this,
+        );
       }
+      this.clickable = onClick !== null;
       this.refresh();
       this.display({});
+    }
+
+    /** Widget com clique só em alguns estados (contagem sem data). */
+    set clickable(clickable: boolean) {
+      this.isClickable = clickable;
+      this.set_cursor_type(clickable ? Clutter.CursorType.POINTER : Clutter.CursorType.DEFAULT);
     }
 
     display(content: WidgetContent): void {
