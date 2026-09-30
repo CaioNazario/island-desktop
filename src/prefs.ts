@@ -6,6 +6,7 @@ import { buildAiPage } from './prefs/aiPage.js';
 import { buildGeneralPage } from './prefs/generalPage.js';
 import { connectWhileOpen } from './prefs/lifetime.js';
 import { buildWeatherPage } from './prefs/weatherPage.js';
+import { buildWidgetsPage } from './prefs/widgetsPage.js';
 
 // O `openPreferences()` do Shell não escolhe página: quem abre grava o nome
 // dela nesta chave interna (ex.: a dica do clima, specs/07-clima.md).
@@ -31,6 +32,7 @@ export default class IslandPreferences extends ExtensionPreferences {
     window.add(buildGeneralPage(settings, window));
     window.add(buildWeatherPage(settings, window));
     window.add(buildAiPage(settings, window));
+    window.add(buildWidgetsPage(settings, window));
     followRequestedPage(settings, window);
     return Promise.resolve();
   }
