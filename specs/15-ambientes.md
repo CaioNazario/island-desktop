@@ -36,7 +36,7 @@ Troca circular: depois do último vem o primeiro.
 | Gatilho | Efeito |
 |---|---|
 | Rolagem horizontal (dois dedos no touchpad) sobre a barra | próximo/anterior conforme o sentido |
-| Roda inclinada (`SCROLL_LEFT`/`SCROLL_RIGHT`) sobre a barra | próximo/anterior, um passo por clique |
+| Roda inclinada (`SCROLL_LEFT`/`SCROLL_RIGHT` com origem `WHEEL`) sobre a barra | próximo/anterior, um passo por clique |
 | `Super+Ctrl+→` / `Super+Ctrl+←` | próximo / anterior, de qualquer lugar |
 | Clique num ponto do botão de ambiente | vai direto para aquele ambiente |
 | Aba no editor (spec 17) | vai direto para aquele ambiente |
@@ -47,11 +47,15 @@ Atalhos numerados (`Alt+1–N` do design) não existem. `Alt+←/→` do design 
 
 ### Rolagem suave
 
-Só conta rolagem com componente horizontal maior que a vertical; o resto passa adiante.
+Só conta rolagem com componente horizontal maior que a vertical; o resto passa adiante. No touchpad o libinput trava o eixo: um gesto vertical chega com dx 0 e um horizontal quase sem dy.
 
-- Acumula o delta horizontal. Enquanto não troca, o conteúdo das duas pílulas acompanha o dedo: deslocamento `−acumulado × 0.5`, limitado a ±56px, sem animação.
-- Passou de **110** (unidade a calibrar, spike S8): troca e trava até a rolagem parar.
-- Rolagem parada por **180ms**: zera o acumulado, destrava e o conteúdo volta a 0.
+- Acumula o `get_scroll_delta()` horizontal dos eventos `SMOOTH`. A unidade é o clique de roda: o Shell emite um evento discreto a cada 1.0 acumulado, e cada evento traz 0.1–3.0 a cada ~7ms. Um passo equivale a ~10px de dedo (deduzido, não medido), então os 110px do design viram **11**.
+- Enquanto não troca, o conteúdo das duas pílulas acompanha o dedo: deslocamento `−acumulado × 5`px (os 0.5 do design com 10px por unidade), limitado a ±56px, sem animação.
+- Passou de **11**: troca e trava até o fim do gesto.
+- Fim do gesto: evento `SMOOTH` com `get_scroll_finish_flags()` diferente de `NONE` e delta 0, que chega 6–28ms depois do último delta. Zera o acumulado, destrava e o conteúdo volta a 0. Substitui o timeout de 180ms do design: com os dedos parados no touchpad a trava continua, e ir e voltar sem soltar troca só uma vez.
+- Junto com os `SMOOTH`, o Shell emite eventos discretos emulados (`UP`/`DOWN`/`LEFT`/`RIGHT`) com origem `FINGER`. Eles são ignorados: só o discreto com `get_scroll_source()` `WHEEL` conta como roda inclinada. Sem esse filtro um gesto troca dezenas de ambientes.
+
+Medido no GNOME Shell 50.4 com touchpad (spike S8): gesto horizontal curto acumulou 16.6, longos 25–38. A roda inclinada não foi medida.
 
 ## Animação da troca
 
