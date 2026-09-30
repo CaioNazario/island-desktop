@@ -74,6 +74,9 @@ const BarChrome = GObject.registerClass(
       const islandWidth = this.island.width;
       const islandHeight = this.island.height;
       const sideWidth = sideWidthFor(allocWidth, islandWidth);
+      // Antes de alocar as pílulas: as duas áreas de widgets medem com ela.
+      const slack = sideWidth - sideWidthFor(allocWidth, MAX_ISLAND_WIDTH);
+      this.widgetAreas.forEach((area) => (area.slack = slack));
 
       const childBox = new Clutter.ActorBox();
 
@@ -93,8 +96,6 @@ const BarChrome = GObject.registerClass(
       childBox.x2 = allocWidth - layout.sideMargin;
       childBox.y1 = 0;
       childBox.y2 = layout.barHeight;
-      const slack = sideWidth - sideWidthFor(allocWidth, MAX_ISLAND_WIDTH);
-      this.widgetAreas.forEach((area) => (area.slack = slack));
       this.rightPill.allocate(childBox);
 
       // "`top` = altura atual da ilha + 8px (acompanha a ilha com a mesma
