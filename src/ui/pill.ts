@@ -13,6 +13,8 @@ export const Pill = GObject.registerClass(
         style_class: 'island-pill',
         reactive: false,
         x_expand: false,
+        // Corta os widgets deslizando na troca de ambiente (specs/15-ambientes.md).
+        clip_to_allocation: true,
         y_align: Clutter.ActorAlign.CENTER,
         style: `
           background-color: ${colors.bg};

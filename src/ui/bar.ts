@@ -15,7 +15,7 @@ import { SystemHardware } from '../system/hardware.js';
 import { SystemMpris } from '../system/mpris.js';
 import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
 import { callerStack, debugLog, syncDebugLog } from '../system/debugLog.js';
-import { SystemEnvironments } from '../system/environments.js';
+import { SystemEnvironments, type SwitchDirection } from '../system/environments.js';
 import { OsdRedirect } from '../system/osd.js';
 import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
@@ -192,6 +192,11 @@ export class BarManager {
     this.environments.select(index);
   }
 
+  private handleEnvironmentStep(monitorIndex: number, direction: SwitchDirection): void {
+    this.environmentMonitorIndex = monitorIndex;
+    this.environments.step(direction);
+  }
+
   /** Clique no banner: abre `stack` naquela barra e marca tudo como lido. */
   private handleBannerOpen(monitorIndex: number): void {
     this.bars.forEach((bar) => bar.banner.dismiss());
@@ -255,6 +260,7 @@ export class BarManager {
           (mode) => this.handleBarTrigger(index, mode),
           () => this.handleBannerOpen(index),
           (environment) => this.handleEnvironmentSelect(index, environment),
+          (direction) => this.handleEnvironmentStep(index, direction),
         ),
     );
     this.render();

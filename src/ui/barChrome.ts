@@ -3,9 +3,12 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import { EnvironmentScroll } from '../core/environments.js';
 import { MAX_ISLAND_WIDTH, type IslandState, type Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
+import type { SwitchDirection } from '../system/environments.js';
 import type { HardwareSource } from '../system/hardware.js';
+import { scrollInput, WidgetSlide } from './environmentSwitch.js';
 import { environmentButton } from './environmentView.js';
 import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } from './banner.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
@@ -139,6 +142,7 @@ export class Bar {
     onTrigger: (mode: Mode) => void,
     onBannerOpen: () => void,
     onSelectEnvironment: (index: number) => void,
+    onStepEnvironment: (direction: SwitchDirection) => void,
   ) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
@@ -158,7 +162,11 @@ export class Bar {
       this.rightWidgets.setWidgets(env.right);
     };
     syncWidgets();
-    this.unsubscribeEnvironments = system.environments.onChange(syncWidgets);
+    const slide = new WidgetSlide([this.leftWidgets, this.rightWidgets]);
+    this.unsubscribeEnvironments = system.environments.onChange((direction) => {
+      if (direction) slide.slide(direction, syncWidgets);
+      else syncWidgets();
+    });
 
     // Pílula esquerda (specs/16-widgets.md "Pílulas"): botão de ambiente,
     // gap 4px e os widgets junto da ilha.
@@ -181,6 +189,24 @@ export class Bar {
       },
       onTrigger,
     );
+
+    // Rolagem horizontal sobre a barra troca de ambiente (specs/15-ambientes.md
+    // "Rolagem suave"). O chrome não recebe eventos: ele cobre a largura do
+    // monitor e comeria os cliques nas janelas; cada pílula e a ilha ouvem.
+    const scroll = new EnvironmentScroll();
+    const onScroll = (_actor: Clutter.Actor, event: Clutter.Event): boolean => {
+      const input = scrollInput(event);
+      if (!input) return Clutter.EVENT_PROPAGATE;
+      const result = scroll.handle(input);
+      if (result.step) onStepEnvironment(result.step);
+      else if (result.drag !== undefined) slide.drag(result.drag);
+      return result.handled ? Clutter.EVENT_STOP : Clutter.EVENT_PROPAGATE;
+    };
+    for (const actor of [leftPill, island, rightPill]) {
+      actor.reactive = true;
+      actor.connect('scroll-event', onScroll);
+    }
+
     this.chrome = new BarChrome(leftPill, island, rightPill, this.banner, [
       this.leftWidgets,
       this.rightWidgets,
