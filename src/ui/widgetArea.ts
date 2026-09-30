@@ -8,6 +8,7 @@ import type { AiUsageSource } from '../system/aiUsage.js';
 import type { HardwareSource } from '../system/hardware.js';
 import { AiButton, type AiButtonActor } from './aiButton.js';
 import { HardwareGroup, type HardwareGroupActor } from './hardwareGroup.js';
+import { progressWidget } from './progressWidget.js';
 
 export interface WidgetSources {
   aiUsage: AiUsageSource;
@@ -16,8 +17,7 @@ export interface WidgetSources {
 
 // Área de widgets de uma pílula lateral (specs/16-widgets.md "Pílulas"): os
 // widgets do ambiente ativo, gap 2px, encostados na ilha (`side` diz de que
-// lado ela fica). Só `ai` e `hw` existem até a spec 16; os outros ids não
-// mostram nada.
+// lado ela fica). Id ainda sem widget não mostra nada.
 export const WidgetArea = GObject.registerClass(
   class WidgetArea extends St.BoxLayout {
     private readonly sources: WidgetSources;
@@ -87,6 +87,8 @@ export const WidgetArea = GObject.registerClass(
           this.hardware = new HardwareGroup(this.sources.hardware);
           this.hardware.slack = this.slackPx;
           return this.hardware;
+        case 'progress':
+          return progressWidget();
         default:
           return null;
       }
