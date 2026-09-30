@@ -45,14 +45,18 @@ def script_block(doc: str, kind: str) -> str:
     return m.group(1)
 
 
+def asset_bytes(manifest: dict, uuid: str) -> bytes:
+    raw = base64.b64decode(manifest[uuid]["data"])
+    return gzip.decompress(raw) if manifest[uuid].get("compressed") else raw
+
+
 def glyph_paths(manifest: dict) -> dict[str, str]:
     """Nome do glifo (`gear-six`, `power-bold`, `moon-fill`) → path, das fontes SVG do bundle."""
     paths: dict[str, str] = {}
-    for asset in manifest.values():
+    for uuid, asset in manifest.items():
         if asset["mime"] != "image/svg+xml":
             continue
-        raw = base64.b64decode(asset["data"])
-        font = (gzip.decompress(raw) if asset.get("compressed") else raw).decode("utf-8")
+        font = asset_bytes(manifest, uuid).decode("utf-8")
         for tag in re.findall(r"<glyph\b[^>]*>", font):
             names = re.search(r'glyph-name="([^"]*)"', tag)
             path = re.search(r'\bd="([^"]*)"', tag)
