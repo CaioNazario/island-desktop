@@ -9,6 +9,7 @@ import { connectWhileOpen } from './lifetime.js';
 
 const NAME_KEY = 'countdown-name';
 const DATE_KEY = 'countdown-date';
+const GH_TIMEOUT_MS = 5000;
 
 function nameRow(settings: Gio.Settings): Adw.EntryRow {
   const row = new Adw.EntryRow({ title: _('Nome'), max_length: MAX_COUNTDOWN_NAME });
@@ -66,8 +67,43 @@ function dateRow(settings: Gio.Settings, window: Gtk.Window): Adw.ActionRow {
   return row;
 }
 
+// Só o código de saída: a saída do `gh auth status` é descartada. Mesmo
+// timeout do widget, para o keyring bloqueado não prender a página.
+async function ghConnected(): Promise<boolean> {
+  let process: Gio.Subprocess;
+  try {
+    process = Gio.Subprocess.new(
+      ['gh', 'auth', 'status'],
+      Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
+    );
+  } catch {
+    return false;
+  }
+  let timeoutId: number | null = GLib.timeout_add(GLib.PRIORITY_DEFAULT, GH_TIMEOUT_MS, () => {
+    timeoutId = null;
+    process.force_exit();
+    return GLib.SOURCE_REMOVE;
+  });
+  try {
+    return await process.wait_check_async(null);
+  } catch {
+    return false;
+  } finally {
+    if (timeoutId !== null) GLib.Source.remove(timeoutId);
+  }
+}
+
+function githubRow(): Adw.ActionRow {
+  const row = new Adw.ActionRow({ title: 'GitHub' });
+  void ghConnected().then((connected) => {
+    row.subtitle = connected ? _('Conectado') : _('Não encontrado: rode gh auth login');
+  });
+  return row;
+}
+
 // specs/13-preferencias.md "Widgets".
 export function buildWidgetsPage(settings: Gio.Settings, window: Gtk.Window): Adw.PreferencesPage {
+  Gio._promisify(Gio.Subprocess.prototype, 'wait_check_async');
   const countdown = new Adw.PreferencesGroup({ title: _('Contagem regressiva') });
   countdown.add(nameRow(settings));
   countdown.add(dateRow(settings, window));
@@ -77,5 +113,8 @@ export function buildWidgetsPage(settings: Gio.Settings, window: Gtk.Window): Ad
     icon_name: 'view-grid-symbolic',
   });
   page.add(countdown);
+  const github = new Adw.PreferencesGroup();
+  github.add(githubRow());
+  page.add(github);
   return page;
 }
