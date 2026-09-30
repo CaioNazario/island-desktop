@@ -11,6 +11,7 @@ import { SystemBattery } from '../system/battery.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
 import { SystemBrightness } from '../system/brightness.js';
 import { SystemCalendarEvents } from '../system/calendarEvents.js';
+import { SystemGithub } from '../system/github.js';
 import { SystemHardware } from '../system/hardware.js';
 import { SystemMpris } from '../system/mpris.js';
 import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
@@ -48,6 +49,7 @@ export class BarManager {
   private readonly system: IslandSystem;
   private readonly battery = new SystemBattery();
   private readonly hardware = new SystemHardware();
+  private readonly github = new SystemGithub();
   private readonly notifications = new SystemNotifications();
   private readonly music = new SystemMpris();
   private readonly calendar = new SystemCalendarEvents();
@@ -99,6 +101,7 @@ export class BarManager {
       weather: this.weather,
       aiUsage: this.aiUsage,
       environments: this.environments,
+      github: this.github,
       pomodoro: this.pomodoro,
       settings,
       openPreferences: (page) => {
@@ -204,6 +207,7 @@ export class BarManager {
     const ids = new Set([...left, ...right]);
     this.hardware.running = ids.has('hw');
     this.aiUsage.running = ids.has('ai');
+    this.github.running = ids.has('github');
   }
 
   private handleEnvironmentSwitch(): void {
@@ -351,6 +355,7 @@ export class BarManager {
     this.system.session.destroy();
     this.battery.destroy();
     this.hardware.destroy();
+    this.github.destroy();
     this.notifications.destroy();
     this.music.destroy();
     this.calendar.destroy();

@@ -11,6 +11,7 @@ import type { SystemBluetooth } from '../system/bluetooth.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import { debugLog } from '../system/debugLog.js';
 import type { EnvironmentSource } from '../system/environments.js';
+import type { GithubSource } from '../system/github.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
 import type { PomodoroSource } from '../system/pomodoro.js';
 import type { SystemBrightness } from '../system/brightness.js';
@@ -70,6 +71,7 @@ export interface IslandSystem {
   weather: WeatherSource;
   aiUsage: AiUsageSource;
   environments: EnvironmentSource;
+  github: GithubSource;
   pomodoro: PomodoroSource;
   settings: Gio.Settings;
   /** Abre as preferências na página `page` (specs/13-preferencias.md). */

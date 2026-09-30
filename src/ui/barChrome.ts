@@ -158,6 +158,7 @@ export class Bar {
       aiUsage: system.aiUsage,
       hardware,
       calendar: system.calendar,
+      github: system.github,
       music: system.music,
       pomodoro: system.pomodoro,
       settings: system.settings,
