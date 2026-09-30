@@ -301,6 +301,7 @@ export class BarManager {
       // atalhos globais, e aí `Super+S` não fecharia a ilha.
       this.grab = Main.pushModal(wantedActor, { actionMode: Shell.ActionMode.POPUP });
       this.grabbedActor = wantedActor;
+      this.bars[this.targetMonitorIndex]?.island.focusContent();
     }
   }
 

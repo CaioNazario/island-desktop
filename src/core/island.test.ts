@@ -399,8 +399,28 @@ describe('IslandState env', () => {
   });
 });
 
+describe('IslandState note', () => {
+  it('spec 16: note é fixo, sem timer, e o mesmo gatilho fecha', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openFromTrigger('note');
+    expect(state.mode).toBe('note');
+    expect(scheduler.pendingCount).toBe(0);
+    state.openFromTrigger('note');
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 16: evento automático não tira a ilha de note', () => {
+    const state = new IslandState(new FakeScheduler());
+    state.openFromTrigger('note');
+    expect(state.openAutomatic('music')).toBe(false);
+    state.volumeKey();
+    expect(state.mode).toBe('note');
+  });
+});
+
 describe('isFixedMode', () => {
-  it('só stack, calendar, quick, wifi, bt e ai tomam foco de teclado', () => {
+  it('só stack, calendar, quick, wifi, bt, ai e note tomam foco de teclado', () => {
     expect(isFixedMode('compact')).toBe(false);
     expect(isFixedMode('notif')).toBe(false);
     expect(isFixedMode('music')).toBe(false);
@@ -413,6 +433,7 @@ describe('isFixedMode', () => {
     expect(isFixedMode('wifi')).toBe(true);
     expect(isFixedMode('bt')).toBe(true);
     expect(isFixedMode('ai')).toBe(true);
+    expect(isFixedMode('note')).toBe(true);
   });
 });
 
@@ -431,6 +452,7 @@ describe('getSize', () => {
       'bt',
       'ai',
       'env',
+      'note',
     ];
     const widths = modes.map((mode) => getSize(mode).width);
     expect(Math.max(...widths)).toBe(MAX_ISLAND_WIDTH);

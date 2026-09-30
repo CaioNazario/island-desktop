@@ -14,7 +14,8 @@ export type Mode =
   | 'wifi'
   | 'bt'
   | 'ai'
-  | 'env';
+  | 'env'
+  | 'note';
 
 const TRANSIENT_MS: Partial<Record<Mode, number>> = {
   notif: 2500,
@@ -34,7 +35,7 @@ function isTransient(mode: Mode): boolean {
   return mode in TRANSIENT_MS;
 }
 
-/** Modos fixos (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`) tomam o foco de teclado (specs/03-ilha.md). */
+/** Modos fixos (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`, `note`) tomam o foco de teclado (specs/03-ilha.md). */
 export function isFixedMode(mode: Mode): boolean {
   return mode !== 'compact' && !isTransient(mode);
 }
@@ -102,6 +103,8 @@ export function getSize(mode: Mode, ctx: SizeContext = {}): Size {
     }
     case 'env':
       return { width: 260, height: 40, radius: 20 };
+    case 'note':
+      return { width: 420, height: 132, radius: 24 };
     case 'ai': {
       const providerCount = ctx.providerCount ?? 0;
       return { width: 480, height: 24 + 32 + providerCount * 108 - 6, radius: 24 };

@@ -20,6 +20,7 @@ import type { SystemVolume } from '../system/volume.js';
 import type { WeatherSource } from '../system/weather.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { AiModeView, type AiModeViewActor } from './aiView.js';
+import { NoteView, type NoteViewActor } from './noteView.js';
 import { BtView, type BtViewActor } from './btView.js';
 import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
 import { CenterCard, type CenterCardActor } from './centerCard.js';
@@ -98,6 +99,7 @@ export const Island = GObject.registerClass(
     private readonly calendarView: CalendarModeViewActor;
     private readonly card: CenterCardActor;
     private readonly aiView: AiModeViewActor;
+    private readonly noteView: NoteViewActor;
     private readonly layers: ReadonlyMap<LayerId, St.Widget>;
     private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
@@ -220,6 +222,8 @@ export const Island = GObject.registerClass(
         onSizeChanged: () => this.resize(),
       });
 
+      this.noteView = new NoteView(system.settings, () => this.state.closeAll());
+
       this.layers = new Map<LayerId, St.Widget>([
         ['compact', modeLayer(compact)],
         ['notif', modeLayer(notif.content)],
@@ -233,6 +237,7 @@ export const Island = GObject.registerClass(
         ['bt', modeLayer(this.btView)],
         ['ai', modeLayer(this.aiView)],
         ['env', modeLayer(new EnvironmentModeRow(system.environments))],
+        ['note', modeLayer(this.noteView)],
         ['card', modeLayer(this.card)],
       ]);
       this.syncLayerSize('compact');
@@ -343,6 +348,11 @@ export const Island = GObject.registerClass(
       );
     }
 
+    /** Depois do grab modal, que leva o foco para a ilha: o campo da nota o pega de volta. */
+    focusContent(): void {
+      if (this.contentMode === 'note') this.noteView.focus();
+    }
+
     private containsPointer(event: Clutter.Event): boolean {
       const [x, y] = event.get_coords();
       const [ix, iy] = this.get_transformed_position();
@@ -418,6 +428,8 @@ export const Island = GObject.registerClass(
         this.syncLayerSize(mode);
       }
       if (previous === 'bt') this.btView.onClose();
+      if (previous === 'note') this.noteView.onClose();
+      if (mode === 'note') this.noteView.onOpen();
       if (mode === 'wifi') this.wifiView.onOpen();
       if (mode === 'bt') this.btView.onOpen();
       if (mode === 'ai') this.aiView.onOpen();

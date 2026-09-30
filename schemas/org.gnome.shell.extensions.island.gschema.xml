@@ -57,5 +57,10 @@
       <summary>Data da contagem regressiva</summary>
       <description>AAAA-MM-DD; vazio é sem data.</description>
     </key>
+    <key name="note-text" type="s">
+      <default>''</default>
+      <summary>Nota da barra</summary>
+      <description>Até 80 caracteres, sem quebra de linha; editada na ilha.</description>
+    </key>
   </schema>
 </schemalist>
