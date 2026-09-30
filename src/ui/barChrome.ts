@@ -157,6 +157,7 @@ export class Bar {
       aiUsage: system.aiUsage,
       hardware,
       calendar: system.calendar,
+      music: system.music,
       settings: system.settings,
       openPreferences: system.openPreferences,
     };

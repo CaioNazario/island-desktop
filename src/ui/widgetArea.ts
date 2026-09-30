@@ -8,10 +8,12 @@ import type { Mode } from '../core/island.js';
 import type { AiUsageSource } from '../system/aiUsage.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import type { HardwareSource } from '../system/hardware.js';
+import type { MusicSource } from '../system/mpris.js';
 import { AiButton, type AiButtonActor } from './aiButton.js';
 import { countdownWidget } from './countdownWidget.js';
 import { eventWidget } from './eventWidget.js';
 import { HardwareGroup, type HardwareGroupActor } from './hardwareGroup.js';
+import { musicWidget } from './musicWidget.js';
 import { noteWidget } from './noteWidget.js';
 import { progressWidget } from './progressWidget.js';
 
@@ -19,6 +21,7 @@ export interface WidgetSources {
   aiUsage: AiUsageSource;
   hardware: HardwareSource;
   calendar: CalendarEventsSource;
+  music: MusicSource;
   settings: Gio.Settings;
   openPreferences: (page: string) => void;
 }
@@ -97,6 +100,8 @@ export const WidgetArea = GObject.registerClass(
           return this.hardware;
         case 'event':
           return eventWidget(this.sources.calendar, () => this.onTrigger('calendar'));
+        case 'music':
+          return musicWidget(this.sources.music, () => this.onTrigger('music'));
         case 'progress':
           return progressWidget();
         case 'countdown':
