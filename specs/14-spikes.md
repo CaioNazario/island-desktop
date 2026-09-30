@@ -21,8 +21,3 @@ Pontos que ninguém verificou ainda. Cada spike se resolve **antes** de implemen
 
 - **Pergunta**: `Layout.PressureBarrier` + `Meta.Barrier` na borda de cima de cada monitor funcionam com o strut removido e com janela maximizada? Que limiar e tempo (o canto ativo usa 100px em 1000ms) dão uma revelação sem disparo acidental?
 - **Pronto quando**: há protótipo revelando a barra por pressão em dois monitores, e os valores estão na spec 18.
-
-## S10 · `gh auth token` (antes do widget GitHub, spec 16)
-
-- **Pergunta**: o que `gh auth token` imprime e com que código sai sem login, com o keyring bloqueado e com token só no `hosts.yml`? O subprocesso pode travar esperando o keyring?
-- **Pronto quando**: os casos estão anotados na spec 16, com timeout do subprocesso definido.

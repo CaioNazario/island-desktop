@@ -87,7 +87,13 @@ Linha de 24px, padding 0 9px, gap 6px, 12px/500, `text`, dígitos tabulares, sem
 
 ### `github`
 
-- Credencial: `gh auth token` via `Gio.Subprocess` assíncrono (cobre token no keyring e no `hosts.yml`; casos de erro no spike S10). Somente leitura; o token fica só em memória, nunca em log, GSettings ou erro.
+- Credencial: `gh auth token` via `Gio.Subprocess` assíncrono. Somente leitura; o token fica só em memória, nunca em log, GSettings ou erro. O stderr do `gh` também não vai para o log.
+- Casos medidos no spike S10 (gh 2.100):
+  - Token no keyring ou no `hosts.yml`: sai 0 com o token e `\n` no stdout, em ~50ms. O keyring é consultado mesmo sem `hosts.yml`.
+  - Sem login (nem keyring nem `hosts.yml`): sai 1, stdout vazio, stderr `no oauth token found for github.com`.
+  - Keyring bloqueado: não medido (abre o prompt de desbloqueio). Coberto pelo timeout.
+  - Sem `gh` no PATH: o spawn falha (`G_SPAWN_ERROR_NOENT`).
+- Credencial = stdout sem espaços nas pontas, só com saída 0 e não vazio. Qualquer outro resultado, ou mais de **5s** sem terminar (o processo é encerrado com `force_exit`), conta como sem credencial.
 - Duas buscas (`GET https://api.github.com/search/issues`, `per_page=1`, lê `total_count`):
   - `is:pr is:open author:@me` → rótulo `N PRs` (`1 PR`)
   - `is:pr is:open review-requested:@me` → sub `M para revisar` (some com M = 0)
