@@ -1,6 +1,6 @@
 # 05 · Música e cartão central
 
-Origem: `design/markup.html` 73–91 (modo `music`) e 338–383 (cartão central); `design/logic.js` `track`/`posLabel`/`posPct`/`togglePlay`/`prevTrack`/`nextTrack`, `pv('center')`.
+Origem: `design/markup.html` camadas `L.music` e `L.hub` (cartão central); `design/logic.js` `track`/`posLabel`/`posPct`/`togglePlay`/`prevTrack`/`nextTrack`, `SIZES.hub`, `hubH`, `musicPin`.
 
 ## Fonte: MPRIS
 
@@ -32,11 +32,17 @@ Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entr
 - Texto: artista 13px/500, título 12px `neutral-400`. Progresso (margin-top 6px, 10px `neutral-500`): posição · barra 3px (`accent` sobre `neutral-800`) · duração. Tempo em `m:ss`.
 - Controles: anterior 34×34 (`ph-fill ph-skip-back` 17px), tocar/pausar 38×38 (`ph-fill ph-play`/`ph-pause` 22px), próxima 34×34 (`ph-fill ph-skip-forward` 17px); hover `neutral-900`. Qualquer controle rearma o timer. Botão desabilitado quando `CanGo*` é falso.
 
+### `music` fixado
+
+- Aberto pelo clique no widget Música (spec 16). Mesmo visual do `music`.
+- Sem timer: fica até clique fora, Esc, novo gatilho ou novo clique no widget. Conta como modo fixo (regra 3 da spec 03).
+- Troca de faixa com ele aberto atualiza o conteúdo. O player sumir fecha a ilha.
+
 ## Cartão central
 
 - Abre ao clicar na ilha em `compact` quando "Clique na ilha abre" = **Calendário e música** (padrão, spec 13). Esc ou clique fora fecha; clicar dentro do cartão é do conteúdo, como nos modos fixos.
-- A ilha se expande no cartão, como num modo: vai a 420×altura do conteúdo, raio 22, com a mola e o crossfade da ilha (spec 03, "Animação"); o relógio sai e o cartão entra. Diverge do design de propósito: lá o cartão abre separado, em `top: 38px`, abaixo da ilha compacta, que não muda.
-- Raio 22, fundo `bg`, anel `neutral-800`, sem o blur, a sombra escura e o brilho do design (spec 03, "Animação"). Padding 18px.
+- A ilha se expande no cartão, como num modo: vai a **440**×altura do conteúdo, raio 26, com a mola e o crossfade da ilha (spec 03, "Animação"); o relógio sai e o cartão entra. No design v3 o cartão é o modo `hub` da ilha, como a Island já fazia (até o v2 ele abria separado, em `top: 38px`).
+- Fundo `bg`, anel `neutral-800`, sem o blur, a sombra escura e o brilho do design (spec 03, "Animação"). Padding 18px.
 - **Seção de música**: capa 56×56 raio 12, artista 14px/500, título 12.5px `neutral-400`, ícone da fonte 22px `accent-400` alinhado ao topo. Progresso (margin-top 12px): barra 3px + `pos / duração` 10.5px `neutral-500`. Controles centralizados, gap 18px: 36/40/36 com ícones 17/24/17.
 - Divisor: 1px, gradiente transparente → `neutral-800` (15%–85%) → transparente, sangrando até as bordas do cartão (margin 14px −18px).
 - **Seção de calendário**: spec 06.
@@ -49,3 +55,5 @@ Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entr
 - [x] Barra de progresso avança a cada segundo e corrige após seek no player.
 - [x] Fechar o player remove a seção de música do cartão.
 - [x] Dois players: o último a tocar é o exibido.
+- [ ] O cartão central abre com 440px de largura e raio 26.
+- [ ] Clicar no widget Música abre `music` sem timer; trocar de faixa atualiza sem fechar; clicar de novo fecha.

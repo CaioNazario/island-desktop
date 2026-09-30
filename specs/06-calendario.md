@@ -1,6 +1,6 @@
 # 06 · Calendário
 
-Origem: `design/logic.js` `calendar(off)` (~153), `calWeeks`, `toggleCal`, `prevMonth`/`nextMonth`, `dows`, `events`; `design/markup.html` 103–133 (modo `calendar`) e 355–383 (seção do cartão central).
+Origem: `design/logic.js` `calendar(off)`, `calWeeks`, `toggleCal`, `prevMonth`/`nextMonth`, `dows`, `events`; `design/markup.html` camadas `L.calendar` e `L.hub` (seção do cartão central).
 
 ## Grade
 
@@ -23,7 +23,7 @@ Regra pura em `src/core/calendar.ts`:
 
 ## Modo `calendar` (ilha, 480 × 150/214)
 
-Aberto quando "Clique na ilha abre" = **Calendário compacto**.
+Aberto quando "Clique na ilha abre" = **Calendário compacto**, ou pelo clique no widget Próximo evento (spec 16), com qualquer opção.
 - Padding 14px 16px, gap 16px, duas colunas separadas por divisor vertical em gradiente.
 - Esquerda (264px): título 13px/500 + botão Mês/Semana (22px, raio 11, `neutral-900`, 11px) + `‹` `›` 22×22; cabeçalho de dias 10.5px `neutral-500`; células 22px de altura, número 12px em pílula 24×20 raio 10.
 - Direita: "Hoje, sex, 25" 13px/500 (dia da semana minúsculo, como no design) e eventos (nome 12px, horário 10.5px `neutral-500`), gap 12px, sem quebra de linha; o que não cabe rola (barra sobreposta, como no `stack`).

@@ -9,7 +9,8 @@
       "Calendário e música",
       "Calendário compacto"
     ],
-    "default": "Calendário e música",
+    "section": "Ambientes não-padrão",
+    "default": "Calendário compacto",
     "tsType": "string"
   },
   "battery": {
@@ -21,14 +22,20 @@
     "default": 78,
     "tsType": "number"
   },
+  "barPosition": {
+    "editor": "enum",
+    "options": [
+      "Topo",
+      "Base",
+      "Esquerda",
+      "Direita"
+    ],
+    "default": "Topo",
+    "tsType": "string"
+  },
   "charging": {
     "editor": "boolean",
     "default": true,
-    "tsType": "boolean"
-  },
-  "autoHide": {
-    "editor": "boolean",
-    "default": false,
     "tsType": "boolean"
   }
 }

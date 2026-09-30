@@ -1,6 +1,8 @@
 # 10 · Hardware
 
-Origem: `design/markup.html` 321–328 (blocos na pílula direita); `design/logic.js` `hw` (~286) e o tick de `componentDidMount`.
+Origem: `design/components/TopbarWidget.html` (parte `w.isHw`); `design/logic.js` `hw`, `widgetData('hw')` e o tick de `componentDidMount`.
+
+Os blocos são o widget `hw` (spec 16). No ambiente Padrão ele fica na pílula direita, como na v1.0.
 
 ## Blocos
 
@@ -8,7 +10,7 @@ Cinco blocos de duas linhas, gap 2px, sem entrelinha:
 - Rótulo: 8.5px/500, `letter-spacing .08em`, `neutral-500`.
 - Valor: 11.5px/500, dígitos tabulares.
 - Largura fixa por bloco, medida para o valor mais largo possível, para a barra não "pular": CPU `100%`, RAM `99.9G`, GPU `100%`, TEMP `100°`, NET `↓99.9`.
-- Sem tooltip; clique não faz nada.
+- Sem tooltip. Clique no widget abre/fecha `quick` (spec 16).
 
 | Bloco | Valor | Cor |
 |---|---|---|
@@ -37,7 +39,9 @@ Amostragem a cada **1s**.
 
 ## Largura mínima
 
-A ordem em que os blocos somem por falta de espaço está na spec 02: NET → GPU → TEMP.
+A ordem em que os blocos somem por falta de espaço está na spec 16: NET → GPU → TEMP, antes de qualquer widget inteiro sumir.
+
+A amostragem só roda com o widget `hw` no ambiente ativo (spec 16).
 
 ## Critérios de aceite
 

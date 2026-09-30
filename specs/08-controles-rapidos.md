@@ -19,7 +19,8 @@ Origem: `design/markup.html` 92–101 (`volume`), 134–157 (`quick`), 158–215
 
    Estado ligado dos tiles Wi‑Fi/BT = rádio ligado. Tile de rádio sem hardware some.
 4. Divisor 1×22 `neutral-800` (margin 0 2px).
-5. **Configurações** e **Energia**: spec 09.
+5. **Cor de realce**: spec 19.
+6. **Configurações** e **Energia**: spec 09.
 
 ### Slider
 
@@ -45,7 +46,7 @@ O OSD nativo de volume e brilho não aparece: o pedido de OSD do Shell é redire
 
 ## Modo `quick` (520×58)
 
-Só a linha de controles. Com a linha de energia aberta: 106px (spec 09). Abre por `Super+S`, bateria ou seta.
+Só a linha de controles. Com a linha de energia aberta: 106px (spec 09); com o painel de realce: 174px (spec 19). Abre por `Super+S`, bateria, seta ou o widget Hardware (spec 16).
 
 ## Modo `wifi` (520×292)
 

@@ -1,6 +1,8 @@
 # 13 · Preferências
 
-Origem: `design/props.json` (`clickAction`). `battery` e `charging` são controles de demonstração do protótipo e **não** viram preferência; `autoHide` está fora de escopo (spec 00).
+Origem: `design/props.json` (`clickAction`) e o estado persistido do protótipo (`localStorage` em `design/logic.js`: `LS`, `island-v3-edge`). `battery` e `charging` são controles de demonstração e **não** viram preferência. `barPosition` está fora de escopo (spec 00).
+
+O design v3 muda o padrão de `clickAction` para "Calendário compacto" e só aplica a opção fora do ambiente Padrão. A Island mantém o comportamento da v1.0: opção global, padrão cartão central.
 
 ## Schema GSettings
 
@@ -14,6 +16,17 @@ Origem: `design/props.json` (`clickAction`). `battery` e `charging` são control
 | `prefs-page` | `s` | vazio | página a abrir nas preferências (interna, sem UI) |
 | `ai-claude-enabled` | `b` | `true` | spec 12 |
 | `ai-codex-enabled` | `b` | `true` | spec 12 |
+| `environments` | `a(ssasas)` (nome, ícone, widgets da esquerda, widgets da direita) | os 4 ambientes iniciais da spec 15 | spec 15, 17 |
+| `environment-index` | `u` | `0` | spec 15 |
+| `switch-environment-next` | `as` | `['<Super><Alt>Right']` | spec 15 (keybinding, sem UI) |
+| `switch-environment-previous` | `as` | `['<Super><Alt>Left']` | spec 15 (keybinding, sem UI) |
+| `auto-hide` | `b` | `false` | spec 18 (editada no editor de ambientes) |
+| `accent-hue` | `u` (0–360) | `289` | spec 19 (editada na ilha) |
+| `accent-chroma` | `u` (0–200) | `100` | spec 19 (editada na ilha) |
+| `note-text` | `s` (até 80) | vazio | spec 16 (editada na ilha) |
+| `countdown-name` | `s` | vazio | spec 16 |
+| `countdown-date` | `s` (`AAAA-MM-DD`) | vazio | spec 16 |
+| `pomodoro-state` | `s` | vazio (Foco 25:00, pausado) | spec 16 (interna, sem UI) |
 
 A extensão reage a `changed::<chave>` sem reiniciar.
 
@@ -31,11 +44,18 @@ Roda em outro processo e só conversa com a extensão via GSettings. Textos em p
   - Busca de cidade própria (o GWeather 4 não tem mais o `GWeatherLocationEntry`): sem acento nem caixa, cada palavra casa com o começo de uma palavra do nome, estado ou país; até 20 resultados
 - **Uso de IA**
   - Um switch por provedor (Claude, Codex) + estado da credencial: "Encontrada", "Não encontrada: faça login no Claude", "Expirada" (só pela data do arquivo; o 401 da spec 12 não chega aqui)
+- **Widgets**
+  - Contagem regressiva: nome (até 20 caracteres) e data (seletor de data; "Limpar" apaga a data)
+  - GitHub: estado do `gh`, "Conectado" ou "Não encontrado: rode `gh auth login`" (roda `gh auth status` ao abrir a página)
 
-A notificação de dica do clima (spec 07) abre esta janela direto na página Clima. O `openPreferences()` do Shell não escolhe página, então a extensão grava `weather` em `prefs-page` antes de abrir; a janela mostra a página e zera a chave (também com a janela já aberta).
+Ambientes, auto-ocultar, cor de realce e nota não aparecem na janela: são editados no Shell (specs 16, 17 e 19).
+
+A notificação de dica do clima (spec 07) abre esta janela direto na página Clima, e o widget de contagem sem data (spec 16) na página Widgets. O `openPreferences()` do Shell não escolhe página, então a extensão grava `weather` em `prefs-page` antes de abrir; a janela mostra a página e zera a chave (também com a janela já aberta).
 
 ## Critérios de aceite
 
 - [x] Cada chave do schema muda o comportamento na hora, com a extensão rodando.
 - [x] `glib-compile-schemas` roda sem aviso no build e no `install.sh`.
 - [x] A janela abre pelo app Extensões e por `gnome-extensions prefs island@caionazario.dev`.
+- [ ] As chaves novas da v1.1 mudam o comportamento na hora, com a extensão rodando.
+- [ ] Mudar a data da contagem nas preferências atualiza o widget sem reiniciar.
