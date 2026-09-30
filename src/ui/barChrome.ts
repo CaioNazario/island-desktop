@@ -5,13 +5,14 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { MAX_ISLAND_WIDTH, type IslandState, type Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
-import { AiButton, type AiButtonActor } from './aiButton.js';
 import type { HardwareSource } from '../system/hardware.js';
+import { environmentButton } from './environmentView.js';
 import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } from './banner.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { RightPill, type RightPillActor } from './rightPill.js';
 import { layout } from './tokens.js';
+import { WidgetArea, type WidgetAreaActor } from './widgetArea.js';
 
 function sideWidthFor(allocWidth: number, islandWidth: number): number {
   return Math.max(0, (allocWidth - 2 * layout.sideMargin - 2 * layout.pillGap - islandWidth) / 2);
@@ -27,14 +28,17 @@ const BarChrome = GObject.registerClass(
     private readonly island: IslandActor;
     private readonly rightPill: RightPillActor;
     private readonly banner: BannerActor;
+    private readonly widgetAreas: readonly WidgetAreaActor[];
 
     constructor(
       leftPill: PillActor,
       island: IslandActor,
       rightPill: RightPillActor,
       banner: BannerActor,
+      widgetAreas: readonly WidgetAreaActor[],
     ) {
       super({ reactive: false });
+      this.widgetAreas = widgetAreas;
       this.leftPill = leftPill;
       this.island = island;
       this.rightPill = rightPill;
@@ -86,7 +90,8 @@ const BarChrome = GObject.registerClass(
       childBox.x2 = allocWidth - layout.sideMargin;
       childBox.y1 = 0;
       childBox.y2 = layout.barHeight;
-      this.rightPill.hardwareSlack = sideWidth - sideWidthFor(allocWidth, MAX_ISLAND_WIDTH);
+      const slack = sideWidth - sideWidthFor(allocWidth, MAX_ISLAND_WIDTH);
+      this.widgetAreas.forEach((area) => (area.slack = slack));
       this.rightPill.allocate(childBox);
 
       // "`top` = altura atual da ilha + 8px (acompanha a ilha com a mesma
@@ -117,7 +122,9 @@ export class Bar {
   readonly island: IslandActor;
   readonly banner: BannerActor;
   private readonly state: IslandState;
-  private readonly aiButton: AiButtonActor;
+  private readonly leftWidgets: WidgetAreaActor;
+  private readonly rightWidgets: WidgetAreaActor;
+  private readonly unsubscribeEnvironments: () => void;
   private readonly strut: InstanceType<typeof StrutActor>;
   private readonly chrome: InstanceType<typeof BarChrome>;
 
@@ -131,6 +138,7 @@ export class Bar {
     onEscape: () => void,
     onTrigger: (mode: Mode) => void,
     onBannerOpen: () => void,
+    onSelectEnvironment: (index: number) => void,
   ) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
@@ -141,27 +149,42 @@ export class Bar {
     });
 
     this.state = state;
-    // "margin-left: auto" do design: o botão de IA fica na ponta direita.
+    const widgetSources = { aiUsage: system.aiUsage, hardware };
+    this.leftWidgets = new WidgetArea(widgetSources, 'end', onTrigger);
+    this.rightWidgets = new WidgetArea(widgetSources, 'start', onTrigger);
+    const syncWidgets = (): void => {
+      const env = system.environments.active;
+      this.leftWidgets.setWidgets(env.left);
+      this.rightWidgets.setWidgets(env.right);
+    };
+    syncWidgets();
+    this.unsubscribeEnvironments = system.environments.onChange(syncWidgets);
+
+    // Pílula esquerda (specs/16-widgets.md "Pílulas"): botão de ambiente,
+    // gap 4px e os widgets junto da ilha.
     const leftPill = new Pill();
-    leftPill.add_child(new St.Widget({ x_expand: true }));
-    this.aiButton = new AiButton(system.aiUsage, () => onTrigger('ai'));
-    leftPill.add_child(this.aiButton);
+    leftPill.add_child(environmentButton(system.environments, onSelectEnvironment, () => {}));
+    leftPill.add_child(new St.Widget({ width: 4 }));
+    leftPill.add_child(this.leftWidgets);
     this.banner = new Banner(onBannerOpen);
     const island = new Island(state, system, onIslandClick, onEscape, (target: Clutter.Actor) =>
       this.banner.handlePressUnderGrab(target),
     );
     this.island = island;
     const rightPill = new RightPill(
+      this.rightWidgets,
       {
         battery,
-        hardware,
         notifications: system.notifications,
         wifi: system.wifi,
         volume: system.volume,
       },
       onTrigger,
     );
-    this.chrome = new BarChrome(leftPill, island, rightPill, this.banner);
+    this.chrome = new BarChrome(leftPill, island, rightPill, this.banner, [
+      this.leftWidgets,
+      this.rightWidgets,
+    ]);
     this.chrome.set_position(monitor.x, monitor.y);
     this.chrome.set_width(monitor.width);
     Main.layoutManager.addTopChrome(this.chrome, {
@@ -171,10 +194,13 @@ export class Bar {
 
   render(isTargetMonitor: boolean): void {
     this.island.render(isTargetMonitor);
-    this.aiButton.active = isTargetMonitor && this.state.mode === 'ai';
+    const aiActive = isTargetMonitor && this.state.mode === 'ai';
+    this.leftWidgets.active = aiActive;
+    this.rightWidgets.active = aiActive;
   }
 
   destroy(): void {
+    this.unsubscribeEnvironments();
     this.chrome.destroy();
     this.strut.destroy();
   }

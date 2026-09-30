@@ -5,12 +5,10 @@ import St from 'gi://St';
 import { batteryDisplay, type BatteryTone } from '../core/battery.js';
 import type { Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
-import type { HardwareSource } from '../system/hardware.js';
 import type { NotificationFeed } from '../system/notifications.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BarButton, type BarButtonActor } from './barButton.js';
-import { HardwareGroup, type HardwareGroupActor } from './hardwareGroup.js';
 import {
   batteryLevelIconName,
   caretIconName,
@@ -22,6 +20,7 @@ import {
 } from './icons.js';
 import { Pill } from './pill.js';
 import { colors, derivedColors } from './tokens.js';
+import type { WidgetAreaActor } from './widgetArea.js';
 
 const BATTERY_ICON_COLOR: Record<BatteryTone, string> = {
   good: derivedColors.batteryGreen,
@@ -143,22 +142,22 @@ function volumeButton(volume: SystemVolume, onClick: () => void): BarButtonActor
 
 export interface RightPillSources {
   battery: BatterySource;
-  hardware: HardwareSource;
   notifications: NotificationFeed;
   wifi: SystemWifi;
   volume: SystemVolume;
 }
 
-// Pílula direita (specs/02-barra.md): grupo de hardware à esquerda (spec 10),
-// botões à direita, com gap 2px.
+// Pílula direita (specs/16-widgets.md "Pílulas"): widgets do ambiente
+// junto da ilha, botões fixos à direita, com gap 2px.
 export const RightPill = GObject.registerClass(
   class RightPill extends Pill {
-    private readonly hardware: HardwareGroupActor;
-
-    constructor(sources: RightPillSources, onTrigger: (mode: Mode) => void) {
+    constructor(
+      widgets: WidgetAreaActor,
+      sources: RightPillSources,
+      onTrigger: (mode: Mode) => void,
+    ) {
       super();
-      this.hardware = new HardwareGroup(sources.hardware);
-      this.add_child(this.hardware);
+      this.add_child(widgets);
 
       const onOpenQuick = (): void => onTrigger('quick');
       const buttons = new St.BoxLayout({
@@ -180,11 +179,6 @@ export const RightPill = GObject.registerClass(
         ),
       );
       this.add_child(buttons);
-    }
-
-    /** Quanto a pílula está mais larga do que ficaria com a ilha no maior modo. */
-    set hardwareSlack(slack: number) {
-      this.hardware.slack = slack;
     }
   },
 );

@@ -62,6 +62,9 @@ export class BarManager {
   private readonly unsubscribeBt: () => void;
   private readonly unsubscribeArrival: () => void;
   private readonly unsubscribeTrack: () => void;
+  private readonly unsubscribeEnvironments: () => void;
+  // Monitor de onde veio a última troca de ambiente pedida na barra.
+  private environmentMonitorIndex: number | null = null;
 
   constructor(settings: Gio.Settings, openPreferences: () => void) {
     syncDebugLog();
@@ -108,6 +111,9 @@ export class BarManager {
       this.handleNotificationArrival(entry, incoming),
     );
     this.unsubscribeTrack = this.music.onTrackChange(() => this.handleTrackChange());
+    this.unsubscribeEnvironments = this.environments.onChange((direction) => {
+      if (direction) this.handleEnvironmentSwitch();
+    });
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
     // Depois do `rebuild()`: a dica chega como notificação e a ilha já precisa existir.
@@ -168,6 +174,22 @@ export class BarManager {
     if (!this.state.openAutomatic('music')) return;
     this.targetMonitorIndex = index;
     this.render();
+  }
+
+  /**
+   * Troca de ambiente (specs/15-ambientes.md "Modo `env`"): na barra onde a
+   * troca foi pedida, ou no monitor da janela focada (atalho, editor).
+   */
+  private handleEnvironmentSwitch(): void {
+    const index = this.environmentMonitorIndex ?? this.focusedMonitorIndex();
+    this.environmentMonitorIndex = null;
+    if (this.state.mode === 'compact') this.targetMonitorIndex = index;
+    if (this.state.environmentSwitched()) this.render();
+  }
+
+  private handleEnvironmentSelect(monitorIndex: number, index: number): void {
+    this.environmentMonitorIndex = monitorIndex;
+    this.environments.select(index);
   }
 
   /** Clique no banner: abre `stack` naquela barra e marca tudo como lido. */
@@ -232,6 +254,7 @@ export class BarManager {
           () => this.handleEscape(),
           (mode) => this.handleBarTrigger(index, mode),
           () => this.handleBannerOpen(index),
+          (environment) => this.handleEnvironmentSelect(index, environment),
         ),
     );
     this.render();
@@ -269,6 +292,7 @@ export class BarManager {
     this.unsubscribeBt();
     this.unsubscribeArrival();
     this.unsubscribeTrack();
+    this.unsubscribeEnvironments();
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;

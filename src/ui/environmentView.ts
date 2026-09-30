@@ -3,6 +3,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import type { EnvironmentSource } from '../system/environments.js';
+import { BarButton, type BarButtonActor } from './barButton.js';
 import { phosphor } from './icons.js';
 import { colors } from './tokens.js';
 
@@ -110,3 +111,30 @@ export const EnvironmentModeRow = GObject.registerClass(
     }
   },
 );
+
+// Botão de ambiente, no início da pílula esquerda (specs/15-ambientes.md):
+// ícone 14px `accent-300` + pontos, gap 7px. Clique num ponto troca de
+// ambiente; o clique no botão é do editor (spec 17).
+export function environmentButton(
+  source: EnvironmentSource,
+  onSelect: (index: number) => void,
+  onClick: () => void,
+): BarButtonActor {
+  const icon = new St.Icon({
+    icon_size: 14,
+    style: `color: ${colors.accent300};`,
+    y_align: Clutter.ActorAlign.CENTER,
+  });
+  const content = new St.BoxLayout({ style: 'spacing: 7px;' });
+  content.add_child(icon);
+  content.add_child(new EnvironmentDots(source, onSelect));
+  const button = new BarButton(content, onClick, 'padding: 0 8px;');
+
+  const sync = (): void => {
+    icon.gicon = phosphor(source.active.icon);
+  };
+  sync();
+  const unsubscribe = source.onChange(sync);
+  button.connectObject('destroy', () => unsubscribe(), button);
+  return button;
+}
