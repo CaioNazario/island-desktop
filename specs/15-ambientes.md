@@ -37,11 +37,13 @@ Troca circular: depois do último vem o primeiro.
 |---|---|
 | Rolagem horizontal (dois dedos no touchpad) sobre a barra | próximo/anterior conforme o sentido |
 | Roda inclinada (`SCROLL_LEFT`/`SCROLL_RIGHT`) sobre a barra | próximo/anterior, um passo por clique |
-| `Super+Alt+→` / `Super+Alt+←` | próximo / anterior, de qualquer lugar |
+| `Super+Ctrl+→` / `Super+Ctrl+←` | próximo / anterior, de qualquer lugar |
 | Clique num ponto do botão de ambiente | vai direto para aquele ambiente |
 | Aba no editor (spec 17) | vai direto para aquele ambiente |
 
-Atalhos numerados (`Alt+1–N` do design) não existem. `Alt+←/→` do design também não: roubaria o "voltar" do navegador e do Nautilus. Os atalhos são keybindings do Shell (`Main.wm.addKeybinding`) com as chaves `switch-environment-next`/`-previous` (spec 13), removidos no `disable()`. Sem editor de atalho na UI. Confirmar que nenhum atalho padrão do GNOME usa essas teclas (spike S7).
+Atalhos numerados (`Alt+1–N` do design) não existem. `Alt+←/→` do design também não: roubaria o "voltar" do navegador e do Nautilus. Os atalhos são keybindings do Shell (`Main.wm.addKeybinding`) com as chaves `switch-environment-next`/`-previous` (spec 13), removidos no `disable()`. Sem editor de atalho na UI.
+
+`Super+Alt+←/→` do design não serve: no GNOME 50 é o padrão de `switch-to-workspace-left/right` (`org.gnome.desktop.wm.keybindings`). Também ocupados: `Super+Shift+←/→` (`move-to-monitor-*`), `Super+Shift+Alt+←/→` (`move-to-workspace-*`), `Ctrl+Alt+←/→` (`switch-to-workspace-*`) e `Super+←/→` (`toggle-tiled-*` do Mutter). `Super+Ctrl+←/→` não aparece em `org.gnome.desktop.wm.keybindings`, `org.gnome.mutter.keybindings`, `org.gnome.shell.keybindings` nem `org.gnome.settings-daemon.plugins.media-keys` (conferido no GNOME Shell 50.4).
 
 ### Rolagem suave
 
@@ -78,6 +80,6 @@ Trocar de novo durante a animação cancela a anterior e parte do estado atual.
 - [ ] Testes de `environments.ts`: saneamento (widget desconhecido, repetido, ícone inválido, lista vazia, mais de 6, nome longo), troca circular nos dois sentidos, índice inválido, Padrão não excluível.
 - [ ] Dois dedos para a esquerda no touchpad trocam **um** ambiente por gesto, com o conteúdo acompanhando o dedo antes da troca.
 - [ ] Rolagem vertical sobre a barra não troca de ambiente.
-- [ ] `Super+Alt+→` troca de ambiente com uma janela do navegador focada, e `Alt+←` continua voltando a página.
+- [ ] `Super+Ctrl+→` troca de ambiente com uma janela do navegador focada, e `Alt+←` continua voltando a página.
 - [ ] Trocar de ambiente com `wifi` aberto não mexe na ilha. Com a ilha compacta, abre `env` por 1500ms.
 - [ ] O ambiente ativo e as mudanças sobrevivem a lock/unlock e a reiniciar a sessão.

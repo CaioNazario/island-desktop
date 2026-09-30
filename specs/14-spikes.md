@@ -17,11 +17,6 @@ Pontos que ninguém verificou ainda. Cada spike se resolve **antes** de implemen
 - **Pergunta**: `St.ThemeContext.get_for_stage(global.stage).get_theme()` com `load_stylesheet`/`unload_stylesheet` reaplica as cores em todos os atores da Island sem recriá-los? Quanto custa cada recarga (dá para 10 por segundo durante o arraste)?
 - **Pronto quando**: há medida do tempo de recarga com a barra e a ilha abertas e a forma de aplicar anotada na spec 19. Se for lento, a prévia durante o arraste cai para "aplica ao soltar".
 
-## S7 · `Super+Alt+←/→` livre no GNOME 50 (antes da spec 15)
-
-- **Pergunta**: algum keybinding padrão do Mutter, do Shell ou do gnome-settings-daemon usa `<Super><Alt>Left`/`Right`?
-- **Pronto quando**: os schemas `org.gnome.desktop.wm.keybindings`, `org.gnome.mutter.keybindings`, `org.gnome.shell.keybindings` e `org.gnome.settings-daemon.plugins.media-keys` foram conferidos, e o resultado está anotado na spec 15.
-
 ## S8 · Rolagem horizontal suave no Clutter (antes da spec 15)
 
 - **Pergunta**: em que unidade chega o `get_scroll_delta()` de um gesto de dois dedos no touchpad (e de uma roda inclinada) no Shell 50? O evento de fim de gesto (`SCROLL_FINISHED`) chega e pode substituir o timeout de 180ms?

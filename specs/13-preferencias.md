@@ -18,8 +18,8 @@ O design v3 muda o padrão de `clickAction` para "Calendário compacto" e só ap
 | `ai-codex-enabled` | `b` | `true` | spec 12 |
 | `environments` | `a(ssasas)` (nome, ícone, widgets da esquerda, widgets da direita) | os 4 ambientes iniciais da spec 15 | spec 15, 17 |
 | `environment-index` | `u` | `0` | spec 15 |
-| `switch-environment-next` | `as` | `['<Super><Alt>Right']` | spec 15 (keybinding, sem UI) |
-| `switch-environment-previous` | `as` | `['<Super><Alt>Left']` | spec 15 (keybinding, sem UI) |
+| `switch-environment-next` | `as` | `['<Super><Control>Right']` | spec 15 (keybinding, sem UI) |
+| `switch-environment-previous` | `as` | `['<Super><Control>Left']` | spec 15 (keybinding, sem UI) |
 | `auto-hide` | `b` | `false` | spec 18 (editada no editor de ambientes) |
 | `accent-hue` | `u` (0–360) | `289` | spec 19 (editada na ilha) |
 | `accent-chroma` | `u` (0–200) | `100` | spec 19 (editada na ilha) |
