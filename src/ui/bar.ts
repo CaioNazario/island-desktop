@@ -15,6 +15,7 @@ import { SystemHardware } from '../system/hardware.js';
 import { SystemMpris } from '../system/mpris.js';
 import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
 import { callerStack, debugLog, syncDebugLog } from '../system/debugLog.js';
+import { SystemEnvironments } from '../system/environments.js';
 import { OsdRedirect } from '../system/osd.js';
 import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
@@ -50,6 +51,7 @@ export class BarManager {
   private readonly calendar = new SystemCalendarEvents();
   private readonly weather: SystemWeather;
   private readonly aiUsage: SystemAiUsage;
+  private readonly environments: SystemEnvironments;
   private readonly weatherHint: WeatherHint;
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
@@ -71,6 +73,7 @@ export class BarManager {
     });
     this.weather = new SystemWeather(settings);
     this.aiUsage = new SystemAiUsage(settings);
+    this.environments = new SystemEnvironments(settings);
     this.system = {
       volume: new SystemVolume(),
       brightness: new SystemBrightness(),
@@ -87,6 +90,7 @@ export class BarManager {
       calendar: this.calendar,
       weather: this.weather,
       aiUsage: this.aiUsage,
+      environments: this.environments,
     };
     this.osdRedirect = new OsdRedirect(
       () => this.triggerVolumeKey(),
@@ -287,6 +291,7 @@ export class BarManager {
     this.weatherHint.destroy();
     this.weather.destroy();
     this.aiUsage.destroy();
+    this.environments.destroy();
     this.osdRedirect.destroy();
   }
 }

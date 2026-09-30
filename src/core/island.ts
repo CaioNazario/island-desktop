@@ -13,13 +13,15 @@ export type Mode =
   | 'quick'
   | 'wifi'
   | 'bt'
-  | 'ai';
+  | 'ai'
+  | 'env';
 
 const TRANSIENT_MS: Partial<Record<Mode, number>> = {
   notif: 2500,
   music: 2500,
   volume: 1500,
   brightness: 1500,
+  env: 1500,
 };
 
 /** `notif` de notificação de navegador (specs/04-notificacoes.md). */
@@ -98,6 +100,8 @@ export function getSize(mode: Mode, ctx: SizeContext = {}): Size {
       if (ctx.btEnergyOpen) height += 48;
       return { width: 520, height, radius: 26 };
     }
+    case 'env':
+      return { width: 260, height: 40, radius: 20 };
     case 'ai': {
       const providerCount = ctx.providerCount ?? 0;
       return { width: 480, height: 24 + 32 + providerCount * 108 - 6, radius: 24 };
@@ -196,6 +200,17 @@ export class IslandState {
     this.openAutomatic('brightness');
   }
 
+  /**
+   * Troca de ambiente (specs/15-ambientes.md "Modo `env`"): só aparece com a
+   * ilha compacta ou já em `env` (rearma o timer). Com outro modo ou o
+   * cartão aberto, a troca acontece sem mexer na ilha.
+   */
+  environmentSwitched(): boolean {
+    if (this._cardOpen || (this._mode !== 'compact' && this._mode !== 'env')) return false;
+    this.setMode('env');
+    return true;
+  }
+
   /** Clique na ilha: regra 5. */
   islandClick(): IslandClickResult {
     if (this._mode === 'compact') {
@@ -214,17 +229,17 @@ export class IslandState {
     return 'noop';
   }
 
-  /** Regra 7: hover cancela o timer; sair do hover rearma. */
+  /** Regra 7: hover cancela o timer; sair do hover rearma. `env` não recebe hover. */
   hoverStart(): void {
     this.log(`hoverStart mode=${this._mode}`);
     this.hovering = true;
-    this.clearTimer();
+    if (this._mode !== 'env') this.clearTimer();
   }
 
   hoverEnd(): void {
     this.log(`hoverEnd mode=${this._mode}`);
     this.hovering = false;
-    this.arm(this._mode);
+    if (this._mode !== 'env') this.arm(this._mode);
   }
 
   /** Regra 8: interação com slider cancela o timer durante o arraste. */
@@ -274,7 +289,7 @@ export class IslandState {
     this.clearTimer();
     const ms = mode === 'notif' && this.notifFromBrowser ? BROWSER_NOTIF_MS : TRANSIENT_MS[mode];
     this.log(`arm ${mode} ms=${ms} hovering=${this.hovering} sticky=${this.notifSticky}`);
-    if (ms === undefined || this.hovering) return;
+    if (ms === undefined || (this.hovering && mode !== 'env')) return;
     if (mode === 'notif' && this.notifSticky) return;
     this.timerId = this.scheduler.setTimeout(() => {
       this.timerId = null;

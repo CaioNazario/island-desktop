@@ -9,6 +9,7 @@ import type { AiUsageSource } from '../system/aiUsage.js';
 import type { SystemBluetooth } from '../system/bluetooth.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import { debugLog } from '../system/debugLog.js';
+import type { EnvironmentSource } from '../system/environments.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { MusicSource } from '../system/mpris.js';
@@ -37,6 +38,7 @@ import { IslandPowerToggle, quickContent } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { easeSpring } from './spring.js';
 import { StackView, type StackViewActor } from './stackView.js';
+import { EnvironmentModeRow } from './environmentView.js';
 import { WeatherItem } from './weatherItem.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
@@ -64,6 +66,7 @@ export interface IslandSystem {
   calendar: CalendarEventsSource;
   weather: WeatherSource;
   aiUsage: AiUsageSource;
+  environments: EnvironmentSource;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
@@ -225,6 +228,7 @@ export const Island = GObject.registerClass(
         ['wifi', modeLayer(this.wifiView)],
         ['bt', modeLayer(this.btView)],
         ['ai', modeLayer(this.aiView)],
+        ['env', modeLayer(new EnvironmentModeRow(system.environments))],
         ['card', modeLayer(this.card)],
       ]);
       this.syncLayerSize('compact');
