@@ -64,9 +64,3 @@ export function countdownView(name: string, dateText: string, today: Date): Coun
     sub: remaining(daysUntil(today, date)),
   };
 }
-
-/** Milissegundos até a próxima meia-noite local. */
-export function msUntilMidnight(now: Date): number {
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  return midnight.getTime() - now.getTime();
-}

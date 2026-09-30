@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  countdownView,
-  daysUntil,
-  formatDate,
-  msUntilMidnight,
-  parseIsoDate,
-  toIsoDate,
-} from './countdown.js';
+import { countdownView, daysUntil, formatDate, parseIsoDate, toIsoDate } from './countdown.js';
 
 describe('parseIsoDate', () => {
   it('lê AAAA-MM-DD', () => {
@@ -79,11 +72,5 @@ describe('countdownView', () => {
 
   it('sem data não tem sub, com qualquer nome', () => {
     expect(countdownView('Viagem', '', today)).toEqual({ label: 'Sem data', missingDate: true });
-  });
-});
-
-describe('msUntilMidnight', () => {
-  it('conta até 00:00 do dia seguinte', () => {
-    expect(msUntilMidnight(new Date(2026, 8, 30, 23, 59, 0))).toBe(60_000);
   });
 });
