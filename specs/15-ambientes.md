@@ -81,9 +81,9 @@ Trocar de novo durante a animação cancela a anterior e parte do estado atual.
 
 ## Critérios de aceite
 
-- [ ] Testes de `environments.ts`: saneamento (widget desconhecido, repetido, ícone inválido, lista vazia, mais de 6, nome longo), troca circular nos dois sentidos, índice inválido, Padrão não excluível.
-- [ ] Dois dedos para a esquerda no touchpad trocam **um** ambiente por gesto, com o conteúdo acompanhando o dedo antes da troca.
-- [ ] Rolagem vertical sobre a barra não troca de ambiente.
-- [ ] `Super+Ctrl+→` troca de ambiente com uma janela do navegador focada, e `Alt+←` continua voltando a página.
-- [ ] Trocar de ambiente com `wifi` aberto não mexe na ilha. Com a ilha compacta, abre `env` por 1500ms.
-- [ ] O ambiente ativo e as mudanças sobrevivem a lock/unlock e a reiniciar a sessão.
+- [x] Testes de `environments.ts`: saneamento (widget desconhecido, repetido, ícone inválido, lista vazia, mais de 6, nome longo), troca circular nos dois sentidos, índice inválido, Padrão não excluível.
+- [x] Dois dedos para a esquerda no touchpad trocam **um** ambiente por gesto, com o conteúdo acompanhando o dedo antes da troca.
+- [x] Rolagem vertical sobre a barra não troca de ambiente.
+- [x] `Super+Ctrl+→` troca de ambiente com uma janela do navegador focada, e `Alt+←` continua voltando a página.
+- [x] Trocar de ambiente com `wifi` aberto não mexe na ilha. Com a ilha compacta, abre `env` por 1500ms.
+- [x] O ambiente ativo e as mudanças sobrevivem a lock/unlock e a reiniciar a sessão.
