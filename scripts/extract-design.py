@@ -85,6 +85,25 @@ def write_icons(manifest: dict, sources: list[str]) -> int:
     return len(used | EXTRA_ICONS)
 
 
+def write_components(manifest: dict, doc: str) -> list[str]:
+    """Subcomponentes `./<Nome>.dc.html` (ex.: `<dc-import name="TopbarWidget">`) → design/components/."""
+    comps = OUT / "components"
+    shutil.rmtree(comps, ignore_errors=True)
+    sources: list[str] = []
+    for res in json.loads(script_block(doc, "ext_resources")):
+        name = re.fullmatch(r"\./(.+)\.dc\.html", res["id"])
+        if not name:
+            continue
+        page = asset_bytes(manifest, res["uuid"]).decode("utf-8")
+        body = re.search(r"</helmet>(.*?)</x-dc>", page, re.S)
+        if not body:
+            sys.exit(f"estrutura de {res['id']} mudou; ajuste scripts/extract-design.py")
+        comps.mkdir(parents=True, exist_ok=True)
+        (comps / f"{name.group(1)}.html").write_text(body.group(1).strip() + "\n", encoding="utf-8")
+        sources.append(body.group(1))
+    return sources
+
+
 def main() -> None:
     doc = SRC.read_text(encoding="utf-8")
     template = json.loads(script_block(doc, "template"))
@@ -102,8 +121,9 @@ def main() -> None:
     props = json.loads(html.unescape(logic.group(1)))
     (OUT / "props.json").write_text(json.dumps(props, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     manifest = json.loads(script_block(doc, "manifest"))
-    count = write_icons(manifest, [page.group(1), logic.group(2)])
-    print(f"design/ e icons/ ({count} ícones) atualizados a partir de {SRC.name}")
+    components = write_components(manifest, doc)
+    count = write_icons(manifest, [page.group(1), logic.group(2), *components])
+    print(f"design/ ({len(components)} componentes) e icons/ ({count} ícones) atualizados a partir de {SRC.name}")
 
 
 if __name__ == "__main__":

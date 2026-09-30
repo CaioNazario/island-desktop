@@ -16,6 +16,7 @@ Design: `Desktop Island.html` (bundle do Claude Design). Leia a versão extraíd
 - `design/logic.js`: máquina de estados, tamanhos (`SIZES`), timers (`TRANSIENT`), limiares e regras de roteamento
 - `design/tokens.css`: tokens Nocturne (bloco `:root`) e classes `.btn*`
 - `design/props.json`: opções expostas no protótipo
+- `design/components/`: subcomponentes importados pelo markup (`<dc-import name="…">`), um arquivo por componente
 
 Specs: `specs/`. Comece por `specs/00-visao-geral.md` (mapa, glossário, ordem de implementação). Cada spec lista critérios de aceite e cita a origem no design por **âncora greppável** (nome do estado, seletor, chave de `SIZES`/`TRANSIENT`), nunca por número de linha.
 
