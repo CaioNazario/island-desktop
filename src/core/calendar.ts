@@ -147,6 +147,31 @@ export function todayEvents(events: readonly CalendarEvent[], today: Date): Toda
     });
 }
 
+export interface NextEventView {
+  label: string;
+  sub: string;
+}
+
+const SOON_MINUTES = 90;
+
+/**
+ * Widget Próximo evento (specs/16-widgets.md `event`): o primeiro evento de
+ * hoje com hora (não "dia inteiro") que começa depois de `now`. O dia
+ * inteiro começa às 00:00, então nunca começa depois de agora.
+ */
+export function nextEvent(events: readonly CalendarEvent[], now: Date): NextEventView {
+  const dayBegin = startOfDay(now);
+  const dayEnd = new Date(dayBegin.getFullYear(), dayBegin.getMonth(), dayBegin.getDate() + 1);
+  const next = events
+    .filter((event) => event.start > now && event.start < dayEnd)
+    .sort((a, b) => a.start.getTime() - b.start.getTime())[0];
+  if (!next) return { label: 'Sem eventos', sub: 'hoje' };
+
+  const minutes = Math.ceil((next.start.getTime() - now.getTime()) / 60_000);
+  const sub = minutes <= SOON_MINUTES ? `em ${minutes} min` : formatClock(next.start);
+  return { label: next.summary, sub };
+}
+
 /** `Hoje, sex, 25`: dia da semana minúsculo, como no design. */
 export function todayTitle(today: Date): string {
   const day = formatDay(today);

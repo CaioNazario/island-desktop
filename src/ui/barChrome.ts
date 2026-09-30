@@ -156,6 +156,7 @@ export class Bar {
     const widgetSources = {
       aiUsage: system.aiUsage,
       hardware,
+      calendar: system.calendar,
       settings: system.settings,
       openPreferences: system.openPreferences,
     };
