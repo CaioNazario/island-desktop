@@ -158,6 +158,7 @@ export class Bar {
       hardware,
       calendar: system.calendar,
       music: system.music,
+      pomodoro: system.pomodoro,
       settings: system.settings,
       openPreferences: system.openPreferences,
     };

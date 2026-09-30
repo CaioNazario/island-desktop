@@ -12,6 +12,7 @@ import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import { debugLog } from '../system/debugLog.js';
 import type { EnvironmentSource } from '../system/environments.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
+import type { PomodoroSource } from '../system/pomodoro.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { MusicSource } from '../system/mpris.js';
 import type { SystemSession } from '../system/session.js';
@@ -69,6 +70,7 @@ export interface IslandSystem {
   weather: WeatherSource;
   aiUsage: AiUsageSource;
   environments: EnvironmentSource;
+  pomodoro: PomodoroSource;
   settings: Gio.Settings;
   /** Abre as preferências na página `page` (specs/13-preferencias.md). */
   openPreferences: (page: string) => void;

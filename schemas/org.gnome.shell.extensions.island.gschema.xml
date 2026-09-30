@@ -62,5 +62,10 @@
       <summary>Nota da barra</summary>
       <description>Até 80 caracteres, sem quebra de linha; editada na ilha.</description>
     </key>
+    <key name="pomodoro-state" type="s">
+      <default>''</default>
+      <summary>Estado do pomodoro</summary>
+      <description>Interna: fase e tempo restante em JSON, sempre pausado; vazio é Foco 25:00.</description>
+    </key>
   </schema>
 </schemalist>

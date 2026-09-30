@@ -14,6 +14,7 @@ import { SystemCalendarEvents } from '../system/calendarEvents.js';
 import { SystemHardware } from '../system/hardware.js';
 import { SystemMpris } from '../system/mpris.js';
 import { SystemNotifications, type NotificationEntry } from '../system/notifications.js';
+import { SystemPomodoro } from '../system/pomodoro.js';
 import { callerStack, debugLog, syncDebugLog } from '../system/debugLog.js';
 import { SystemEnvironments, type SwitchDirection } from '../system/environments.js';
 import { OsdRedirect } from '../system/osd.js';
@@ -24,6 +25,7 @@ import { SystemWifi } from '../system/wifi.js';
 import { SystemWeather } from '../system/weather.js';
 import { WeatherHint } from '../system/weatherHint.js';
 import { Bar } from './barChrome.js';
+import { phosphor } from './icons.js';
 import type { IslandSystem } from './island.js';
 
 class GLibScheduler implements Scheduler {
@@ -52,6 +54,7 @@ export class BarManager {
   private readonly weather: SystemWeather;
   private readonly aiUsage: SystemAiUsage;
   private readonly environments: SystemEnvironments;
+  private readonly pomodoro: SystemPomodoro;
   private readonly weatherHint: WeatherHint;
   private bars: Bar[] = [];
   private targetMonitorIndex = 0;
@@ -78,6 +81,7 @@ export class BarManager {
     this.weather = new SystemWeather(settings);
     this.aiUsage = new SystemAiUsage(settings);
     this.environments = new SystemEnvironments(settings);
+    this.pomodoro = new SystemPomodoro(settings, phosphor('timer'));
     this.system = {
       volume: new SystemVolume(),
       brightness: new SystemBrightness(),
@@ -95,6 +99,7 @@ export class BarManager {
       weather: this.weather,
       aiUsage: this.aiUsage,
       environments: this.environments,
+      pomodoro: this.pomodoro,
       settings,
       openPreferences: (page) => {
         // O `openPreferences()` não escolhe página; a janela lê esta chave.
@@ -343,6 +348,7 @@ export class BarManager {
     this.weather.destroy();
     this.aiUsage.destroy();
     this.environments.destroy();
+    this.pomodoro.destroy();
     this.osdRedirect.destroy();
   }
 }

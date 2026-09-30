@@ -4,6 +4,7 @@ import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 import { phosphor } from './icons.js';
+import { ProgressRing, type ProgressRingActor } from './progressRing.js';
 import { colors } from './tokens.js';
 
 const HOVER_MS = 150;
@@ -12,6 +13,8 @@ const BAR = { width: 34, height: 4, radius: 2 };
 
 /** O que o widget mostra; parte ausente fica escondida. */
 export interface WidgetContent {
+  /** 0–1: mostra o anel. */
+  ring?: number;
   icon?: string;
   iconColor?: string;
   label?: string;
@@ -28,6 +31,7 @@ export interface WidgetContent {
 // 150ms; cursor de mão só com ação de clique.
 export const TopbarWidget = GObject.registerClass(
   class TopbarWidget extends St.Button {
+    private readonly ring: ProgressRingActor;
     private readonly iconView: St.Icon;
     private readonly labelView: St.Label;
     private readonly labelStyle: string;
@@ -49,6 +53,10 @@ export const TopbarWidget = GObject.registerClass(
         can_focus: false,
         y_align: Clutter.ActorAlign.CENTER,
       });
+
+      this.ring = new ProgressRing();
+      this.ring.y_align = Clutter.ActorAlign.CENTER;
+      content.add_child(this.ring);
 
       this.iconView = new St.Icon({ icon_size: 14, y_align: Clutter.ActorAlign.CENTER });
       content.add_child(this.iconView);
@@ -109,6 +117,9 @@ export const TopbarWidget = GObject.registerClass(
     }
 
     display(content: WidgetContent): void {
+      this.ring.visible = content.ring !== undefined;
+      this.ring.fraction = content.ring ?? 0;
+
       this.iconView.visible = content.icon !== undefined;
       if (content.icon !== undefined) {
         this.iconView.gicon = phosphor(content.icon);
