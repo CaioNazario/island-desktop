@@ -157,12 +157,16 @@ async function findThermalZone(type: string, cancellable: Gio.Cancellable): Prom
 
 // Grupo de hardware (specs/10-hardware.md): descobre GPU e sensor uma vez e
 // amostra a cada 1s, tudo por Gio assíncrono (nenhuma leitura síncrona no
-// main loop).
+// main loop). Só lê enquanto `running`: com o `hw` fora do ambiente ativo,
+// nada de `/proc` nem `/sys` (specs/16-widgets.md "Fontes só quando visíveis").
+// Ao voltar, a primeira amostra é a média desde a última leitura.
 export class SystemHardware implements HardwareSource {
   private readonly cancellable = new Gio.Cancellable();
   private gpu: GpuSource | null = null;
   private tempPath: string | null = null;
   private timerId: number | null = null;
+  private discovery: Promise<void> | null = null;
+  private isRunning = false;
   private sampling = false;
   private previous: Counters | null = null;
   // Última leitura boa: uma falha pontual não pode sumir com o bloco.
@@ -176,7 +180,13 @@ export class SystemHardware implements HardwareSource {
     Gio._promisify(Gio.File.prototype, 'enumerate_children_async');
     Gio._promisify(Gio.FileEnumerator.prototype, 'next_files_async');
     Gio._promisify(Gio.FileEnumerator.prototype, 'close_async');
-    void this.start();
+  }
+
+  set running(running: boolean) {
+    if (running === this.isRunning) return;
+    this.isRunning = running;
+    if (running) void this.resume();
+    else this.clearTimer();
   }
 
   get blocks(): readonly HardwareBlock[] {
@@ -190,26 +200,34 @@ export class SystemHardware implements HardwareSource {
 
   destroy(): void {
     this.cancellable.cancel();
-    if (this.timerId !== null) {
-      GLib.Source.remove(this.timerId);
-      this.timerId = null;
-    }
+    this.clearTimer();
     this.listeners.clear();
   }
 
-  private async start(): Promise<void> {
-    const [gpu, tempPath] = await Promise.all([
-      findGpu(this.cancellable),
-      findTemp(this.cancellable),
-    ]);
-    if (this.cancellable.is_cancelled()) return;
-    this.gpu = gpu;
-    this.tempPath = tempPath;
+  private async resume(): Promise<void> {
+    this.discovery ??= this.discover();
+    await this.discovery;
+    if (!this.isRunning || this.timerId !== null || this.cancellable.is_cancelled()) return;
     void this.sample();
     this.timerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, SAMPLE_SECONDS, () => {
       void this.sample();
       return GLib.SOURCE_CONTINUE;
     });
+  }
+
+  private async discover(): Promise<void> {
+    const [gpu, tempPath] = await Promise.all([
+      findGpu(this.cancellable),
+      findTemp(this.cancellable),
+    ]);
+    this.gpu = gpu;
+    this.tempPath = tempPath;
+  }
+
+  private clearTimer(): void {
+    if (this.timerId === null) return;
+    GLib.Source.remove(this.timerId);
+    this.timerId = null;
   }
 
   private async sample(): Promise<void> {

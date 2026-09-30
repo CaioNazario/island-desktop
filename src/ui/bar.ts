@@ -128,8 +128,10 @@ export class BarManager {
       if (this.state.musicPinned && this.music.track === null) this.state.closeAll();
     });
     this.unsubscribeEnvironments = this.environments.onChange((direction) => {
+      this.syncWidgetSources();
       if (direction) this.handleEnvironmentSwitch();
     });
+    this.syncWidgetSources();
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
     // Depois do `rebuild()`: a dica chega como notificação e a ilha já precisa existir.
@@ -196,6 +198,14 @@ export class BarManager {
    * Troca de ambiente (specs/15-ambientes.md "Modo `env`"): na barra onde a
    * troca foi pedida, ou no monitor da janela focada (atalho, editor).
    */
+  /** Fontes usadas só por widget rodam com o widget no ambiente ativo (specs/16-widgets.md). */
+  private syncWidgetSources(): void {
+    const { left, right } = this.environments.active;
+    const ids = new Set([...left, ...right]);
+    this.hardware.running = ids.has('hw');
+    this.aiUsage.running = ids.has('ai');
+  }
+
   private handleEnvironmentSwitch(): void {
     const index = this.environmentMonitorIndex ?? this.focusedMonitorIndex();
     this.environmentMonitorIndex = null;
