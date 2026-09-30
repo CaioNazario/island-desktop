@@ -12,6 +12,7 @@ import { AiButton, type AiButtonActor } from './aiButton.js';
 import { countdownWidget } from './countdownWidget.js';
 import { eventWidget } from './eventWidget.js';
 import { HardwareGroup, type HardwareGroupActor } from './hardwareGroup.js';
+import { noteWidget } from './noteWidget.js';
 import { progressWidget } from './progressWidget.js';
 
 export interface WidgetSources {
@@ -102,6 +103,8 @@ export const WidgetArea = GObject.registerClass(
           return countdownWidget(this.sources.settings, () =>
             this.sources.openPreferences('widgets'),
           );
+        case 'note':
+          return noteWidget(this.sources.settings, () => this.onTrigger('note'));
         default:
           return null;
       }
