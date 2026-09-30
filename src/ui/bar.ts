@@ -192,6 +192,12 @@ export class BarManager {
     this.environments.select(index);
   }
 
+  /** Atalho de troca: o `env` aparece no monitor da janela focada. */
+  stepEnvironmentFromShortcut(direction: SwitchDirection): void {
+    this.environmentMonitorIndex = null;
+    this.environments.step(direction);
+  }
+
   private handleEnvironmentStep(monitorIndex: number, direction: SwitchDirection): void {
     this.environmentMonitorIndex = monitorIndex;
     this.environments.step(direction);
