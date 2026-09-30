@@ -77,7 +77,7 @@ Linha de 24px, padding 0 9px, gap 6px, 12px/500, `text`, dígitos tabulares, sem
   - fim do foco: "Hora da pausa" / "5 min de pausa"
   - fim da pausa: "Hora de focar" / "25 min de foco"
 - Sem botão de reiniciar nesta versão.
-- Estado em GSettings `pomodoro-state` (spec 13), guardando o **horário de término** da fase quando rodando e o restante quando pausado. Assim sobrevive a lock/unlock (o `disable()` roda a cada bloqueio) e conta o tempo passado com a tela bloqueada.
+- Estado em GSettings `pomodoro-state` (spec 13): fase e tempo restante. O bloqueio de tela pausa o pomodoro (o `disable()` roda a cada bloqueio) e ele volta pausado, com o restante guardado; o tempo bloqueado não conta.
 - O relógio de 1s só roda com o widget visível e o pomodoro rodando. O vencimento de fase é um timeout único, esteja o widget visível ou não.
 
 ### `music`
@@ -129,9 +129,9 @@ Fonte de dado usada só por widget (hardware, IA, GitHub) roda apenas enquanto u
 
 ## Critérios de aceite
 
-- [ ] Testes puros: próximo evento (sem eventos, dia inteiro, ≤90 min, >90 min), fases do pomodoro a partir do horário de término (inclusive com tempo passado bloqueado), `daysUntil` (hoje, amanhã, passado, virada de ano), progresso do dia, parse das buscas do GitHub e textos no singular/plural.
+- [ ] Testes puros: próximo evento (sem eventos, dia inteiro, ≤90 min, >90 min), fases do pomodoro (troca ao zerar, pausar e retomar), `daysUntil` (hoje, amanhã, passado, virada de ano), progresso do dia, parse das buscas do GitHub e textos no singular/plural.
 - [ ] Com a barra estreita, o `hw` perde NET, GPU e TEMP antes de qualquer widget sumir, e nenhum widget aparece cortado.
-- [ ] O pomodoro continua contando com a tela bloqueada e notifica a troca de fase.
+- [ ] O pomodoro notifica a troca de fase e volta pausado, com o mesmo restante, depois de lock/unlock.
 - [ ] Sem `gh` instalado, o widget GitHub mostra "GitHub" sem erro no journal. Com login, os números batem com `gh search prs`.
 - [ ] Nota editada na ilha aparece no widget ao fechar e sobrevive a lock/unlock.
 - [ ] Ambiente sem `hw` nem `ai`: nenhuma leitura de `/proc` e nenhuma chamada HTTP de IA acontecem.
