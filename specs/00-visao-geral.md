@@ -53,7 +53,8 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 4. 04 (notificações) → 05/06 (música, calendário, cartão central)
 5. 10 (hardware) → 07 (clima) → 12 (IA)
 6. 13 (preferências) consolida as opções que cada spec já declarou
-7. v1.1 (design v3): 15 → 16 → 17 → 18 → 19, com os spikes da spec 14 antes da spec dependente
+7. v1.1 (design v3): 15 → 16 → 17 → 11 → 18 → 19, com os spikes da spec 14 antes da spec dependente; a 11 entra pelo desenho da bateria que o v3 trouxe
+8. Specs anteriores que o v3 reabriu (02, 03, 05, 13): conferir o que as specs 15–19 já cobriram e implementar o resto antes da tag v1.1.0
 
 ## Fora de escopo (v1.x)
 
