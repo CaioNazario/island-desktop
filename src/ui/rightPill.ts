@@ -10,8 +10,8 @@ import type { SystemVolume } from '../system/volume.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { BarButton, type BarButtonActor } from './barButton.js';
 import {
-  batteryLevelIconName,
   caretIconName,
+  chargingIconName,
   notificationFallbackIconName,
   phosphor,
   volumeIconName,
@@ -22,31 +22,79 @@ import { Pill } from './pill.js';
 import { colors, derivedColors } from './tokens.js';
 import type { WidgetAreaActor } from './widgetArea.js';
 
-const BATTERY_ICON_COLOR: Record<BatteryTone, string> = {
+const BATTERY_COLOR: Record<BatteryTone, string> = {
   good: derivedColors.batteryGreen,
   normal: colors.neutral300,
   low: derivedColors.alertRed,
 };
 
-// Bateria (specs/11-bateria.md): ícone 17px + `78%` 13px/500, gap 6px,
-// padding 0 10px. Sem bateria o botão some.
+// Corpo 28×15 com borda 1.5px e padding 1.5px: sobra 22×9 para o
+// preenchimento. No St, `width`/`height` do estilo são a caixa de conteúdo.
+const BATTERY_BODY = { inner: { width: 22, height: 9 }, edge: 1.5 };
+const BATTERY_FILL_MS = 300;
+// `letter-spacing: -0.02em` do design em 9.5px.
+const BATTERY_NUMBER_STYLE =
+  'font-size: 9.5px; font-weight: 600; letter-spacing: -0.19px; font-feature-settings: "tnum";';
+
+/** `color-mix(in oklch, <cor> 38%, transparent)` do preenchimento (spec 01). */
+function fillColor(hex: string): string {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return `rgba(${r},${g},${b},0.38)`;
+}
+
+// Bateria (specs/11-bateria.md): desenho (corpo + polo) e raio só
+// carregando, gap 4px, padding 0 10px. Sem bateria o botão some.
 function batteryButton(battery: BatterySource, onClick: () => void): BarButtonActor {
-  const icon = new St.Icon({ icon_size: 17, y_align: Clutter.ActorAlign.CENTER });
-  const label = new St.Label({ y_align: Clutter.ActorAlign.CENTER });
-  const content = new St.BoxLayout({ style: 'spacing: 6px;' });
-  content.add_child(icon);
-  content.add_child(label);
+  const { inner, edge } = BATTERY_BODY;
+  // Caixa no fluxo em vez de posição fixa: o preenchimento começa dentro do
+  // padding e herda a altura interna.
+  const fill = new St.Widget({ width: 0 });
+  const frame = new St.BoxLayout({ clip_to_allocation: true });
+  frame.add_child(fill);
+  // Número centralizado sobre o corpo: sem expand, o BinLayout centraliza no
+  // tamanho natural (ver o sino abaixo).
+  const number = new St.Label({
+    x_align: Clutter.ActorAlign.CENTER,
+    y_align: Clutter.ActorAlign.CENTER,
+  });
+  const body = new St.Widget({ layout_manager: new Clutter.BinLayout() });
+  body.add_child(frame);
+  body.add_child(number);
+  const pole = new St.Widget({ width: 2, height: 6, y_align: Clutter.ActorAlign.CENTER });
+  const drawing = new St.BoxLayout({ style: 'spacing: 1px;', y_align: Clutter.ActorAlign.CENTER });
+  drawing.add_child(body);
+  drawing.add_child(pole);
+  const bolt = new St.Icon({
+    gicon: phosphor(chargingIconName),
+    icon_size: 11,
+    y_align: Clutter.ActorAlign.CENTER,
+  });
+  const content = new St.BoxLayout({ style: 'spacing: 4px;' });
+  content.add_child(drawing);
+  content.add_child(bolt);
   const button = new BarButton(content, onClick, 'padding: 0 10px;');
 
   const sync = (): void => {
     button.visible = battery.available;
     if (!button.visible) return;
     const display = batteryDisplay(battery.percentage, battery.charging);
-    icon.gicon = phosphor(batteryLevelIconName(display.icon));
-    icon.style = `color: ${BATTERY_ICON_COLOR[display.tone]};`;
-    label.text = display.label;
+    const color = BATTERY_COLOR[display.tone];
+    frame.style = `
+      width: ${inner.width}px; height: ${inner.height}px;
+      border: ${edge}px solid ${color}; border-radius: 4px; padding: ${edge}px;
+    `;
+    fill.style = `border-radius: 2px; background-color: ${fillColor(color)};`;
+    fill.ease({
+      width: Math.round(inner.width * display.fill),
+      duration: BATTERY_FILL_MS,
+      mode: Clutter.AnimationMode.EASE,
+    });
+    number.text = display.number;
     const textColor = display.tone === 'low' ? derivedColors.alertRed : colors.text;
-    label.style = `color: ${textColor}; font-size: 13px; font-weight: 500;`;
+    number.style = `${BATTERY_NUMBER_STYLE} color: ${textColor};`;
+    pole.style = `border-radius: 0 1px 1px 0; background-color: ${color};`;
+    bolt.visible = display.bolt;
+    bolt.style = `color: ${color};`;
   };
   sync();
   const unsubscribe = battery.onChange(sync);

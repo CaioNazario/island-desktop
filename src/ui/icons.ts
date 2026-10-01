@@ -1,6 +1,5 @@
 import Gio from 'gi://Gio';
 
-import type { BatteryIcon } from '../core/battery.js';
 import type { DeviceKind } from '../core/bluetooth.js';
 import type { SignalLevel } from '../core/wifi.js';
 import type { SystemVolume } from '../system/volume.js';
@@ -51,6 +50,7 @@ export const btIconName = 'bluetooth-bold';
 export const btOffIconName = 'bluetooth-slash';
 export const spinnerIconName = 'circle-notch';
 export const batteryIconName = 'battery-medium-fill';
+export const chargingIconName = 'lightning-fill';
 
 export const nightLightIconName = 'moon-fill';
 export const settingsIconName = 'gear-six';
@@ -72,10 +72,6 @@ export function notificationAppIcon(appIcon: Gio.Icon | null): Gio.Icon {
   const name = appIcon.get_names()[0];
   if (!name) return phosphor(notificationFallbackIconName);
   return new Gio.ThemedIcon({ name: name.endsWith('-symbolic') ? name : `${name}-symbolic` });
-}
-
-export function batteryLevelIconName(icon: BatteryIcon): string {
-  return `battery-${icon}-fill`;
 }
 
 export function btDeviceIconName(kind: DeviceKind): string {

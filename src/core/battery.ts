@@ -1,23 +1,17 @@
-// Botão de bateria da pílula direita (specs/11-bateria.md; design/logic.js
-// `batColor`/`batIcon`/`batShown`, ~197–198 e 285).
+// Bateria desenhada da pílula direita (specs/11-bateria.md; design/logic.js
+// `batColor`/`batText`/`batFillW`/`batNum`/`chgD`).
 
-export type BatteryIcon = 'full' | 'high' | 'medium' | 'low' | 'warning' | 'charging';
-
-/** `good` ≥80 (verde), `low` ≤20 (vermelho no ícone e no texto), `normal` entre. */
+/** `good` ≥80 (verde), `low` ≤20 (vermelho no desenho e no número), `normal` entre. */
 export type BatteryTone = 'good' | 'normal' | 'low';
 
 export interface BatteryDisplay {
-  icon: BatteryIcon;
   tone: BatteryTone;
-  label: string;
-}
-
-function levelIcon(percent: number): BatteryIcon {
-  if (percent >= 95) return 'full';
-  if (percent >= 60) return 'high';
-  if (percent > 20) return 'medium';
-  if (percent > 8) return 'low';
-  return 'warning';
+  /** Fração 0–1 da largura interna do corpo. */
+  fill: number;
+  /** Nível sem `%`, escrito dentro do corpo. */
+  number: string;
+  /** Raio de carga depois do polo. */
+  bolt: boolean;
 }
 
 function tone(percent: number): BatteryTone {
@@ -26,12 +20,13 @@ function tone(percent: number): BatteryTone {
   return 'normal';
 }
 
-/** As cores seguem o nível também carregando; só o ícone vira `charging`. */
+/** As cores seguem o nível também carregando; carregar só acende o raio. */
 export function batteryDisplay(percentage: number, charging: boolean): BatteryDisplay {
   const percent = Math.max(0, Math.min(100, Math.round(percentage)));
   return {
-    icon: charging ? 'charging' : levelIcon(percent),
     tone: tone(percent),
-    label: `${percent}%`,
+    fill: percent / 100,
+    number: String(percent),
+    bolt: charging,
   };
 }
