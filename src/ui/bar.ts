@@ -44,6 +44,8 @@ class GLibScheduler implements Scheduler {
   }
 }
 
+const AUTO_HIDE_KEY = 'auto-hide';
+
 // Existe um único IslandState compartilhado entre monitores (specs/02-barra.md):
 // só a ilha do monitor-alvo mostra o modo atual, as outras ficam em `compact`.
 export class BarManager {
@@ -140,6 +142,15 @@ export class BarManager {
     this.syncWidgetSources();
     this.rebuild();
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
+    // Auto-ocultar (specs/18-auto-ocultar.md): o overview aberto mostra as barras.
+    settings.connectObject(`changed::${AUTO_HIDE_KEY}`, () => this.syncAutoHide(), this);
+    Main.overview.connectObject(
+      'showing',
+      () => this.render(),
+      'hidden',
+      () => this.render(),
+      this,
+    );
     // Depois do `rebuild()`: a dica chega como notificação e a ilha já precisa existir.
     this.weatherHint = new WeatherHint(settings, this.weather, openPreferences);
   }
@@ -260,6 +271,8 @@ export class BarManager {
       () => this.closeEditor(),
     );
     this.editor = { session, view };
+    // Com auto-ocultar, o editor aberto segura a barra do monitor dele.
+    this.render();
   }
 
   private closeEditor(): void {
@@ -269,6 +282,7 @@ export class BarManager {
     view.destroy();
     this.bars.forEach((bar) => bar.setEditing(null));
     session.destroy();
+    this.render();
   }
 
   /** Clique no banner: abre `stack` naquela barra e marca tudo como lido. */
@@ -341,11 +355,24 @@ export class BarManager {
           () => this.toggleEditor(index),
         ),
     );
+    this.syncAutoHide();
+  }
+
+  private syncAutoHide(): void {
+    const enabled = this.system.settings.get_boolean(AUTO_HIDE_KEY);
+    this.bars.forEach((bar) => bar.setAutoHide(enabled));
     this.render();
   }
 
   private render(): void {
-    this.bars.forEach((bar, index) => bar.render(index === this.targetMonitorIndex));
+    const overview = Main.overview.visible;
+    const editorMonitor = this.editor?.session.monitorIndex ?? null;
+    this.bars.forEach((bar, index) =>
+      bar.render(index === this.targetMonitorIndex, {
+        editing: index === editorMonitor,
+        overview,
+      }),
+    );
     this.syncGrab();
   }
 
@@ -374,6 +401,8 @@ export class BarManager {
   destroy(): void {
     this.closeEditor();
     Main.layoutManager.disconnectObject(this);
+    this.system.settings.disconnectObject(this);
+    Main.overview.disconnectObject(this);
     this.unsubscribeWifi();
     this.unsubscribeBt();
     this.unsubscribeArrival();

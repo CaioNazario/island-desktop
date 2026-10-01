@@ -1,8 +1,16 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
 import St from 'gi://St';
+import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {
+  getPointerWatcher,
+  type PointerWatch,
+} from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
 
+import { AutoHide, type BarActivity } from '../core/autoHide.js';
 import { EnvironmentScroll } from '../core/environments.js';
 import { MAX_ISLAND_WIDTH, type IslandState, type Mode } from '../core/island.js';
 import type { BatterySource } from '../system/battery.js';
@@ -15,7 +23,8 @@ import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } fro
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { RightPill, type RightPillActor } from './rightPill.js';
-import { colors, layout } from './tokens.js';
+import { easeBezier } from './spring.js';
+import { colors, effects, layout } from './tokens.js';
 import { WidgetArea, type WidgetAreaActor } from './widgetArea.js';
 
 // Brilho `accent` 22% de 18px da pílula-alvo na edição (specs/17-editor-ambientes.md
@@ -144,6 +153,17 @@ const StrutActor = GObject.registerClass(
   },
 );
 
+// Revelação por pressão no topo (specs/18-auto-ocultar.md, spike S9): os
+// valores do canto ativo do Shell.
+const REVEAL_PRESSURE = { threshold: 100, timeoutMs: 1000 };
+// Intervalo do `PointerWatcher` enquanto a barra está revelada.
+const POINTER_WATCH_MS = 100;
+
+type MonitorGeometry = { index: number; x: number; y: number; width: number };
+
+/** Tudo que o `BarManager` sabe e a barra não: editor e overview. */
+export type BarContext = Pick<BarActivity, 'editing' | 'overview'>;
+
 export class Bar {
   readonly island: IslandActor;
   readonly banner: BannerActor;
@@ -151,7 +171,14 @@ export class Bar {
   private readonly leftWidgets: WidgetAreaActor;
   private readonly rightWidgets: WidgetAreaActor;
   private readonly unsubscribeEnvironments: () => void;
-  private readonly strut: InstanceType<typeof StrutActor>;
+  private readonly monitor: MonitorGeometry;
+  private strut: InstanceType<typeof StrutActor> | null = null;
+  private readonly autoHide = new AutoHide();
+  private activity: BarActivity = { islandOpen: false, editing: false, overview: false };
+  private shown = true;
+  private pressure: Layout.PressureBarrier | null = null;
+  private barrier: Meta.Barrier | null = null;
+  private pointerWatch: PointerWatch | null = null;
   private readonly chrome: InstanceType<typeof BarChrome>;
   private readonly leftPill: PillActor;
   private readonly rightPill: RightPillActor;
@@ -159,7 +186,7 @@ export class Bar {
   private unsubscribeSession: (() => void) | null = null;
 
   constructor(
-    monitor: { index: number; x: number; y: number; width: number },
+    monitor: MonitorGeometry,
     state: IslandState,
     system: IslandSystem,
     battery: BatterySource,
@@ -172,13 +199,8 @@ export class Bar {
     onStepEnvironment: (direction: SwitchDirection) => void,
     onEditEnvironments: () => void,
   ) {
-    this.strut = new StrutActor();
-    this.strut.set_position(monitor.x, monitor.y);
-    this.strut.set_size(monitor.width, layout.barHeight + layout.bottomGap);
-    Main.layoutManager.addChrome(this.strut, {
-      affectsStruts: true,
-      trackFullscreen: true,
-    });
+    this.monitor = monitor;
+    this.setStrut(true);
 
     this.state = state;
     const widgetSources = {
@@ -292,17 +314,115 @@ export class Bar {
     this.chrome.rightGlow.visible = target === 'right';
   }
 
-  render(isTargetMonitor: boolean): void {
+  render(isTargetMonitor: boolean, context: BarContext): void {
     this.island.render(isTargetMonitor);
     const aiActive = isTargetMonitor && this.state.mode === 'ai';
     this.leftWidgets.active = aiActive;
     this.rightWidgets.active = aiActive;
+    // Só a ilha do monitor-alvo sai de `compact` (specs/02-barra.md).
+    const islandOpen = isTargetMonitor && (this.state.mode !== 'compact' || this.state.cardOpen);
+    this.activity = { islandOpen, ...context };
+    this.syncAutoHide();
+  }
+
+  /** Chave `auto-hide` (specs/18-auto-ocultar.md): sem strut e com barreira. */
+  setAutoHide(enabled: boolean): void {
+    if (enabled === this.autoHide.enabled) return;
+    this.autoHide.setEnabled(enabled);
+    this.setStrut(!enabled);
+    this.setRevealBarrier(enabled);
+    this.syncAutoHide();
+  }
+
+  // Reserva 32px no topo (specs/02-barra.md). O `affectsStruts` não muda
+  // depois do `addChrome`: ligar/desligar cria ou destrói o ator.
+  private setStrut(enabled: boolean): void {
+    if (enabled === (this.strut !== null)) return;
+    if (!enabled) {
+      this.strut?.destroy();
+      this.strut = null;
+      return;
+    }
+    this.strut = new StrutActor();
+    this.strut.set_position(this.monitor.x, this.monitor.y);
+    this.strut.set_size(this.monitor.width, layout.barHeight + layout.bottomGap);
+    Main.layoutManager.addChrome(this.strut, {
+      affectsStruts: true,
+      trackFullscreen: true,
+    });
+  }
+
+  // Barreira de pressão na borda de cima deste monitor ("Revelar pela borda").
+  // O `PressureBarrier.destroy()` só solta os sinais: a barreira é destruída à parte.
+  private setRevealBarrier(enabled: boolean): void {
+    if (enabled === (this.barrier !== null)) return;
+    if (!enabled) {
+      this.pressure?.destroy();
+      this.barrier?.destroy();
+      this.pressure = null;
+      this.barrier = null;
+      return;
+    }
+    const { x, y, width } = this.monitor;
+    this.pressure = new Layout.PressureBarrier(
+      REVEAL_PRESSURE.threshold,
+      REVEAL_PRESSURE.timeoutMs,
+      Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
+    );
+    this.pressure.connect('trigger', () => {
+      this.autoHide.reveal();
+      this.syncAutoHide();
+    });
+    this.barrier = new Meta.Barrier({
+      backend: global.backend,
+      x1: x,
+      x2: x + width,
+      y1: y,
+      y2: y,
+      directions: Meta.BarrierDirection.POSITIVE_Y,
+    });
+    this.pressure.addBarrier(this.barrier);
+  }
+
+  private syncAutoHide(): void {
+    this.syncPointerWatch();
+    const shown = this.autoHide.shown(this.activity);
+    if (shown === this.shown) return;
+    this.shown = shown;
+    // A barra inteira (pílulas, ilha e banner) sobe para fora da tela.
+    const { durationMs, offsetY, bezier } = effects.barHide;
+    easeBezier(this.chrome, { translationY: shown ? 0 : offsetY }, bezier, {
+      duration: durationMs,
+    });
+  }
+
+  // Revelada, a barra vigia o ponteiro até ele sair da faixa dela: largura do
+  // monitor, do topo até o fim do chrome (ilha aberta e banner inclusos). O
+  // chrome não é reativo, então os vãos entre pílulas não dão `leave`.
+  private syncPointerWatch(): void {
+    const watching = this.autoHide.revealed;
+    if (watching === (this.pointerWatch !== null)) return;
+    if (!watching) {
+      this.pointerWatch?.remove();
+      this.pointerWatch = null;
+      return;
+    }
+    this.pointerWatch = getPointerWatcher().addWatch(POINTER_WATCH_MS, (px, py) => {
+      const { x, y, width } = this.monitor;
+      const inside = px >= x && px < x + width && py >= y && py < y + this.chrome.height;
+      if (inside) return;
+      this.autoHide.pointerLeft();
+      this.syncAutoHide();
+    });
   }
 
   destroy(): void {
+    this.pointerWatch?.remove();
+    this.pointerWatch = null;
+    this.setRevealBarrier(false);
     this.unsubscribeSession?.();
     this.unsubscribeEnvironments();
     this.chrome.destroy();
-    this.strut.destroy();
+    this.setStrut(false);
   }
 }
