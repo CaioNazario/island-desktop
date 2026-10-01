@@ -18,6 +18,8 @@ import { SystemNotifications, type NotificationEntry } from '../system/notificat
 import { SystemPomodoro } from '../system/pomodoro.js';
 import { callerStack, debugLog, syncDebugLog } from '../system/debugLog.js';
 import { SystemEnvironments, type SwitchDirection } from '../system/environments.js';
+import { EditSession } from './editSession.js';
+import { EnvironmentEditor } from './environmentEditor.js';
 import { OsdRedirect } from '../system/osd.js';
 import { SystemSession } from '../system/session.js';
 import { GSettingsToggle } from '../system/toggleSetting.js';
@@ -71,6 +73,7 @@ export class BarManager {
   private readonly unsubscribeEnvironments: () => void;
   // Monitor de onde veio a última troca de ambiente pedida na barra.
   private environmentMonitorIndex: number | null = null;
+  private editor: { session: EditSession; view: EnvironmentEditor } | null = null;
 
   constructor(settings: Gio.Settings, openPreferences: () => void) {
     syncDebugLog();
@@ -233,6 +236,41 @@ export class BarManager {
     this.environments.step(direction);
   }
 
+  /**
+   * Botão de ambiente: abre o editor no monitor daquela barra, ou fecha
+   * (specs/17-editor-ambientes.md "Abrir e fechar"). Abrir fecha a ilha.
+   */
+  private toggleEditor(monitorIndex: number): void {
+    if (this.editor) {
+      this.closeEditor();
+      return;
+    }
+    const monitor = Main.layoutManager.monitors[monitorIndex];
+    if (!monitor) return;
+    this.bars.forEach((bar) => bar.banner.dismiss());
+    this.state.closeAll();
+    this.render();
+    const session = new EditSession(monitorIndex, this.environments);
+    this.bars[monitorIndex]?.setEditing(session);
+    const view = new EnvironmentEditor(
+      session,
+      monitor,
+      this.system.settings,
+      (index) => this.handleEnvironmentSelect(monitorIndex, index),
+      () => this.closeEditor(),
+    );
+    this.editor = { session, view };
+  }
+
+  private closeEditor(): void {
+    if (!this.editor) return;
+    const { session, view } = this.editor;
+    this.editor = null;
+    view.destroy();
+    this.bars.forEach((bar) => bar.setEditing(null));
+    session.destroy();
+  }
+
   /** Clique no banner: abre `stack` naquela barra e marca tudo como lido. */
   private handleBannerOpen(monitorIndex: number): void {
     this.bars.forEach((bar) => bar.banner.dismiss());
@@ -279,6 +317,7 @@ export class BarManager {
   }
 
   private rebuild(): void {
+    this.closeEditor();
     if (this.grab) {
       Main.popModal(this.grab);
       this.grab = null;
@@ -299,6 +338,7 @@ export class BarManager {
           () => this.handleBannerOpen(index),
           (environment) => this.handleEnvironmentSelect(index, environment),
           (direction) => this.handleEnvironmentStep(index, direction),
+          () => this.toggleEditor(index),
         ),
     );
     this.render();
@@ -332,6 +372,7 @@ export class BarManager {
   }
 
   destroy(): void {
+    this.closeEditor();
     Main.layoutManager.disconnectObject(this);
     this.unsubscribeWifi();
     this.unsubscribeBt();

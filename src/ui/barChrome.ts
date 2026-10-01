@@ -8,14 +8,30 @@ import { MAX_ISLAND_WIDTH, type IslandState, type Mode } from '../core/island.js
 import type { BatterySource } from '../system/battery.js';
 import type { SwitchDirection } from '../system/environments.js';
 import type { HardwareSource } from '../system/hardware.js';
+import type { EditSession } from './editSession.js';
 import { scrollInput, WidgetSlide } from './environmentSwitch.js';
 import { environmentButton } from './environmentView.js';
 import { Banner, BANNER_GAP, BANNER_HEIGHT, BANNER_WIDTH, type BannerActor } from './banner.js';
 import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { RightPill, type RightPillActor } from './rightPill.js';
-import { layout } from './tokens.js';
+import { colors, layout } from './tokens.js';
 import { WidgetArea, type WidgetAreaActor } from './widgetArea.js';
+
+// Brilho `accent` 22% de 18px da pílula-alvo na edição (specs/17-editor-ambientes.md
+// "Barra durante a edição"). Ator próprio atrás da pílula: ela corta o que
+// pinta fora da alocação (`clip_to_allocation` da troca de ambiente). Fundo
+// opaco porque a sombra do St sai do fundo; a pílula cobre o miolo.
+function pillGlow(): St.Widget {
+  return new St.Widget({
+    visible: false,
+    style: `
+      background-color: ${colors.bg};
+      border-radius: ${layout.pillRadius}px;
+      box-shadow: 0 0 18px rgba(145,132,217,0.22);
+    `,
+  });
+}
 
 function sideWidthFor(allocWidth: number, islandWidth: number): number {
   return Math.max(0, (allocWidth - 2 * layout.sideMargin - 2 * layout.pillGap - islandWidth) / 2);
@@ -32,6 +48,8 @@ const BarChrome = GObject.registerClass(
     private readonly rightPill: RightPillActor;
     private readonly banner: BannerActor;
     private readonly widgetAreas: readonly WidgetAreaActor[];
+    readonly leftGlow = pillGlow();
+    readonly rightGlow = pillGlow();
 
     constructor(
       leftPill: PillActor,
@@ -46,6 +64,8 @@ const BarChrome = GObject.registerClass(
       this.island = island;
       this.rightPill = rightPill;
       this.banner = banner;
+      this.add_child(this.leftGlow);
+      this.add_child(this.rightGlow);
       this.add_child(leftPill);
       this.add_child(island);
       this.add_child(rightPill);
@@ -85,6 +105,7 @@ const BarChrome = GObject.registerClass(
       childBox.y1 = 0;
       childBox.y2 = layout.barHeight;
       this.leftPill.allocate(childBox);
+      this.leftGlow.allocate(childBox);
 
       childBox.x1 = layout.sideMargin + sideWidth + layout.pillGap;
       childBox.x2 = childBox.x1 + islandWidth;
@@ -97,6 +118,7 @@ const BarChrome = GObject.registerClass(
       childBox.y1 = 0;
       childBox.y2 = layout.barHeight;
       this.rightPill.allocate(childBox);
+      this.rightGlow.allocate(childBox);
 
       // "`top` = altura atual da ilha + 8px (acompanha a ilha com a mesma
       // mola)" (specs/04-notificacoes.md): a altura lida aqui já é a animada.
@@ -131,6 +153,10 @@ export class Bar {
   private readonly unsubscribeEnvironments: () => void;
   private readonly strut: InstanceType<typeof StrutActor>;
   private readonly chrome: InstanceType<typeof BarChrome>;
+  private readonly leftPill: PillActor;
+  private readonly rightPill: RightPillActor;
+  private session: EditSession | null = null;
+  private unsubscribeSession: (() => void) | null = null;
 
   constructor(
     monitor: { index: number; x: number; y: number; width: number },
@@ -144,6 +170,7 @@ export class Bar {
     onBannerOpen: () => void,
     onSelectEnvironment: (index: number) => void,
     onStepEnvironment: (direction: SwitchDirection) => void,
+    onEditEnvironments: () => void,
   ) {
     this.strut = new StrutActor();
     this.strut.set_position(monitor.x, monitor.y);
@@ -181,7 +208,9 @@ export class Bar {
     // Pílula esquerda (specs/16-widgets.md "Pílulas"): botão de ambiente,
     // gap 4px e os widgets junto da ilha.
     const leftPill = new Pill();
-    leftPill.add_child(environmentButton(system.environments, onSelectEnvironment, () => {}));
+    leftPill.add_child(
+      environmentButton(system.environments, onSelectEnvironment, onEditEnvironments),
+    );
     leftPill.add_child(new St.Widget({ width: 4 }));
     leftPill.add_child(this.leftWidgets);
     this.banner = new Banner(onBannerOpen);
@@ -216,6 +245,21 @@ export class Bar {
       actor.reactive = true;
       actor.connect('scroll-event', onScroll);
     }
+    this.leftPill = leftPill;
+    this.rightPill = rightPill;
+    // Na edição, clique no espaço vazio da pílula a torna alvo e limpa a
+    // seleção. A área de widgets não é reativa: o clique cai na pílula.
+    for (const [pill, side] of [
+      [leftPill, 'left'],
+      [rightPill, 'right'],
+    ] as const) {
+      pill.connect('button-press-event', (_actor: Clutter.Actor, event: Clutter.Event) => {
+        if (!this.session || global.stage.get_event_actor(event) !== pill)
+          return Clutter.EVENT_PROPAGATE;
+        this.session.setTarget(side, true);
+        return Clutter.EVENT_STOP;
+      });
+    }
 
     this.chrome = new BarChrome(leftPill, island, rightPill, this.banner, [
       this.leftWidgets,
@@ -228,6 +272,26 @@ export class Bar {
     });
   }
 
+  /** Liga (com a sessão do editor) ou desliga o modo de edição desta barra. */
+  setEditing(session: EditSession | null): void {
+    if (session === this.session) return;
+    this.unsubscribeSession?.();
+    this.unsubscribeSession = null;
+    this.session = session;
+    this.leftWidgets.edit(session);
+    this.rightWidgets.edit(session);
+    if (session) this.unsubscribeSession = session.onChange(() => this.syncEditing());
+    this.syncEditing();
+  }
+
+  private syncEditing(): void {
+    const target = this.session?.target ?? null;
+    this.leftPill.ring = target === null ? 'normal' : target === 'left' ? 'target' : 'other';
+    this.rightPill.ring = target === null ? 'normal' : target === 'right' ? 'target' : 'other';
+    this.chrome.leftGlow.visible = target === 'left';
+    this.chrome.rightGlow.visible = target === 'right';
+  }
+
   render(isTargetMonitor: boolean): void {
     this.island.render(isTargetMonitor);
     const aiActive = isTargetMonitor && this.state.mode === 'ai';
@@ -236,6 +300,7 @@ export class Bar {
   }
 
   destroy(): void {
+    this.unsubscribeSession?.();
     this.unsubscribeEnvironments();
     this.chrome.destroy();
     this.strut.destroy();
