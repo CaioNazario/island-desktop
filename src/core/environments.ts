@@ -162,6 +162,16 @@ export function removeWidget(env: Environment, id: WidgetId): Environment {
   };
 }
 
+/** Novo ambiente no fim (design/logic.js `addEnv`); com 6, nada muda. */
+export function addEnvironment(envs: readonly Environment[]): Environment[] {
+  const n = envs.length;
+  if (n >= MAX_ENVIRONMENTS) return [...envs];
+  return [
+    ...envs,
+    { name: `Ambiente ${n + 1}`, icon: ENV_ICONS[n % ENV_ICONS.length]!, left: [], right: [] },
+  ];
+}
+
 // Rolagem suave (specs/15-ambientes.md "Rolagem suave"; spike S8): o delta
 // chega em cliques de roda, ~10px de dedo cada.
 export const SWITCH_THRESHOLD = 11;

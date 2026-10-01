@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addEnvironment,
   defaultEnvironments,
   EnvironmentScroll,
   findWidget,
@@ -211,6 +212,29 @@ describe('removeWidget', () => {
     const env: Environment = { name: 'A', icon: 'house', left: ['ai'], right: ['hw', 'note'] };
     expect(removeWidget(env, 'hw')).toMatchObject({ left: ['ai'], right: ['note'] });
     expect(removeWidget(env, 'ai')).toMatchObject({ left: [], right: ['hw', 'note'] });
+  });
+});
+
+describe('addEnvironment', () => {
+  it('appends "Ambiente N" with the next icon and empty pills', () => {
+    const envs = defaultEnvironments();
+    expect(addEnvironment(envs)).toEqual([
+      ...envs,
+      { name: 'Ambiente 5', icon: 'code', left: [], right: [] },
+    ]);
+  });
+
+  it('picks the icon by the environment count', () => {
+    const envs = [...defaultEnvironments(), defaultEnvironments()[0]!];
+    expect(addEnvironment(envs).at(-1)).toMatchObject({
+      name: 'Ambiente 6',
+      icon: 'game-controller',
+    });
+  });
+
+  it('does nothing with 6 environments', () => {
+    const envs = [...defaultEnvironments(), ...defaultEnvironments().slice(0, 2)];
+    expect(addEnvironment(envs)).toEqual(envs);
   });
 });
 
