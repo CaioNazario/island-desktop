@@ -161,15 +161,19 @@ const SOON_MINUTES = 90;
 /**
  * Widget Próximo evento (specs/16-widgets.md `event`): o primeiro evento de
  * hoje com hora (não "dia inteiro") que começa depois de `now`. O dia
- * inteiro começa às 00:00, então nunca começa depois de agora.
+ * inteiro começa às 00:00, então nunca começa depois de agora; sem próximo,
+ * ele é a reserva.
  */
 export function nextEvent(events: readonly CalendarEvent[], now: Date): NextEventView {
   const dayBegin = startOfDay(now);
   const dayEnd = new Date(dayBegin.getFullYear(), dayBegin.getMonth(), dayBegin.getDate() + 1);
-  const next = events
-    .filter((event) => event.start > now && event.start < dayEnd)
-    .sort((a, b) => a.start.getTime() - b.start.getTime())[0];
-  if (!next) return { label: 'Sem eventos', sub: 'hoje' };
+  const byStart = [...events].sort((a, b) => a.start.getTime() - b.start.getTime());
+  const next = byStart.find((event) => event.start > now && event.start < dayEnd);
+  if (!next) {
+    const allDay = byStart.find((event) => isAllDay(event, dayBegin, dayEnd));
+    if (allDay) return { label: allDay.summary, sub: 'dia inteiro' };
+    return { label: 'Sem eventos', sub: 'hoje' };
+  }
 
   const minutes = Math.ceil((next.start.getTime() - now.getTime()) / 60_000);
   const sub = minutes <= SOON_MINUTES ? `em ${minutes} min` : formatClock(next.start);

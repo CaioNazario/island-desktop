@@ -234,13 +234,23 @@ describe('nextEvent', () => {
     expect(nextEvent([], now)).toEqual({ label: 'Sem eventos', sub: 'hoje' });
   });
 
-  it('ignora dia inteiro, eventos já começados e os de amanhã', () => {
-    const events = [
-      event('Feriado', at(0), at(0, 0, 31)),
-      event('Daily', at(8, 30), at(9, 30)),
-      event('Amanhã', at(10, 0, 31)),
-    ];
+  it('ignora eventos já começados e os de amanhã', () => {
+    const events = [event('Daily', at(8, 30), at(9, 30)), event('Amanhã', at(10, 0, 31))];
     expect(nextEvent(events, now)).toEqual({ label: 'Sem eventos', sub: 'hoje' });
+  });
+
+  it('sem próximo com hora, mostra o primeiro de dia inteiro', () => {
+    const events = [
+      event('Daily', at(8, 30), at(9, 30)),
+      event('Viagem', at(0, 0, 29), at(0, 0, 32)),
+      event('Feriado', at(0), at(0, 0, 31)),
+    ];
+    expect(nextEvent(events, now)).toEqual({ label: 'Viagem', sub: 'dia inteiro' });
+  });
+
+  it('o próximo com hora vem antes do dia inteiro', () => {
+    const events = [event('Feriado', at(0), at(0, 0, 31)), event('Almoço', at(12, 0))];
+    expect(nextEvent(events, now)).toEqual({ label: 'Almoço', sub: '12:00' });
   });
 
   it('até 90 min mostra quanto falta', () => {
