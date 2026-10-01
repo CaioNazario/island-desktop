@@ -1,4 +1,5 @@
 import Clutter from 'gi://Clutter';
+import type Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
@@ -9,7 +10,10 @@ import type { AiUsageSource } from '../system/aiUsage.js';
 import type { SystemBluetooth } from '../system/bluetooth.js';
 import type { CalendarEventsSource } from '../system/calendarEvents.js';
 import { debugLog } from '../system/debugLog.js';
+import type { EnvironmentSource } from '../system/environments.js';
+import type { GithubSource } from '../system/github.js';
 import type { NotificationEntry, NotificationFeed } from '../system/notifications.js';
+import type { PomodoroSource } from '../system/pomodoro.js';
 import type { SystemBrightness } from '../system/brightness.js';
 import type { MusicSource } from '../system/mpris.js';
 import type { SystemSession } from '../system/session.js';
@@ -18,6 +22,7 @@ import type { SystemVolume } from '../system/volume.js';
 import type { WeatherSource } from '../system/weather.js';
 import type { SystemWifi } from '../system/wifi.js';
 import { AiModeView, type AiModeViewActor } from './aiView.js';
+import { NoteView, type NoteViewActor } from './noteView.js';
 import { BtView, type BtViewActor } from './btView.js';
 import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
 import { CenterCard, type CenterCardActor } from './centerCard.js';
@@ -37,6 +42,7 @@ import { IslandPowerToggle, quickContent } from './powerRow.js';
 import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { easeSpring } from './spring.js';
 import { StackView, type StackViewActor } from './stackView.js';
+import { EnvironmentModeRow } from './environmentView.js';
 import { WeatherItem } from './weatherItem.js';
 import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
@@ -64,6 +70,12 @@ export interface IslandSystem {
   calendar: CalendarEventsSource;
   weather: WeatherSource;
   aiUsage: AiUsageSource;
+  environments: EnvironmentSource;
+  github: GithubSource;
+  pomodoro: PomodoroSource;
+  settings: Gio.Settings;
+  /** Abre as preferências na página `page` (specs/13-preferencias.md). */
+  openPreferences: (page: string) => void;
 }
 
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
@@ -91,6 +103,7 @@ export const Island = GObject.registerClass(
     private readonly calendarView: CalendarModeViewActor;
     private readonly card: CenterCardActor;
     private readonly aiView: AiModeViewActor;
+    private readonly noteView: NoteViewActor;
     private readonly layers: ReadonlyMap<LayerId, St.Widget>;
     private readonly power: IslandPowerToggle;
     private clockTimerId: number | null = null;
@@ -213,6 +226,8 @@ export const Island = GObject.registerClass(
         onSizeChanged: () => this.resize(),
       });
 
+      this.noteView = new NoteView(system.settings, () => this.state.closeAll());
+
       this.layers = new Map<LayerId, St.Widget>([
         ['compact', modeLayer(compact)],
         ['notif', modeLayer(notif.content)],
@@ -225,6 +240,8 @@ export const Island = GObject.registerClass(
         ['wifi', modeLayer(this.wifiView)],
         ['bt', modeLayer(this.btView)],
         ['ai', modeLayer(this.aiView)],
+        ['env', modeLayer(new EnvironmentModeRow(system.environments))],
+        ['note', modeLayer(this.noteView)],
         ['card', modeLayer(this.card)],
       ]);
       this.syncLayerSize('compact');
@@ -335,6 +352,11 @@ export const Island = GObject.registerClass(
       );
     }
 
+    /** Depois do grab modal, que leva o foco para a ilha: o campo da nota o pega de volta. */
+    focusContent(): void {
+      if (this.contentMode === 'note') this.noteView.focus();
+    }
+
     private containsPointer(event: Clutter.Event): boolean {
       const [x, y] = event.get_coords();
       const [ix, iy] = this.get_transformed_position();
@@ -410,6 +432,8 @@ export const Island = GObject.registerClass(
         this.syncLayerSize(mode);
       }
       if (previous === 'bt') this.btView.onClose();
+      if (previous === 'note') this.noteView.onClose();
+      if (mode === 'note') this.noteView.onOpen();
       if (mode === 'wifi') this.wifiView.onOpen();
       if (mode === 'bt') this.btView.onOpen();
       if (mode === 'ai') this.aiView.onOpen();

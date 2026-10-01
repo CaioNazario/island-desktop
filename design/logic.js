@@ -1,8 +1,10 @@
 const SIZES = {
-  compact: [240, 30, 15], notif: [400, 62, 22], stack: [400, 178, 24], music: [500, 82, 26],
-  volume: [320, 50, 25], calendar: [480, 214, 24], calendarWeek: [480, 150, 24], quick: [520, 58, 29], ai: [480, 300, 24], wifi: [520, 292, 26], bt: [520, 348, 26], system: [440, 62, 22]
+  note: [420, 132, 24],
+  hub: [440, 470, 26],
+  compact: [240, 30, 15], compactV: [38, 124, 19], notif: [400, 62, 22], stack: [400, 178, 24], music: [500, 82, 26],
+  volume: [320, 50, 25], calendar: [480, 214, 24], calendarWeek: [480, 150, 24], quick: [520, 58, 29], ai: [480, 300, 24], wifi: [520, 292, 26], bt: [520, 348, 26], system: [440, 62, 22], env: [260, 40, 20]
 };
-const TRANSIENT = { notif: 4200, music: 4500, volume: 2600 };
+const TRANSIENT = { notif: 4200, music: 4500, volume: 2600, env: 1500 };
 const INCOMING = [
   { icon: 'ph-fill ph-discord-logo', app: 'Discord', text: 'Caio: “Olha isso aqui!”' },
   { icon: 'ph-fill ph-telegram-logo', app: 'Telegram', text: 'Lucas: Bora no cinema hoje?' },
@@ -21,11 +23,40 @@ const TRACKS = [
   { artist: 'Spice Girls', title: '2 Become 1', dur: 241 },
   { artist: 'Tame Impala', title: 'The Less I Know the Better', dur: 216 }
 ];
+const AC_L = [0.97, 0.93, 0.87, 0.78, 0.67, 0.57, 0.47, 0.37, 0.28];
+const AC_C = [0.02, 0.04, 0.07, 0.11, 0.125, 0.12, 0.1, 0.075, 0.045];
+const AC_PRESETS = [['Blurple', 289], ['Azul', 255], ['Ciano', 215], ['Verde', 155], ['Lima', 125], ['Âmbar', 75], ['Coral', 35], ['Rosa', 350]];
+const acRamp = (h, k) => AC_L.map((l, i) => 'oklch(' + l + ' ' + (AC_C[i] * k).toFixed(3) + ' ' + h + ')');
 const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+
+const WIDGETS = {
+  ai: { name: 'Uso de IA', icon: 'ph ph-sparkle', desc: 'Sessão e limite semanal' },
+  hw: { name: 'Hardware', icon: 'ph ph-cpu', desc: 'CPU, RAM, GPU, temperatura e rede' },
+  event: { name: 'Próximo evento', icon: 'ph ph-calendar-blank', desc: 'O próximo compromisso do dia' },
+  pomodoro: { name: 'Pomodoro', icon: 'ph ph-timer', desc: 'Ciclos de foco e pausa' },
+  music: { name: 'Música', icon: 'ph ph-music-note', desc: 'O que está tocando agora' },
+  github: { name: 'GitHub', icon: 'ph ph-github-logo', desc: 'PRs esperando revisão' },
+  progress: { name: 'Progresso do dia', icon: 'ph ph-hourglass-medium', desc: 'Quanto do dia já passou' },
+  countdown: { name: 'Contagem regressiva', icon: 'ph ph-airplane-tilt', desc: 'Dias até a data que importa' },
+  note: { name: 'Nota', icon: 'ph ph-note', desc: 'Um recado fixo na barra' }
+};
+const ENV_ICONS = ['ph ph-house', 'ph ph-briefcase', 'ph ph-book-open', 'ph ph-sun-horizon', 'ph ph-code', 'ph ph-game-controller', 'ph ph-moon-stars', 'ph ph-barbell', 'ph ph-coffee'];
+const DEFAULT_ENVS = [
+  { name: 'Padrão', icon: 'ph ph-house', left: ['ai'], right: ['hw'], isDefault: true },
+  { name: 'Trabalho', icon: 'ph ph-briefcase', left: ['event', 'pomodoro', 'ai'], right: ['hw', 'github'] },
+  { name: 'Estudos', icon: 'ph ph-book-open', left: ['progress', 'pomodoro'], right: ['note'] },
+  { name: 'Fim de semana', icon: 'ph ph-sun-horizon', left: ['music'], right: ['countdown'] }
+];
+const LS = 'island-v2-envs-2';
+const EDGE_OF = { 'Topo': 'top', 'Base': 'bottom', 'Esquerda': 'left', 'Direita': 'right' };
+const loadEdge = () => { try { const v = localStorage.getItem('island-v3-edge'); return ['top', 'bottom', 'left', 'right'].includes(v) ? v : null; } catch (e) { return null; } };
+const loadEnvs = () => { try { const v = JSON.parse(localStorage.getItem(LS)); if (Array.isArray(v) && v.length) return v.map(e => ({ ...e, left: (e.left || []).filter(id => WIDGETS[id]), right: (e.right || []).filter(id => WIDGETS[id]) })); } catch (e) {} return DEFAULT_ENVS; };
+const loadIdx = () => { try { const i = +localStorage.getItem(LS + '-i'); return i >= 0 && i < loadEnvs().length ? i : 0; } catch (e) { return 0; } };
 
 class Component extends DCLogic {
   state = {
-    mode: 'compact', panel: null, calOpen: false, powerOpen: false, pwFor: null, pw: '', pwVis: false, pwErr: false, btBusy: null,
+    envs: loadEnvs(), env: loadIdx(), edge: loadEdge(), note: (() => { try { const v = localStorage.getItem(LS + '-note'); return v == null ? 'Comprar café e pão' : v; } catch (e) { return 'Comprar café e pão'; } })(), autoHideOn: (() => { try { const v = localStorage.getItem(LS + '-ah'); return v == null ? undefined : v === '1'; } catch (e) { return undefined; } })(), slideX: 0, slideO: 1, slideT: 'transform .3s cubic-bezier(.2,.9,.25,1), opacity .22s ease', drag: 0, editing: false, sel: null, target: 'left', pomo: 1122, pomoRun: true, water: 3,
+    acHue: 289, acChroma: 100, acOpen: false, mode: 'compact', panel: null, calOpen: false, powerOpen: false, pwFor: null, pw: '', pwVis: false, pwErr: false, btBusy: null,
     bt: [
       { id: 'airpods', name: 'AirPods Pro', icon: 'ph-fill ph-headphones', paired: true, on: true, bat: '72%' },
       { id: 'mouse', name: 'MX Master 3S', icon: 'ph-fill ph-mouse', paired: true, on: true, bat: '58%' },
@@ -62,20 +93,26 @@ class Component extends DCLogic {
     this.clock = setInterval(() => this.setState(s => {
       const t = TRACKS[s.track];
       const j = (v, d, lo, hi) => Math.max(lo, Math.min(hi, v + (Math.random() * 2 - 1) * d));
-      return { now: new Date(), pos: s.playing ? (s.pos + 1) % t.dur : s.pos,
+      return { now: new Date(), pomo: s.pomoRun ? (s.pomo > 0 ? s.pomo - 1 : 1500) : s.pomo, pos: s.playing ? (s.pos + 1) % t.dur : s.pos,
         cpu: Math.round(j(s.cpu, 5, 3, 72)), gpu: Math.round(j(s.gpu, 3, 1, 40)), temp: Math.round(j(s.temp, 1.5, 44, 72)),
         down: +j(s.down, 0.4, 0.1, 9.8).toFixed(1), up: Math.round(j(s.up, 20, 8, 400)),
         ai: s.ai.map(p => p.on && Math.random() < 0.15 ? { ...p, s: Math.min(100, p.s + 1), w: Math.min(100, p.w + (Math.random() < 0.3 ? 1 : 0)) } : p) };
     }), 1000);
     this.onKey = e => {
       if (e.key === 'Escape' && this.state.pwFor) return;
+      if (e.key === 'Escape' && this.state.editing) { this.setState({ editing: false, sel: null }); return; }
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); this.switchEnv(e.key === 'ArrowRight' ? 1 : -1); return; }
+        const m = /^Digit(\d)$/.exec(e.code || '');
+        if (m && +m[1] >= 1 && +m[1] <= this.state.envs.length) { e.preventDefault(); this.goEnv(+m[1] - 1); return; }
+      }
       if (e.key === 'Escape') { this.closeAll(); this.forceUpdate(); return; }
       if ((e.metaKey || e.altKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         if (e.repeat || e.__islandHandled) return;
         e.__islandHandled = true;
         clearTimeout(this.hideT);
-        this.setState(p => p.mode === 'quick' ? { mode: 'compact', panel: null, powerOpen: false } : { mode: 'quick', panel: null, powerOpen: false }, () => this.forceUpdate());
+        this.setState(p => p.mode === 'quick' ? { acOpen: false, mode: 'compact', panel: null, powerOpen: false } : { mode: 'quick', panel: null, powerOpen: false, acOpen: false }, () => this.forceUpdate());
         this.forceUpdate();
       }
     };
@@ -85,23 +122,41 @@ class Component extends DCLogic {
     if (window.__islandKey) document.removeEventListener('keydown', window.__islandKey);
     window.__islandKey = this.onKey;
     document.addEventListener('keydown', this.onKey);
+    this.onWheel = e => this.wheel(e);
+    const bar = this.barRef && this.barRef.current;
+    if (bar) { this._bar = bar; bar.addEventListener('wheel', this.onWheel, { passive: false }); }
+  }
+  componentDidUpdate() { this.applyAccent(); }
+  applyAccent() {
+    const el = this.rootRef && this.rootRef.current; if (!el) return;
+    const s = this.state, key = s.acHue + '/' + s.acChroma;
+    if (this._ac === key) return; this._ac = key;
+    const r = acRamp(s.acHue, s.acChroma / 100);
+    r.forEach((c, i) => el.style.setProperty('--color-accent-' + (i + 1) * 100, c));
+    el.style.setProperty('--color-accent', r[4]);
   }
   componentWillUnmount() {
     clearInterval(this.clock); clearTimeout(this.peekT); clearInterval(this.autoN); clearTimeout(this.autoFirst); clearTimeout(this.hideT);
     document.removeEventListener('keydown', this.onKey);
+    if (this._bar) this._bar.removeEventListener('wheel', this.onWheel); clearTimeout(this.envT1); clearTimeout(this.wheelEnd);
   }
 
+  componentDidUpdate(pp) {
+    if (pp && pp.barPosition !== this.props.barPosition && this.state.edge) { try { localStorage.removeItem('island-v3-edge'); } catch (e) {} this.setState({ edge: null }); }
+    const el = this.hubRef && this.hubRef.current;
+    if (el) { const hh = el.offsetHeight; if (hh && Math.abs(hh - (this.state.hubH || 0)) > 1) this.setState({ hubH: hh }); }
+  }
   setMode(mode) {
     clearTimeout(this.hideT);
-    this.setState({ mode, panel: null, powerOpen: false, pwFor: null, pw: '', pwErr: false });
+    this.setState({ mode, musicPin: false, panel: null, powerOpen: false, acOpen: false, pwFor: null, pw: '', pwErr: false });
     this.arm(mode);
   }
   arm(mode) {
     clearTimeout(this.hideT);
     const ms = TRANSIENT[mode];
-    if (ms && !this.state.hover) this.hideT = setTimeout(() => this.setState(s => s.mode === mode ? { mode: 'compact' } : null), ms);
+    if (ms && !this.state.hover && !(mode === 'music' && this.state.musicPin)) this.hideT = setTimeout(() => this.setState(s => s.mode === mode ? { mode: 'compact' } : null), ms);
   }
-  closeAll = () => { clearTimeout(this.hideT); this.setState({ mode: 'compact', panel: null, powerOpen: false }); };
+  closeAll = () => { clearTimeout(this.hideT); this.setState({ acOpen: false, mode: 'compact', musicPin: false, panel: null, powerOpen: false }); };
 
   slider(key, showMode) {
     return e => {
@@ -174,12 +229,61 @@ class Component extends DCLogic {
     return { title: t.charAt(0).toUpperCase() + t.slice(1), weeks };
   }
 
+  setEnvs(fn) { this.setState(p => { const envs = fn(p.envs); try { localStorage.setItem(LS, JSON.stringify(envs)); } catch (e) {} return { envs }; }); }
+  placeW(id, k, at) {
+    this.setState(p => {
+      const envs = p.envs.map((e, n) => {
+        if (n !== p.env) return e;
+        const o = e[k].indexOf(id);
+        const x = { ...e, left: e.left.filter(y => y !== id), right: e.right.filter(y => y !== id) };
+        let t = at == null ? x[k].length : at;
+        if (o !== -1 && o < t) t--;
+        x[k].splice(Math.max(0, Math.min(x[k].length, t)), 0, id);
+        return x;
+      });
+      try { localStorage.setItem(LS, JSON.stringify(envs)); } catch (e) {}
+      return { envs, sel: { id }, target: k };
+    });
+  }
+  wheel(e) {
+    const sd = this._edge === 'left' || this._edge === 'right';
+    const d0 = sd ? e.deltaY : e.deltaX, d1 = sd ? e.deltaX : e.deltaY;
+    if (Math.abs(d0) <= Math.abs(d1)) return;
+    e.preventDefault();
+    clearTimeout(this.wheelEnd);
+    this.wheelEnd = setTimeout(() => { this.acc = 0; this.wLock = false; if (this.state.drag) this.setState({ drag: 0 }); }, 180);
+    if (this.wLock) return;
+    this.acc = (this.acc || 0) + d0;
+    if (Math.abs(this.acc) > 110) { const d = Math.sign(this.acc); this.acc = 0; this.wLock = true; this.switchEnv(d); return; }
+    this.setState({ drag: Math.max(-56, Math.min(56, -this.acc * 0.5)) });
+  }
+  switchEnv(d) { const n = this.state.envs.length; this.goEnv((this.state.env + d + n) % n, d); }
+  goEnv(i, dir) {
+    const s = this.state;
+    if (i === s.env || s.envs.length < 2) { this.setState({ drag: 0 }); return; }
+    const d = dir || (i > s.env ? 1 : -1);
+    clearTimeout(this.envT1);
+    this.setState({ drag: 0, sel: null, slideX: -d * 44, slideO: 0, slideT: 'transform .16s ease-in, opacity .16s ease-in' });
+    this.envT1 = setTimeout(() => {
+      this.setState({ env: i, slideX: d * 44, slideT: 'none' }, () => requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ slideX: 0, slideO: 1, slideT: 'transform .34s cubic-bezier(.2,.9,.25,1), opacity .24s ease' }))));
+      try { localStorage.setItem(LS + '-i', String(i)); } catch (e) {}
+    }, 160);
+    if (s.mode === 'compact' || s.mode === 'env') this.setMode('env');
+  }
+
   renderVals() {
     const s = this.state;
-    const autoHide = this.props.autoHide ?? false;
-    const clickAction = this.props.clickAction ?? 'Calendário e música';
+    const edge = s.edge || EDGE_OF[this.props.barPosition] || 'top';
+    this._edge = edge;
+    const side = edge === 'left' || edge === 'right';
+    const autoHide = s.autoHideOn ?? this.props.autoHide ?? false;
+    const acK = s.acChroma / 100;
+    const clickAction = this.props.clickAction ?? 'Calendário compacto';
     let [w, h, r] = SIZES[s.mode === 'calendar' && !s.calOpen ? 'calendarWeek' : s.mode];
+    if (side && s.mode === 'compact') [w, h, r] = SIZES.compactV;
     if (s.mode === 'quick' && s.powerOpen) h = 106;
+    if (s.mode === 'quick' && s.acOpen) h = 58 + 116;
+    if (s.mode === 'hub' && s.hubH) h = s.hubH;
     if (s.mode === 'wifi') h = 292 + (s.powerOpen ? 48 : 0) + (s.pwFor ? (s.pwErr ? 76 : 58) : 0);
     if (s.mode === 'bt') h = (s.toggles.bt ? 348 : 300) + (s.powerOpen ? 48 : 0);
     const aiOnList = s.ai.filter(p => p.on), aiOffList = s.ai.filter(p => !p.on);
@@ -199,8 +303,9 @@ class Component extends DCLogic {
     const expanded = s.mode !== 'compact';
     const L = {};
     Object.keys(SIZES).forEach(k => {
-      const on = k === s.mode;
-      L[k] = { o: on ? 1 : 0, pe: on ? 'auto' : 'none', t: k === 'notif' ? (on ? 'translateY(0) scale(1)' : 'translateY(-18px) scale(.96)') : (on ? 'scale(1)' : 'scale(.94)') };
+      const on = k === (side && s.mode === 'compact' ? 'compactV' : s.mode);
+      const off = { top: 'translateY(-18px)', bottom: 'translateY(18px)', left: 'translateX(-18px)', right: 'translateX(18px)' }[edge];
+      L[k] = { o: on ? 1 : 0, pe: on ? 'auto' : 'none', t: k === 'notif' ? (on ? 'translate(0px, 0px) scale(1)' : off + ' scale(.96)') : (on ? 'scale(1)' : 'scale(.94)') };
     });
     const t = TRACKS[s.track];
     const wd = s.now.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
@@ -246,17 +351,41 @@ class Component extends DCLogic {
         focus: e => { e.stopPropagation(); this.setState({ activeTerm: i }); } };
     });
     const hidden = autoHide && !s.revealed && !expanded && !s.panel;
+    const gTop = { barL: '12px', barR: '12px', barT: '2px', barB: 'auto', barW: 'auto', barDir: 'row', barAlign: 'flex-start', hid: 'translateY(-60px)',
+      iT: '0px', iB: 'auto', iL: '50%', iR: 'auto', iTf: 'translateX(-50%)', alT: '0px', alB: 'auto', alL: '50%', alR: 'auto', alM: '0 0 0 -18px', alW: '36px', alH: '2px',
+      rvInset: '0 0 auto 0', rvW: 'auto', rvH: '6px', pkL: '50%', pkR: 'auto', pkT: (h + 8) + 'px', pkB: 'auto', pkM: '0 0 0 -190px', pkHid: 'translateY(-16px)',
+      hubOrigin: '50% 0', edT: '48px', edB: 'auto', caretIcon: 'ph ph-caret-down' };
+    const gLeft = { ...gTop, barL: '2px', barR: 'auto', barT: '12px', barB: '12px', barW: '38px', barDir: 'column', hid: 'translateX(-60px)',
+      iT: '50%', iL: '0px', iTf: 'translateY(-50%)', alT: '50%', alL: '0px', alM: '-18px 0 0 0', alW: '2px', alH: '36px',
+      rvInset: '0 auto 0 0', rvW: '6px', rvH: 'auto', pkL: (w + 12) + 'px', pkT: '50%', pkM: '-29px 0 0 0', pkHid: 'translateX(-16px)', hubOrigin: '0 50%', caretIcon: 'ph ph-caret-right' };
+    const G = {
+      top: gTop,
+      bottom: { ...gTop, barT: 'auto', barB: '2px', barAlign: 'flex-end', hid: 'translateY(60px)', iT: 'auto', iB: '0px', alT: 'auto', alB: '0px', rvInset: 'auto 0 0 0', pkT: 'auto', pkB: (h + 8) + 'px', pkHid: 'translateY(16px)', hubOrigin: '50% 100%', edT: 'auto', edB: '48px', caretIcon: 'ph ph-caret-up' },
+      left: gLeft,
+      right: { ...gLeft, barL: 'auto', barR: '2px', barAlign: 'flex-end', hid: 'translateX(60px)', iL: 'auto', iR: '0px', alL: 'auto', alR: '0px', rvInset: '0 0 0 auto', pkL: 'auto', pkR: (w + 12) + 'px', pkHid: 'translateX(16px)', hubOrigin: '100% 50%', caretIcon: 'ph ph-caret-left' }
+    }[edge];
     const pv = k => ({ o: s.panel === k ? 1 : 0, y: s.panel === k ? '0px' : '-10px', s: s.panel === k ? 1 : 0.96, pe: s.panel === k ? 'auto' : 'none' });
     const togglePanel = k => e => { e.stopPropagation(); clearTimeout(this.hideT); this.setState({ panel: s.panel === k ? null : k, mode: 'compact', unread: k === 'notifs' ? false : s.unread }); };
 
-    return {
+    const R = {
       islandW: w + 'px', islandH: h + 'px', islandR: r + 'px',
       islandShadow: expanded ? '0 0 0 1px var(--color-neutral-800), 0 18px 44px rgba(0,0,0,.6), 0 0 28px color-mix(in srgb, var(--color-accent) 18%, transparent)' : 'var(--shadow-sm)',
       islandCursor: s.mode === 'compact' || s.mode === 'notif' ? 'pointer' : 'default',
       accentLine: expanded || s.panel === 'center' ? 1 : 0,
       L,
-      barY: hidden ? '-60px' : '0px',
-      backdropEvents: s.panel || ['stack', 'calendar', 'quick', 'system', 'wifi', 'ai', 'bt'].includes(s.mode) ? 'auto' : 'none',
+      ...G, barTf: hidden ? G.hid : 'translate(0px, 0px)', pkTf: s.peek ? 'translate(0px, 0px)' : G.pkHid,
+      islandBasis: side ? '124px' : w + 'px', islandBoxW: side ? '38px' : 'auto', islandBoxH: side ? 'auto' : '30px',
+      laneW: side ? '38px' : 'auto', laneH: side ? 'auto' : '30px', laneR: side ? '19px' : '15px', laneDir: side ? 'column' : 'row', lanePad: side ? '6px 0' : '0 6px',
+      laneInnerW: side ? '100%' : 'auto', laneInnerH: side ? 'auto' : '100%', envBtnH: side ? 'auto' : '24px', envBtnPad: side ? '7px 0' : '0 8px',
+      batGap: side ? '2px' : '4px', batH: side ? 'auto' : '24px', batPad: side ? '5px 0' : '0 10px', batFs: side ? '10.5px' : '13px',
+      emptyPad: side ? '10px 0' : '0 10px', emptyWM: side ? 'vertical-rl' : 'horizontal-tb',
+      laneAName: side ? 'Em cima' : 'Esquerda', laneBName: side ? 'Embaixo' : 'Direita',
+      hourLabel: String(s.now.getHours()).padStart(2, '0'), minLabel: String(s.now.getMinutes()).padStart(2, '0'), wdLabel: wdCap, dayLabel: String(s.now.getDate()),
+      ahDesc: 'A barra some e reaparece quando o ponteiro encosta na ' + { top: 'borda de cima', bottom: 'borda de baixo', left: 'borda esquerda', right: 'borda direita' }[edge] + ' da tela',
+      edges: [['top', 'Topo', 'ph ph-align-top'], ['bottom', 'Base', 'ph ph-align-bottom'], ['left', 'Esquerda', 'ph ph-align-left'], ['right', 'Direita', 'ph ph-align-right']].map(([k, n, ic]) => ({ name: n, icon: ic,
+        bg: edge === k ? 'var(--color-accent-800)' : 'transparent', fg: edge === k ? 'var(--color-accent-100)' : 'var(--color-neutral-400)',
+        pick: e => { e.stopPropagation(); try { localStorage.setItem('island-v3-edge', k); } catch (_) {} clearTimeout(this.hideT); this.setState({ edge: k, mode: 'compact', panel: null, peek: false }); } })),
+      backdropEvents: s.panel || (s.mode === 'music' && s.musicPin) || ['note', 'hub', 'stack', 'calendar', 'quick', 'system', 'wifi', 'ai', 'bt'].includes(s.mode) ? 'auto' : 'none',
       timeLabel: s.now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       dateLabel: wdCap + ', ' + s.now.getDate(),
       todayLabel: 'Hoje, ' + wd + ', ' + s.now.getDate(),
@@ -282,7 +411,7 @@ class Component extends DCLogic {
         { name: 'Academia', time: '18:00 – 19:00', dot: 'var(--color-neutral-400)' }
       ],
       tiles, sysRows: sys, sysCompact: sys,
-      batColor, batIcon, batShown: (this.props.charging ?? true) ? 'ph-fill ph-battery-charging' : batIcon, batLabel: bat + '%', batText: bat <= 20 ? batColor : 'var(--color-text)',
+      batColor, batIcon, batFillW: bat + '%', batFillBg: 'color-mix(in oklch, ' + batColor + ' 38%, transparent)', batNum: String(bat), chgD: (this.props.charging ?? true) ? 'block' : 'none', batShown: (this.props.charging ?? true) ? 'ph-fill ph-battery-charging' : batIcon, batLabel: bat + '%', batText: bat <= 20 ? batColor : 'var(--color-text)',
       hw: [
         { short: 'CPU', name: 'CPU ' + s.cpu + '%', value: s.cpu + '%', w: '3.2ch', color: s.cpu >= 60 ? 'var(--color-accent-300)' : 'var(--color-text)' },
         { short: 'RAM', name: 'RAM 7.2 / 16 GB', value: '7.2G', w: '3.4ch', color: 'var(--color-text)' },
@@ -351,7 +480,7 @@ class Component extends DCLogic {
       powerFg: s.powerOpen ? 'var(--color-neutral-100)' : 'var(--color-neutral-300)',
       showPower: s.powerOpen,
       openSettings: e => { e.stopPropagation(); this.closeAll(); },
-      openPower: e => { e.stopPropagation(); clearTimeout(this.hideT); this.setState(p => ({ powerOpen: !p.powerOpen })); },
+      openPower: e => { e.stopPropagation(); clearTimeout(this.hideT); this.setState(p => ({ powerOpen: !p.powerOpen, acOpen: false })); },
       powerActions: [
         { label: 'Suspender', icon: 'ph ph-moon-stars' },
         { label: 'Reiniciar', icon: 'ph ph-arrow-clockwise' },
@@ -378,14 +507,26 @@ class Component extends DCLogic {
         };
         return { btPaired: s.bt.filter(d => d.paired).map(map), btNearby: s.bt.filter(d => !d.paired).map(map) };
       })(),
-      pC: pv('center'), pN: pv('notifs'), stop: e => e.stopPropagation(),
+      rootRef: this.rootRef || (this.rootRef = React.createRef()),
+      acOpen: s.acOpen, acHue: s.acHue, acChroma: s.acChroma, acHueLabel: s.acHue + '°', acChromaLabel: s.acChroma + '%',
+      acRamp: acRamp(s.acHue, acK),
+      acPresets: AC_PRESETS.map(([name, h]) => ({ name, color: 'oklch(0.67 ' + (0.125 * acK).toFixed(3) + ' ' + h + ')',
+        ring: s.acHue === h ? '0 0 0 2px var(--color-bg), 0 0 0 3px var(--color-neutral-300)' : 'none',
+        pick: e => { e.stopPropagation(); this.setState({ acHue: h }); } })),
+      acOnHue: e => this.setState({ acHue: +e.target.value }),
+      acOnChroma: e => this.setState({ acChroma: +e.target.value }),
+      acToggle: e => { e.stopPropagation(); clearTimeout(this.hideT); this.setState(p => ({ acOpen: !p.acOpen, powerOpen: false })); },
+      acBtnBg: s.acOpen ? 'var(--color-accent-600)' : 'var(--color-neutral-800)', acBtnFg: s.acOpen ? 'var(--color-neutral-100)' : 'var(--color-neutral-300)',
+      acReset: e => { e.stopPropagation(); this.setState({ acHue: 289, acChroma: 100 }); },
+      hubRef: this.hubRef || (this.hubRef = React.createRef()), pC: pv('center'), pN: pv('notifs'), stop: e => e.stopPropagation(),
       showDemo: this.props.showDemo ?? true,
 
       islandClick: e => {
         e.stopPropagation();
         if (s.mode === 'compact') {
-          if (clickAction === 'Calendário compacto') this.setMode('calendar');
-          else togglePanel('center')(e);
+          const envNow = s.envs[s.env] || {};
+          if (clickAction === 'Calendário compacto' && !envNow.isDefault) this.setMode('calendar');
+          else this.setMode('hub');
         } else if (s.mode === 'notif') { this.setMode('stack'); this.setState({ unread: false }); }
       },
       islandEnter: () => { this.setState({ hover: true }); clearTimeout(this.hideT); },
@@ -413,5 +554,110 @@ class Component extends DCLogic {
         { label: 'Acesso rápido', icon: 'ph ph-sliders-horizontal', run: e => { e.stopPropagation(); this.setMode('quick'); } }
       ]
     };
+    const env = s.envs[s.env] || s.envs[0];
+    const pad = n => String(n).padStart(2, '0');
+    const mins = s.now.getHours() * 60 + s.now.getMinutes();
+    const evs = [['Reunião de equipe', 540], ['Estudo Java', 840], ['Academia', 1080]];
+    const nx = evs.find(x => x[1] > mins);
+    const dayPct = Math.round(mins / 14.4);
+    const trip = Math.max(0, Math.ceil((new Date(2026, 9, 12) - s.now) / 86400000));
+    const act = {
+      ai: R.openAi, hw: R.openDash,
+      note: e => { e.stopPropagation(); if (s.mode === 'note') { this.closeAll(); return; } this.setMode('note'); setTimeout(() => { const t = this.noteRef && this.noteRef.current; if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 320); },
+      music: e => { e.stopPropagation(); if (s.mode === 'music' && s.musicPin) { this.closeAll(); return; } clearTimeout(this.hideT); this.setState({ mode: 'music', musicPin: true, panel: null, powerOpen: false }); },
+      event: e => { e.stopPropagation(); this.setMode('calendar'); },
+      pomodoro: e => { e.stopPropagation(); this.setState(p => ({ pomoRun: !p.pomoRun })); }
+    };
+    const simple = o => ({ hasIcon: !!o.icon, iconColor: 'var(--color-neutral-300)', hasLabel: o.label != null, labelMax: '140px', hasSub: !!o.sub, hasTrail: !!o.trail, ...o });
+    const widgetData = id => {
+      switch (id) {
+        case 'ai': return { isAi: true, ai: R.aiOn, aiNone: R.aiNone };
+        case 'hw': return { isHw: true, hw: R.hw };
+        case 'event': return simple({ icon: 'ph ph-calendar-blank', label: nx ? nx[0] : 'Sem eventos', sub: nx ? (nx[1] - mins <= 90 ? 'em ' + (nx[1] - mins) + ' min' : pad(Math.floor(nx[1] / 60)) + ':00') : 'hoje', labelMax: '130px' });
+        case 'pomodoro': return simple({ hasRing: true, ringPct: Math.round((1 - s.pomo / 1500) * 100) + '%', label: fmt(s.pomo), sub: s.pomoRun ? 'Foco' : 'Pausado' });
+        case 'music': return simple({ icon: 'ph-fill ph-spotify-logo', iconColor: 'var(--color-accent-400)', label: R.track.title, sub: R.track.artist, trail: R.playIcon, labelMax: '120px' });
+        case 'github': return simple({ icon: 'ph-fill ph-github-logo', label: '3 PRs', sub: '2 para revisar' });
+        case 'progress': return simple({ icon: 'ph ph-hourglass-medium', label: 'Dia', hasBar: true, pct: dayPct + '%', sub: dayPct + '%' });
+        case 'countdown': return simple({ icon: 'ph ph-airplane-tilt', label: 'Férias', sub: trip + (trip === 1 ? ' dia' : ' dias') });
+        case 'note': return simple({ icon: 'ph-fill ph-note', iconColor: 'var(--color-accent-300)', label: s.note || 'Nota vazia', iconColor: s.note ? 'var(--color-accent-300)' : 'var(--color-neutral-500)', labelMax: '150px' });
+      }
+      return {};
+    };
+    const lane = k => env[k].filter(id => WIDGETS[id]).map((id, i) => {
+      const sel = s.editing && s.sel && s.sel.id === id;
+      const a = act[id];
+      const mini = { ai: R.aiOn[0] ? R.aiOn[0].sPct : '', hw: s.cpu + '%', event: nx ? (nx[1] - mins <= 90 ? (nx[1] - mins) + 'm' : Math.floor(nx[1] / 60) + 'h') : '', pomodoro: Math.ceil(s.pomo / 60) + 'm', github: '3', progress: dayPct + '%', countdown: trip + 'd' }[id] || '';
+      const vIcon = { music: 'ph-fill ph-spotify-logo', github: 'ph-fill ph-github-logo', note: 'ph-fill ph-note' }[id] || WIDGETS[id].icon;
+      const vColor = id === 'music' ? 'var(--color-accent-400)' : (id === 'note' && s.note) || (id === 'pomodoro' && s.pomoRun) ? 'var(--color-accent-300)' : 'var(--color-neutral-300)';
+      return { ...widgetData(id), horiz: !side, vert: side, mini, miniD: mini ? 'block' : 'none', vIcon, vColor, title: s.editing ? WIDGETS[id].name + ' · clique para selecionar, arraste para mover' : WIDGETS[id].name,
+        bg: sel ? 'var(--color-accent-900)' : 'transparent',
+        edge: sel ? 'inset 0 0 0 1px var(--color-accent)' : s.editing ? 'inset 0 0 0 1px var(--color-neutral-800)' : 'none',
+        cursor: s.editing ? 'grab' : a ? 'pointer' : 'default', draggable: !!s.editing,
+        dragStart: e => { this.drag = id; try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id); } catch (_) {} },
+        drop: e => { e.preventDefault(); e.stopPropagation(); if (this.drag) this.placeW(this.drag, k, i); this.drag = null; },
+        click: e => { e.stopPropagation(); if (s.editing) { this.setState({ sel: { id }, target: k }); return; } if (a) a(e); } };
+    });
+    const laneSh = k => !s.editing ? 'var(--shadow-sm)' : s.target === k ? '0 0 0 1px var(--color-accent), 0 0 18px color-mix(in srgb, var(--color-accent) 22%, transparent)' : '0 0 0 1px var(--color-neutral-700)';
+    const selId = s.editing && s.sel && (env.left.includes(s.sel.id) || env.right.includes(s.sel.id)) ? s.sel.id : null;
+    const selLane = selId ? (env.left.includes(selId) ? 'left' : 'right') : 'left';
+    const selIdx = selId ? env[selLane].indexOf(selId) : -1;
+    const other = selLane === 'left' ? 'right' : 'left';
+    const dropTo = k => e => { e.preventDefault(); if (this.drag) this.placeW(this.drag, k, null); this.drag = null; };
+    const pick = k => e => { if (s.editing) { e.stopPropagation(); this.setState({ target: k, sel: null }); } };
+    const tgt = k => ({ bg: s.target === k ? 'var(--color-accent-800)' : 'transparent', fg: s.target === k ? 'var(--color-accent-100)' : 'var(--color-neutral-400)' });
+    const updEnv = patch => this.setEnvs(list => list.map((x, k) => k === this.state.env ? { ...x, ...patch(x) } : x));
+    Object.assign(R, {
+      leftW: lane('left'), rightW: lane('right'),
+      leftEmpty: s.editing && !env.left.length, rightEmpty: s.editing && !env.right.length,
+      laneLeftShadow: laneSh('left'), laneRightShadow: laneSh('right'),
+      slideX: (s.slideX + s.drag) + 'px', slideTf: (side ? 'translateY(' : 'translateX(') + (s.slideX + s.drag) + 'px)', slideO: s.slideO, slideT: s.drag ? 'transform .08s linear' : s.slideT,
+      allowDrop: e => e.preventDefault(),
+      dropLeft: dropTo('left'), dropRight: dropTo('right'), pickLeft: pick('left'), pickRight: pick('right'),
+      barRef: this.barRef || (this.barRef = React.createRef()),
+      envIcon: env.icon, envName: env.name || 'Sem nome', envCount: s.envs.length,
+      envTitle: (env.name || 'Ambiente') + ' · editar ambientes',
+      envBtnBg: s.editing ? 'var(--color-neutral-900)' : 'transparent',
+      envDots: s.envs.map((_, i) => ({ w: i === s.env ? '12px' : '4px', bw: side ? '4px' : (i === s.env ? '12px' : '4px'), bh: side ? (i === s.env ? '12px' : '4px') : '4px', bg: i === s.env ? 'var(--color-accent)' : 'var(--color-neutral-700)', go: e => { e.stopPropagation(); this.goEnv(i); } })),
+      openEditor: e => { e.stopPropagation(); clearTimeout(this.hideT); this.setState({ editing: !s.editing, sel: null, mode: 'compact', panel: null }); },
+      closeEditor: e => { if (e) e.stopPropagation(); this.setState({ editing: false, sel: null }); },
+      editing: s.editing,
+      noteRef: this.noteRef || (this.noteRef = React.createRef()), noteText: s.note, noteCount: s.note.length,
+      onNote: e => { const v = e.target.value.replace(/\n/g, ' ').slice(0, 80); try { localStorage.setItem(LS + '-note', v); } catch (_) {} this.setState({ note: v }); },
+      noteKey: e => { e.stopPropagation(); if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); e.target.blur(); this.closeAll(); } },
+      toggleAutoHide: e => { e.stopPropagation(); const v = !autoHide; try { localStorage.setItem(LS + '-ah', v ? '1' : '0'); } catch (_) {} this.setState({ autoHideOn: v, revealed: true }); },
+      ahTrack: autoHide ? 'var(--color-accent-800)' : 'var(--color-neutral-800)', ahEdge: autoHide ? 'inset 0 0 0 1px var(--color-accent)' : 'none', ahKnobX: autoHide ? '16px' : '2px', ahKnob: autoHide ? 'var(--color-accent-200)' : 'var(--color-neutral-400)',
+      envTabs: s.envs.map((x, i) => ({ name: x.name || 'Sem nome', icon: x.icon, key: 'Alt+' + (i + 1),
+        bg: i === s.env ? 'var(--color-accent-900)' : 'var(--color-neutral-900)', ring: i === s.env ? 'inset 0 0 0 1px var(--color-accent-700)' : 'none',
+        fg: i === s.env ? 'var(--color-accent-100)' : 'var(--color-neutral-300)', go: e => { e.stopPropagation(); this.goEnv(i); } })),
+      addEnvD: s.envs.length < 6 ? 'flex' : 'none',
+      addEnv: e => { e.stopPropagation(); const n = s.envs.length; if (n >= 6) return; this.setEnvs(v => [...v, { name: 'Ambiente ' + (n + 1), icon: ENV_ICONS[n % ENV_ICONS.length], left: [], right: [] }]); setTimeout(() => this.goEnv(n), 0); },
+      envNameVal: env.name,
+      onEnvName: e => { const v = e.target.value.slice(0, 20); updEnv(() => ({ name: v })); },
+      envIcons: ENV_ICONS.map(ic => ({ icon: ic, bg: ic === env.icon ? 'var(--color-accent-900)' : 'transparent', fg: ic === env.icon ? 'var(--color-accent-200)' : 'var(--color-neutral-400)',
+        edge: ic === env.icon ? 'inset 0 0 0 1px var(--color-accent-700)' : 'none', pick: e => { e.stopPropagation(); updEnv(() => ({ icon: ic })); } })),
+      delEnvD: s.envs.length > 1 && !env.isDefault ? 'flex' : 'none',
+      delEnv: e => { e.stopPropagation(); if (s.envs.length < 2 || env.isDefault) return; const i = s.env; this.setEnvs(v => v.filter((_, k) => k !== i)); this.setState({ env: Math.max(0, i - 1), sel: null }); try { localStorage.setItem(LS + '-i', String(Math.max(0, i - 1))); } catch (_) {} },
+      hasSel: !!selId, noSel: !selId,
+      selName: selId ? WIDGETS[selId].name : '', selIcon: selId ? WIDGETS[selId].icon : '',
+      selWhere: selId ? (side ? (selLane === 'left' ? 'Pílula de cima' : 'Pílula de baixo') : (selLane === 'left' ? 'Pílula esquerda' : 'Pílula direita')) + ' · ' + (selIdx + 1) + ' de ' + env[selLane].length : '',
+      selMoveLabel: side ? (selLane === 'left' ? 'Mover para baixo' : 'Mover para cima') : (selLane === 'left' ? 'Mover para a direita' : 'Mover para a esquerda'),
+      selPrevO: selIdx > 0 ? 1 : 0.35, selNextO: selId && selIdx < env[selLane].length - 1 ? 1 : 0.35,
+      selPrev: e => { e.stopPropagation(); if (selIdx > 0) this.placeW(selId, selLane, selIdx - 1); },
+      selNext: e => { e.stopPropagation(); if (selId && selIdx < env[selLane].length - 1) this.placeW(selId, selLane, selIdx + 2); },
+      selMove: e => { e.stopPropagation(); if (selId) this.placeW(selId, other, null); },
+      selRemove: e => { e.stopPropagation(); updEnv(x => ({ left: x.left.filter(y => y !== selId), right: x.right.filter(y => y !== selId) })); this.setState({ sel: null }); },
+      tLBg: tgt('left').bg, tLFg: tgt('left').fg, tRBg: tgt('right').bg, tRFg: tgt('right').fg,
+      setTargetLeft: e => { e.stopPropagation(); this.setState({ target: 'left' }); },
+      setTargetRight: e => { e.stopPropagation(); this.setState({ target: 'right' }); },
+      usedCount: env.left.length + env.right.length,
+      catalog: Object.keys(WIDGETS).map(id => {
+        const used = env.left.includes(id) || env.right.includes(id);
+        return { ...WIDGETS[id], o: used ? 0.45 : 1, cursor: used ? 'default' : 'grab', draggable: !used,
+          mark: used ? 'ph-fill ph-check-circle' : 'ph ph-plus', markColor: used ? 'var(--color-accent-400)' : 'var(--color-neutral-400)',
+          dragStart: e => { this.drag = id; try { e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', id); } catch (_) {} },
+          add: e => { e.stopPropagation(); if (used) return; this.placeW(id, s.target, null); } };
+      })
+    });
+    return R;
   }
 }

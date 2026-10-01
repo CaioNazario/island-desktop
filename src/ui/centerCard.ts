@@ -25,8 +25,8 @@ import { phosphor } from './icons.js';
 import { MusicControls, MusicCover, MusicProgressBar } from './musicView.js';
 import { colors, derivedColors, effects } from './tokens.js';
 
-const CENTER_CARD_WIDTH = 420;
-const CENTER_CARD_RADIUS = 22;
+const CENTER_CARD_WIDTH = 440;
+const CENTER_CARD_RADIUS = 26;
 const CARD_PADDING = 18;
 
 function singleLine(label: St.Label): St.Label {

@@ -87,6 +87,8 @@ export const effects = {
   islandChrome: { durationMs: 300, easing: 'EASE' }, // linha de acento
   // Entrada `translateY(-16px)` com `transform .4s cubic-bezier(.3,1.25,.4,1)`.
   bannerSlide: { durationMs: 400, offsetY: -16, easing: 'EASE_OUT_BACK' },
+  // Barra escondida pelo auto-ocultar: `translateY(-60px)`, `transform .32s cubic-bezier(.2,.8,.2,1)`.
+  barHide: { durationMs: 320, offsetY: -60, bezier: [0.2, 0.8, 0.2, 1] },
   bannerFade: { durationMs: 220, easing: 'EASE' },
   contentCrossfade: { durationMs: 220, delayMs: 80, easing: 'EASE' },
   contentScale: {

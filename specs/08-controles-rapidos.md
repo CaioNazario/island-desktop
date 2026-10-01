@@ -45,7 +45,7 @@ O OSD nativo de volume e brilho não aparece: o pedido de OSD do Shell é redire
 
 ## Modo `quick` (520×58)
 
-Só a linha de controles. Com a linha de energia aberta: 106px (spec 09). Abre por `Super+S`, bateria ou seta.
+Só a linha de controles. Com a linha de energia aberta: 106px (spec 09). Abre por `Super+S`, bateria, seta ou o widget Hardware (spec 16).
 
 ## Modo `wifi` (520×292)
 

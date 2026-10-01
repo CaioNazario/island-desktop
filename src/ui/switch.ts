@@ -25,13 +25,18 @@ export const Switch = GObject.registerClass(
       super({ y_align: Clutter.ActorAlign.CENTER });
       this.source = source;
 
+      // Bolinha em posição fixa num trilho sem layout, como o switch do
+      // editor: o alinhamento do filho do `St.Button` a deixava fora do lugar.
       this.knob = new St.Widget({
-        style: `width: 14px; height: 14px; border-radius: 7px; background-color: ${colors.neutral100};`,
-        x_align: Clutter.ActorAlign.START,
-        y_align: Clutter.ActorAlign.CENTER,
-        translation_x: source.on ? KNOB_ON_X : KNOB_OFF_X,
+        style: `border-radius: 7px; background-color: ${colors.neutral100};`,
+        width: 14,
+        height: 14,
+        x: source.on ? KNOB_ON_X : KNOB_OFF_X,
+        y: 2,
       });
-      this.set_child(this.knob);
+      const track = new St.Widget({ width: 32, height: 18 });
+      track.add_child(this.knob);
+      this.set_child(track);
 
       this.connectObject(
         'clicked',
@@ -48,14 +53,12 @@ export const Switch = GObject.registerClass(
     private sync(): void {
       const on = this.source.on;
       this.style = `
-        width: 32px;
-        height: 18px;
         border-radius: 9px;
         background-color: ${on ? colors.accent600 : colors.neutral700};
         transition-duration: ${TRANSITION_MS}ms;
       `;
       this.knob.ease({
-        translationX: on ? KNOB_ON_X : KNOB_OFF_X,
+        x: on ? KNOB_ON_X : KNOB_OFF_X,
         duration: TRANSITION_MS,
         mode: Clutter.AnimationMode.EASE_OUT_QUAD,
       });

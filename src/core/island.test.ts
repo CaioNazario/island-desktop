@@ -335,19 +335,157 @@ describe('IslandState', () => {
   });
 });
 
+describe('IslandState env', () => {
+  it('spec 15: troca de ambiente com a ilha compacta abre env por 1500ms', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    expect(state.environmentSwitched()).toBe(true);
+    expect(state.mode).toBe('env');
+    scheduler.advance(1499);
+    expect(state.mode).toBe('env');
+    scheduler.advance(1);
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 15: nova troca em env rearma o timer', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.environmentSwitched();
+    scheduler.advance(1000);
+    expect(state.environmentSwitched()).toBe(true);
+    scheduler.advance(1000);
+    expect(state.mode).toBe('env');
+    scheduler.advance(500);
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 15: com outro modo ou o cartão aberto, a troca não mexe na ilha', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openFromTrigger('wifi');
+    expect(state.environmentSwitched()).toBe(false);
+    expect(state.mode).toBe('wifi');
+
+    state.openNotification(false);
+    expect(state.environmentSwitched()).toBe(false);
+    expect(state.mode).toBe('notif');
+
+    state.closeAll();
+    state.islandClick();
+    expect(state.environmentSwitched()).toBe(false);
+    expect(state.cardOpen).toBe(true);
+  });
+
+  it('spec 15: env não recebe hover e fecha mesmo com o ponteiro em cima', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.hoverStart();
+    state.environmentSwitched();
+    scheduler.advance(1500);
+    expect(state.mode).toBe('compact');
+
+    state.environmentSwitched();
+    state.hoverEnd();
+    state.hoverStart();
+    scheduler.advance(1500);
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 15: clique na ilha em env não faz nada', () => {
+    const state = new IslandState(new FakeScheduler());
+    state.environmentSwitched();
+    expect(state.islandClick()).toBe('noop');
+    expect(state.mode).toBe('env');
+  });
+});
+
+describe('IslandState note', () => {
+  it('spec 16: note é fixo, sem timer, e o mesmo gatilho fecha', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openFromTrigger('note');
+    expect(state.mode).toBe('note');
+    expect(scheduler.pendingCount).toBe(0);
+    state.openFromTrigger('note');
+    expect(state.mode).toBe('compact');
+  });
+
+  it('spec 16: evento automático não tira a ilha de note', () => {
+    const state = new IslandState(new FakeScheduler());
+    state.openFromTrigger('note');
+    expect(state.openAutomatic('music')).toBe(false);
+    state.volumeKey();
+    expect(state.mode).toBe('note');
+  });
+});
+
+describe('IslandState music fixado', () => {
+  it('spec 05: abre sem timer, fica com hover e sem hover, e o mesmo clique fecha', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.toggleMusicPinned();
+    expect(state.mode).toBe('music');
+    expect(state.musicPinned).toBe(true);
+    expect(state.fixed).toBe(true);
+    expect(scheduler.pendingCount).toBe(0);
+    state.hoverStart();
+    state.hoverEnd();
+    state.keepAlive();
+    scheduler.advance(10_000);
+    expect(state.mode).toBe('music');
+    state.toggleMusicPinned();
+    expect(state.mode).toBe('compact');
+    expect(state.musicPinned).toBe(false);
+  });
+
+  it('spec 05: troca de faixa com ele aberto não reabre nem arma timer', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.toggleMusicPinned();
+    expect(state.openAutomatic('music')).toBe(false);
+    expect(state.openAutomatic('volume')).toBe(false);
+    expect(state.musicPinned).toBe(true);
+    expect(scheduler.pendingCount).toBe(0);
+  });
+
+  it('spec 05: clicar no widget com o music transitório aberto o fixa', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openAutomatic('music');
+    expect(state.fixed).toBe(false);
+    state.toggleMusicPinned();
+    expect(state.musicPinned).toBe(true);
+    scheduler.advance(2500);
+    expect(state.mode).toBe('music');
+  });
+
+  it('spec 05: outro modo depois do fixado volta ao music transitório', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.toggleMusicPinned();
+    state.escape(false);
+    state.openAutomatic('music');
+    expect(state.musicPinned).toBe(false);
+    scheduler.advance(2500);
+    expect(state.mode).toBe('compact');
+  });
+});
+
 describe('isFixedMode', () => {
-  it('só stack, calendar, quick, wifi, bt e ai tomam foco de teclado', () => {
+  it('só stack, calendar, quick, wifi, bt, ai e note tomam foco de teclado', () => {
     expect(isFixedMode('compact')).toBe(false);
     expect(isFixedMode('notif')).toBe(false);
     expect(isFixedMode('music')).toBe(false);
     expect(isFixedMode('volume')).toBe(false);
     expect(isFixedMode('brightness')).toBe(false);
+    expect(isFixedMode('env')).toBe(false);
     expect(isFixedMode('stack')).toBe(true);
     expect(isFixedMode('calendar')).toBe(true);
     expect(isFixedMode('quick')).toBe(true);
     expect(isFixedMode('wifi')).toBe(true);
     expect(isFixedMode('bt')).toBe(true);
     expect(isFixedMode('ai')).toBe(true);
+    expect(isFixedMode('note')).toBe(true);
   });
 });
 
@@ -365,6 +503,8 @@ describe('getSize', () => {
       'wifi',
       'bt',
       'ai',
+      'env',
+      'note',
     ];
     const widths = modes.map((mode) => getSize(mode).width);
     expect(Math.max(...widths)).toBe(MAX_ISLAND_WIDTH);
@@ -376,6 +516,7 @@ describe('getSize', () => {
     expect(getSize('music')).toEqual({ width: 500, height: 82, radius: 26 });
     expect(getSize('volume')).toEqual({ width: 320, height: 50, radius: 25 });
     expect(getSize('brightness')).toEqual({ width: 320, height: 50, radius: 25 });
+    expect(getSize('env')).toEqual({ width: 260, height: 40, radius: 20 });
   });
 
   it('stack: cresce por item até 6, com piso para lista vazia', () => {

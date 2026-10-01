@@ -3,18 +3,12 @@ import { batteryDisplay } from './battery.js';
 
 describe('batteryDisplay', () => {
   it.each([
-    [100, 'full'],
-    [95, 'full'],
-    [94, 'high'],
-    [60, 'high'],
-    [59, 'medium'],
-    [21, 'medium'],
-    [20, 'low'],
-    [9, 'low'],
-    [8, 'warning'],
-    [0, 'warning'],
-  ] as const)('shows the %i%% level as %s', (percent, icon) => {
-    expect(batteryDisplay(percent, false).icon).toBe(icon);
+    [100, 1],
+    [78, 0.78],
+    [5, 0.05],
+    [0, 0],
+  ] as const)('fills %i%% of the body width', (percent, fill) => {
+    expect(batteryDisplay(percent, false).fill).toBe(fill);
   });
 
   it.each([
@@ -28,9 +22,15 @@ describe('batteryDisplay', () => {
     expect(batteryDisplay(percent, false).tone).toBe(tone);
   });
 
-  it('shows the charging icon at any level', () => {
-    for (const percent of [100, 94, 50, 20, 8, 0]) {
-      expect(batteryDisplay(percent, true).icon).toBe('charging');
+  it('writes the level without the percent sign', () => {
+    expect(batteryDisplay(78, false).number).toBe('78');
+    expect(batteryDisplay(100, true).number).toBe('100');
+  });
+
+  it('shows the bolt only while charging', () => {
+    for (const percent of [100, 50, 20, 0]) {
+      expect(batteryDisplay(percent, true).bolt).toBe(true);
+      expect(batteryDisplay(percent, false).bolt).toBe(false);
     }
   });
 
@@ -41,12 +41,22 @@ describe('batteryDisplay', () => {
   });
 
   it('rounds the UPower percentage before applying the thresholds', () => {
-    expect(batteryDisplay(94.6, false)).toEqual({ icon: 'full', tone: 'good', label: '95%' });
-    expect(batteryDisplay(20.4, false)).toEqual({ icon: 'low', tone: 'low', label: '20%' });
+    expect(batteryDisplay(79.6, false)).toEqual({
+      tone: 'good',
+      fill: 0.8,
+      number: '80',
+      bolt: false,
+    });
+    expect(batteryDisplay(20.4, false)).toEqual({
+      tone: 'low',
+      fill: 0.2,
+      number: '20',
+      bolt: false,
+    });
   });
 
   it('clamps out-of-range percentages', () => {
-    expect(batteryDisplay(104, false).label).toBe('100%');
-    expect(batteryDisplay(-3, false).label).toBe('0%');
+    expect(batteryDisplay(104, false)).toMatchObject({ fill: 1, number: '100' });
+    expect(batteryDisplay(-3, false)).toMatchObject({ fill: 0, number: '0' });
   });
 });

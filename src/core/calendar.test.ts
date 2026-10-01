@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  nextEvent,
   monthGrid,
   todayEvents,
   todayTitle,
@@ -216,5 +217,59 @@ describe('todayTitle', () => {
   it('usa o dia da semana minúsculo', () => {
     expect(todayTitle(TODAY)).toBe('Hoje, sex, 25');
     expect(todayTitle(new Date(2026, 8, 27))).toBe('Hoje, dom, 27');
+  });
+});
+
+describe('nextEvent', () => {
+  const now = new Date(2026, 8, 30, 9, 0);
+  const at = (h: number, m = 0, day = 30): Date => new Date(2026, 8, day, h, m);
+  const event = (summary: string, start: Date, end = start) => ({
+    id: `cal\n${summary}\n`,
+    summary,
+    start,
+    end,
+  });
+
+  it('sem eventos: "Sem eventos" hoje', () => {
+    expect(nextEvent([], now)).toEqual({ label: 'Sem eventos', sub: 'hoje' });
+  });
+
+  it('ignora eventos já começados e os de amanhã', () => {
+    const events = [event('Daily', at(8, 30), at(9, 30)), event('Amanhã', at(10, 0, 31))];
+    expect(nextEvent(events, now)).toEqual({ label: 'Sem eventos', sub: 'hoje' });
+  });
+
+  it('sem próximo com hora, mostra o primeiro de dia inteiro', () => {
+    const events = [
+      event('Daily', at(8, 30), at(9, 30)),
+      event('Viagem', at(0, 0, 29), at(0, 0, 32)),
+      event('Feriado', at(0), at(0, 0, 31)),
+    ];
+    expect(nextEvent(events, now)).toEqual({ label: 'Viagem', sub: 'dia inteiro' });
+  });
+
+  it('o próximo com hora vem antes do dia inteiro', () => {
+    const events = [event('Feriado', at(0), at(0, 0, 31)), event('Almoço', at(12, 0))];
+    expect(nextEvent(events, now)).toEqual({ label: 'Almoço', sub: '12:00' });
+  });
+
+  it('até 90 min mostra quanto falta', () => {
+    expect(nextEvent([event('Review', at(10, 30))], now)).toEqual({
+      label: 'Review',
+      sub: 'em 90 min',
+    });
+    expect(nextEvent([event('Review', at(9, 0, 30))], new Date(2026, 8, 30, 8, 59, 30)).sub).toBe(
+      'em 1 min',
+    );
+  });
+
+  it('depois de 90 min mostra a hora', () => {
+    expect(nextEvent([event('Almoço', at(12, 0))], now)).toEqual({ label: 'Almoço', sub: '12:00' });
+    expect(nextEvent([event('Review', at(10, 31))], now).sub).toBe('10:31');
+  });
+
+  it('escolhe o que começa primeiro', () => {
+    const events = [event('Tarde', at(15)), event('Manhã', at(11)), event('Meio-dia', at(12))];
+    expect(nextEvent(events, now).label).toBe('Manhã');
   });
 });

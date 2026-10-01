@@ -110,24 +110,17 @@ const GAP = 10;
 
 // Grupo de hardware da pílula direita (specs/02-barra.md, item 1): encostado
 // à esquerda, padding 0 10px, gap 10px. Bloco sem leitura (sem GPU ou sensor,
-// ou antes da segunda amostra) fica escondido. Sem espaço com a ilha no maior
-// modo, somem NET → GPU → TEMP; o corte usa essa largura e não a atual para
-// os blocos não piscarem quando a ilha abre e fecha. Bloco cortado é alocado
+// ou antes da segunda amostra) fica escondido. Sem espaço na largura que a
+// área de widgets der, somem NET → GPU → TEMP. Bloco cortado é alocado
 // depois da borda e some pelo clip, sem mexer em `visible` dentro do allocate.
 export const HardwareGroup = GObject.registerClass(
   class HardwareGroup extends St.Widget {
-    /** Quanto o grupo está mais largo do que ficaria com a ilha no maior modo. */
-    slack = 0;
     private readonly views = new Map<HardwareBlockId, HardwareBlockViewActor>();
 
     constructor(source: HardwareSource) {
       super({
         style: 'padding: 0 10px;',
         clip_to_allocation: true,
-        x_expand: true,
-        // FILL: o allocate precisa da vaga inteira para medir o espaço; com
-        // START a alocação vira a largura natural e o corte tira tudo.
-        x_align: Clutter.ActorAlign.FILL,
         y_align: Clutter.ActorAlign.CENTER,
       });
       for (const id of BLOCK_ORDER) {
@@ -161,8 +154,7 @@ export const HardwareGroup = GObject.registerClass(
       this.set_allocation(box);
       const content = this.get_theme_node().get_content_box(box);
       const ids = this.readingIds();
-      const budget = content.get_width() - this.slack;
-      const shown = new Set(fittingBlocks(ids, (id) => this.widthOf(id), budget, GAP));
+      const shown = new Set(this.fitting(content.get_width()));
       const childBox = new Clutter.ActorBox();
       let x = content.x1;
       for (const id of ids) {
@@ -176,6 +168,16 @@ export const HardwareGroup = GObject.registerClass(
         view.allocate(childBox);
         if (shown.has(id)) x += width + GAP;
       }
+    }
+
+    /** Largura que o grupo ocupa de fato numa vaga de `width` (sem sobra à direita). */
+    fittedWidth(width: number): number {
+      const padding = this.get_theme_node().get_horizontal_padding();
+      return this.rowWidth(this.fitting(width - padding)) + padding;
+    }
+
+    private fitting(budget: number): HardwareBlockId[] {
+      return fittingBlocks(this.readingIds(), (id) => this.widthOf(id), budget, GAP);
     }
 
     private readingIds(): HardwareBlockId[] {

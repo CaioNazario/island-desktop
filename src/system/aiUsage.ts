@@ -301,11 +301,14 @@ class ProviderPoller {
 
 // Uso de IA (specs/12-uso-ia.md). A Island nunca escreve em `~/.claude` nem
 // em `~/.codex` e nunca renova token: só lê e reage quando o CLI troca o arquivo.
+// Só busca enquanto `running`: com o `ai` fora do ambiente ativo, nenhuma
+// chamada HTTP (specs/16-widgets.md "Fontes só quando visíveis").
 export class SystemAiUsage implements AiUsageSource {
   private readonly settings: Gio.Settings;
   private readonly session = new Soup.Session({ timeout: HTTP_TIMEOUT_SECONDS });
   private readonly pollers = new Map<ProviderId, ProviderPoller>();
   private readonly listeners = new Set<() => void>();
+  private isRunning = false;
 
   constructor(settings: Gio.Settings) {
     Gio._promisify(Gio.File.prototype, 'load_contents_async');
@@ -313,6 +316,12 @@ export class SystemAiUsage implements AiUsageSource {
     this.settings = settings;
     for (const config of PROVIDERS)
       settings.connectObject(`changed::${config.settingsKey}`, () => this.sync(), this);
+    this.sync();
+  }
+
+  set running(running: boolean) {
+    if (running === this.isRunning) return;
+    this.isRunning = running;
     this.sync();
   }
 
@@ -339,7 +348,7 @@ export class SystemAiUsage implements AiUsageSource {
 
   private sync(): void {
     for (const config of PROVIDERS) {
-      const enabled = this.settings.get_boolean(config.settingsKey);
+      const enabled = this.isRunning && this.settings.get_boolean(config.settingsKey);
       const poller = this.pollers.get(config.id);
       if (enabled && !poller)
         this.pollers.set(config.id, new ProviderPoller(config, this.session, () => this.notify()));

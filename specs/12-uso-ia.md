@@ -1,6 +1,6 @@
 # 12 · Uso de IA
 
-Origem: `design/markup.html` 15–26 (botão na pílula esquerda) e 281–309 (modo `ai`); `design/logic.js` `aiMap`/`lvl`/`lvlText`/`aiHpx` (~186–193), `aiSummary`.
+Origem: `design/components/TopbarWidget.html` (parte `w.isAi`) e camada `L.ai` em `design/markup.html`; `design/logic.js` `aiMap`/`lvl`/`lvlText`/`aiHpx`, `aiSummary`, `widgetData('ai')`.
 
 Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akitaonrails/ai-usagebar) (`src/anthropic/`, `src/openai/`). A Island reimplementa em TS, **sem** depender do binário.
 
@@ -26,12 +26,12 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 
 - A Island **nunca** escreve nos arquivos de credencial e **nunca** renova token.
 - `Gio.FileMonitor` nos dois arquivos: quando o CLI renova o token, a Island relê e atualiza.
-- Arquivo ausente → cartão mostra, no lugar das barras, "Faça login no Claude" / "Faça login no Codex", e o provedor some do botão na pílula esquerda.
+- Arquivo ausente → cartão mostra, no lugar das barras, "Faça login no Claude" / "Faça login no Codex", e o provedor some do widget.
 - Token expirado (pela data ou HTTP 401) → mantém os últimos valores do cache e mostra "Abra o Claude Code para renovar" / "Abra o Codex para renovar".
 
 ## Atualização
 
-- Polling a cada **300s** por provedor.
+- Polling a cada **300s** por provedor, só com o widget `ai` no ambiente ativo (spec 16).
 - Abrir o modo `ai` força atualização se o cache tiver mais de **60s**.
 - HTTP 429 → mantém cache e dobra o intervalo até 1200s; volta a 300s no próximo sucesso.
 - Erro de rede → mantém cache sem mensagem; após 3 falhas seguidas, "Sem conexão" no cartão.
@@ -45,12 +45,14 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 | ≥70% | `accent-300` | `text` |
 | ≥90% | `#f75d59` | `#fd736d` |
 
-## Botão na pílula esquerda
+## Widget `ai`
 
-- Padding 0 10px, gap 12px entre provedores; fundo `neutral-900` com `ai` aberto; hover `neutral-900`.
-- Por provedor logado (gap 6px): ícone 13px `neutral-300` · mini barra 26×4 raio 2 (`neutral-800` + preenchimento da **sessão**, transição 600ms) · `62%` 11.5px/500 alinhado à direita, largura fixa.
-- Nenhum provedor logado (sem credencial ou desligado nas preferências): `ph ph-sparkle` 14px + "IA" 12px `neutral-400`.
-- Clique abre `ai`.
+O antigo botão da pílula esquerda virou o widget `ai` (spec 16). No ambiente Padrão ele fica na pílula esquerda, como na v1.0.
+
+- Moldura e padding do widget (spec 16: 24px, padding 0 9px, hover `neutral-900`); gap 12px entre provedores. O fundo `neutral-900` com `ai` aberto do design antigo saiu.
+- Por provedor logado (gap 6px): ícone 13px `neutral-300` · mini barra 26×4 raio 2 (`neutral-800` + preenchimento da **sessão**, transição 600ms) · `62%` 11.5px/500 alinhado à direita, largura mínima 3.2ch.
+- Nenhum provedor logado (sem credencial ou desligado nas preferências): `ph ph-sparkle` 14px + "IA" `neutral-400`.
+- Clique abre/fecha `ai`.
 
 ## Modo `ai` (480 × (24 + 32 + p·108 − 6))
 
@@ -65,6 +67,6 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 
 - [x] Testes de `aiUsage.ts`: parse dos dois payloads, janelas do Codex fora de ordem, campos ausentes, formatação de "Reinicia", faixas de cor.
 - [x] Nenhuma escrita em `~/.claude` ou `~/.codex` durante a execução (verificável por `inotifywait`).
-- [x] Sem `~/.codex/auth.json`, o cartão do Codex mostra "Faça login no Codex", o Codex some do botão na pílula e o Claude funciona normalmente.
+- [x] Sem `~/.codex/auth.json`, o cartão do Codex mostra "Faça login no Codex", o Codex some do widget e o Claude funciona normalmente.
 - [x] Rodar o Claude Code (que renova o token) faz o cartão sair do estado expirado sem reiniciar a extensão.
 - [x] Resposta HTTP malformada não gera exceção no log do Shell.

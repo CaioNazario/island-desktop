@@ -112,8 +112,12 @@ function overlaps(event: CalendarEvent, begin: Date, end: Date): boolean {
   return event.end > begin && event.start < end;
 }
 
+function isAllDay(event: CalendarEvent, dayBegin: Date, dayEnd: Date): boolean {
+  return event.start <= dayBegin && event.end >= dayEnd;
+}
+
 function eventTime(event: CalendarEvent, dayBegin: Date, dayEnd: Date): string {
-  if (event.start <= dayBegin && event.end >= dayEnd) return 'Dia inteiro';
+  if (isAllDay(event, dayBegin, dayEnd)) return 'Dia inteiro';
   const start = formatClock(event.start);
   if (event.start.getTime() === event.end.getTime()) return start;
   return `${start} – ${formatClock(event.end)}`;
@@ -145,6 +149,35 @@ export function todayEvents(events: readonly CalendarEvent[], today: Date): Toda
       }
       return { name: event.summary, time: eventTime(event, dayBegin, dayEnd), dot };
     });
+}
+
+export interface NextEventView {
+  label: string;
+  sub: string;
+}
+
+const SOON_MINUTES = 90;
+
+/**
+ * Widget Próximo evento (specs/16-widgets.md `event`): o primeiro evento de
+ * hoje com hora (não "dia inteiro") que começa depois de `now`. O dia
+ * inteiro começa às 00:00, então nunca começa depois de agora; sem próximo,
+ * ele é a reserva.
+ */
+export function nextEvent(events: readonly CalendarEvent[], now: Date): NextEventView {
+  const dayBegin = startOfDay(now);
+  const dayEnd = new Date(dayBegin.getFullYear(), dayBegin.getMonth(), dayBegin.getDate() + 1);
+  const byStart = [...events].sort((a, b) => a.start.getTime() - b.start.getTime());
+  const next = byStart.find((event) => event.start > now && event.start < dayEnd);
+  if (!next) {
+    const allDay = byStart.find((event) => isAllDay(event, dayBegin, dayEnd));
+    if (allDay) return { label: allDay.summary, sub: 'dia inteiro' };
+    return { label: 'Sem eventos', sub: 'hoje' };
+  }
+
+  const minutes = Math.ceil((next.start.getTime() - now.getTime()) / 60_000);
+  const sub = minutes <= SOON_MINUTES ? `em ${minutes} min` : formatClock(next.start);
+  return { label: next.summary, sub };
 }
 
 /** `Hoje, sex, 25`: dia da semana minúsculo, como no design. */

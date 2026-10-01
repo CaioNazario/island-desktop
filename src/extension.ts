@@ -11,6 +11,12 @@ const QUICK_SETTINGS_KEYBINDING = 'toggle-quick-settings';
 const QUICK_SETTINGS_MODES =
   Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW | Shell.ActionMode.POPUP;
 
+// specs/15-ambientes.md: `Super+Ctrl+→`/`←` trocam de ambiente de qualquer lugar.
+const ENVIRONMENT_KEYBINDINGS = [
+  ['switch-environment-next', 1],
+  ['switch-environment-previous', -1],
+] as const;
+
 export default class IslandExtension extends Extension {
   private barManager: BarManager | null = null;
 
@@ -19,7 +25,16 @@ export default class IslandExtension extends Extension {
     // três pílulas passam a reservar o próprio espaço (specs/02-barra.md).
     Main.layoutManager.untrackChrome(Main.layoutManager.panelBox);
     Main.panel.hide();
-    this.barManager = new BarManager(this.getSettings(), () => this.openPreferences());
+    const settings = this.getSettings();
+    this.barManager = new BarManager(settings, () => this.openPreferences());
+    for (const [name, direction] of ENVIRONMENT_KEYBINDINGS)
+      Main.wm.addKeybinding(
+        name,
+        settings,
+        Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
+        QUICK_SETTINGS_MODES,
+        () => this.barManager?.stepEnvironmentFromShortcut(direction),
+      );
 
     // specs/03-ilha.md "Atalho Super+S": a Island assume o atalho nativo de
     // quick settings (o painel nativo está escondido atrás dela) e devolve o
@@ -35,6 +50,7 @@ export default class IslandExtension extends Extension {
   }
 
   override disable(): void {
+    for (const [name] of ENVIRONMENT_KEYBINDINGS) Main.wm.removeKeybinding(name);
     Main.wm.removeKeybinding(QUICK_SETTINGS_KEYBINDING);
     Main.wm.addKeybinding(
       QUICK_SETTINGS_KEYBINDING,
