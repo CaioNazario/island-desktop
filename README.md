@@ -2,6 +2,7 @@
 # Island
 Uma extensão do **GNOME Shell** que substitui a top bar(barra superior) por três pílulas flutuantes.
 A pílula central — a **Island** — funciona como uma Dynamic Island para o desktop: muda de tamanho conforme o contexto e concentra notificações, música, volume, brilho, calendário, controles rápidos e outras informações do sistema.
+As pílulas laterais mostram widgets, organizados em **ambientes** que você troca com um gesto ou atalho.
 ***
 ## ✦ Recursos
 ### Island
@@ -21,6 +22,47 @@ Quando expandida, pode exibir:
 - Uso de IA
 
 A Island possui diferentes modos de exibição e só mantém um modo ativo por vez.
+### Ambientes
+Um ambiente é um conjunto nomeado de widgets para as duas pílulas laterais. Só um fica ativo por vez, igual em todos os monitores.
+Vêm quatro prontos:
+
+| Ambiente | Esquerda | Direita |
+|---|---|---|
+| Padrão | IA | Hardware |
+| Trabalho | Próximo evento, Pomodoro, IA | Hardware, GitHub |
+| Estudos | Progresso do dia, Pomodoro | Nota |
+| Fim de semana | Música | Contagem regressiva |
+
+É possível ter até 6. O Padrão pode ser editado, mas não excluído.
+Para trocar de ambiente:
+- Rolagem horizontal sobre a barra (dois dedos no touchpad ou roda inclinada)
+- `Super+Ctrl+→` / `Super+Ctrl+←`
+- Clique num dos pontos do botão de ambiente
+
+### Widgets
+| Widget | Mostra | Clique |
+|---|---|---|
+| Uso de IA | Sessão e limite semanal | Abre o cartão de IA |
+| Hardware | CPU, RAM, GPU, temperatura e rede | Abre os controles rápidos |
+| Próximo evento | O próximo compromisso do dia | Abre o calendário |
+| Pomodoro | Ciclos de 25 min de foco e 5 min de pausa | Inicia/pausa |
+| Música | O que está tocando agora | Abre a música |
+| GitHub | Seus PRs abertos e quantos esperam sua revisão | — |
+| Progresso do dia | Quanto do dia já passou | — |
+| Contagem regressiva | Dias até uma data | Sem data: abre as preferências |
+| Nota | Um recado fixo na barra | Edita o recado |
+
+Quando falta espaço, o Hardware perde blocos (rede, GPU, temperatura) e depois somem widgets inteiros, a começar pelo mais longe da Island.
+### Editor de ambientes
+Clique no botão de ambiente, no início da pílula esquerda, para abrir o editor. Nele dá para:
+- Criar, renomear, trocar o ícone e excluir ambientes
+- Adicionar widgets clicando ou arrastando do catálogo para uma pílula
+- Reordenar arrastando na própria barra, ou selecionar um widget e movê-lo ou removê-lo
+- Ligar o auto-ocultar
+
+### Auto-ocultar
+Desligado por padrão. Quando ligado, a barra não reserva espaço no topo e sobe para fora da tela.
+Ela reaparece quando você empurra o ponteiro contra a borda de cima (só encostar não basta, para não atrapalhar as abas de um navegador maximizado), quando a Island abre qualquer modo e quando o overview ou o editor estão abertos.
 ### Notificações
 As notificações aparecem diretamente na Island e também podem ser consultadas em uma lista.
 No Chrome, Brave e outros navegadores Chromium, notificações web exibem o serviço de origem — por exemplo, WhatsApp, Discord ou YouTube.
@@ -73,10 +115,10 @@ Informações sobre:
 - Rede
 
 ### Bateria
-Exibe o nível da bateria e o estado de carregamento.
+A barra desenha a bateria com o nível dentro: verde a partir de 80%, vermelha até 20%, e um raio enquanto carrega.
 ### Uso de IA
 A Island pode mostrar os limites de uso do **Claude** e do **Codex**, utilizando as credenciais já existentes dos respectivos CLIs.
-> Veja Uso de IA: leia antes antes de ativar esse recurso.
+> Veja [Uso de IA: leia antes](#uso-de-ia-leia-antes) antes de ativar esse recurso.
 
 ***
 ## Como funciona
@@ -87,6 +129,7 @@ São ativados automaticamente por eventos e desaparecem após alguns segundos.
 - `music`
 - `volume`
 - `brightness`
+- `env` (nome do ambiente ao trocar)
 
 Passar o mouse sobre a Island mantém o modo aberto.
 ### Fixos
@@ -102,6 +145,7 @@ Modos fixos:
 - `wifi`
 - `bt`
 - `ai`
+- `note`
 
 ### Eventos não interrompem o que você abriu
 Eventos automáticos respeitam o modo fixo atualmente aberto.
@@ -113,8 +157,10 @@ Isso evita que a interface fique pulando de um estado para outro enquanto você 
 ### Interações
 - **Clique na Island compacta:** abre o cartão central ou o calendário, conforme configurado.
 - **Clique em uma notificação:** abre a lista de notificações.
-- `**Super+S**`**:** abre os controles rápidos.
-- `**Esc**`**:** fecha o modo fixo atual.
+- **Clique no botão de ambiente:** abre o editor de ambientes.
+- **`Super+S`:** abre os controles rápidos.
+- **`Super+Ctrl+←/→`:** troca de ambiente.
+- **`Esc`:** fecha o modo fixo atual.
 
 ***
 ## Arquitetura
@@ -159,6 +205,9 @@ Requer login em um ou ambos:
 - Claude Code — `~/.claude/.credentials.json`
 - Codex CLI — `~/.codex/auth.json`
 
+**GitHub**
+Requer o [`gh`](https://cli.github.com/) com login feito (`gh auth login`). A extensão só lê o token com `gh auth token` e o mantém em memória.
+
 ***
 ## Instalação
 ```
@@ -185,6 +234,9 @@ Nas preferências é possível configurar, entre outras coisas:
 - A ação do clique na Island
 - Cidade do clima
 - Provedores de IA
+- Nome e data da contagem regressiva
+
+Ambientes, auto-ocultar e a nota são editados direto na barra, não nas preferências.
 
 ***
 ## Atualização
@@ -203,7 +255,7 @@ gnome-extensions disable island@caionazario.dev
 Ao desativar a extensão, o painel padrão do GNOME Shell volta a funcionar normalmente.
 ***
 ## Uso de IA: leia antes
-A pílula de uso de IA **não utiliza APIs oficiais de uso**.
+O widget de uso de IA **não utiliza APIs oficiais de uso**.
 Quando ativados, os provedores funcionam da seguinte maneira:
 1. A extensão lê o token OAuth existente em:
    - `~/.claude/.credentials.json`
@@ -219,7 +271,7 @@ A extensão:
 Esses endpoints não são APIs públicas e podem mudar ou deixar de existir a qualquer momento.
 Se a resposta recebida estiver em um formato inesperado, o cartão de IA mostra um erro sem afetar o restante da extensão.
 Se preferir não utilizar esse recurso, desative os provedores de IA nas preferências.
-Sem uma credencial válida, a pílula continua disponível, mas mostra apenas **"IA"**.
+Sem uma credencial válida, o widget continua disponível, mas mostra apenas **"IA"**.
 ***
 ## Limitações
 Atualmente:
@@ -233,7 +285,8 @@ Atualmente:
 - Não há suporte a AppIndicator/System Tray.
 - Não há troca de layout do teclado pela barra.
 - O botão **Atividades** não faz parte da barra.
-- A barra não possui auto-ocultar e sempre reserva o espaço superior.
+- A barra fica só no topo.
+- Monitores com menos de 1280px lógicos de largura não são suportados.
 - A extensão ainda não está disponível no extensions.gnome.org.
 - A instalação é feita pelo `install.sh`.
 
