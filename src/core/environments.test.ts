@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultEnvironments,
   EnvironmentScroll,
+  placeWidget,
   removeEnvironment,
   sanitizeEnvironments,
   sanitizeIndex,
   stepIndex,
   toStored,
+  type Environment,
   type ScrollInput,
   type StoredEnvironment,
 } from './environments.js';
@@ -133,6 +135,59 @@ describe('removeEnvironment', () => {
 
   it('ignores an index out of range', () => {
     expect(removeEnvironment(defaultEnvironments(), 7)).toHaveLength(4);
+  });
+});
+
+describe('placeWidget', () => {
+  const env: Environment = {
+    name: 'A',
+    icon: 'house',
+    left: ['ai', 'event', 'pomodoro'],
+    right: ['hw'],
+  };
+
+  it('appends at the end without a position', () => {
+    expect(placeWidget(env, 'note', 'right', null)).toMatchObject({ right: ['hw', 'note'] });
+  });
+
+  it('inserts before the widget at the position', () => {
+    expect(placeWidget(env, 'note', 'left', 1)).toMatchObject({
+      left: ['ai', 'note', 'event', 'pomodoro'],
+    });
+  });
+
+  it('moves forward in the same pill, adjusting the index', () => {
+    expect(placeWidget(env, 'ai', 'left', 2)).toMatchObject({
+      left: ['event', 'ai', 'pomodoro'],
+    });
+  });
+
+  it('moves back in the same pill', () => {
+    expect(placeWidget(env, 'pomodoro', 'left', 0)).toMatchObject({
+      left: ['pomodoro', 'ai', 'event'],
+    });
+  });
+
+  it('moves to the other pill', () => {
+    expect(placeWidget(env, 'event', 'right', 0)).toEqual({
+      ...env,
+      left: ['ai', 'pomodoro'],
+      right: ['event', 'hw'],
+    });
+  });
+
+  it('does not duplicate a widget already present', () => {
+    const placed = placeWidget(env, 'hw', 'right', null);
+    expect(placed).toMatchObject({ left: env.left, right: ['hw'] });
+  });
+
+  it('clamps a position past the end', () => {
+    expect(placeWidget(env, 'note', 'right', 9)).toMatchObject({ right: ['hw', 'note'] });
+  });
+
+  it('leaves the original untouched', () => {
+    placeWidget(env, 'ai', 'right', null);
+    expect(env).toMatchObject({ left: ['ai', 'event', 'pomodoro'], right: ['hw'] });
   });
 });
 

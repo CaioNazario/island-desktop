@@ -118,6 +118,31 @@ export function removeEnvironment(envs: readonly Environment[], index: number): 
   return envs.filter((_env, i) => i !== index);
 }
 
+export type Side = 'left' | 'right';
+
+/**
+ * Põe `id` na pílula `side` antes da posição `at` (`null`: no fim), tirando-o
+ * de onde estiver (specs/17-editor-ambientes.md; design/logic.js `placeW`).
+ * `at` conta na lista de antes da mudança.
+ */
+export function placeWidget(
+  env: Environment,
+  id: WidgetId,
+  side: Side,
+  at: number | null,
+): Environment {
+  const from = env[side].indexOf(id);
+  const placed = {
+    ...env,
+    left: env.left.filter((w) => w !== id),
+    right: env.right.filter((w) => w !== id),
+  };
+  let index = at ?? placed[side].length;
+  if (from !== -1 && from < index) index--;
+  placed[side].splice(Math.max(0, Math.min(placed[side].length, index)), 0, id);
+  return placed;
+}
+
 // Rolagem suave (specs/15-ambientes.md "Rolagem suave"; spike S8): o delta
 // chega em cliques de roda, ~10px de dedo cada.
 export const SWITCH_THRESHOLD = 11;
