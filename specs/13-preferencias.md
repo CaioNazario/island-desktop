@@ -55,5 +55,5 @@ A notificação de dica do clima (spec 07) abre esta janela direto na página Cl
 - [x] Cada chave do schema muda o comportamento na hora, com a extensão rodando.
 - [x] `glib-compile-schemas` roda sem aviso no build e no `install.sh`.
 - [x] A janela abre pelo app Extensões e por `gnome-extensions prefs island@caionazario.dev`.
-- [ ] As chaves novas da v1.1 mudam o comportamento na hora, com a extensão rodando.
-- [ ] Mudar a data da contagem nas preferências atualiza o widget sem reiniciar.
+- [x] As chaves novas da v1.1 mudam o comportamento na hora, com a extensão rodando.
+- [x] Mudar a data da contagem nas preferências atualiza o widget sem reiniciar.

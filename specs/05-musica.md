@@ -55,5 +55,5 @@ Música tocando em aba de navegador mostra título/artista/capa que o MPRIS entr
 - [x] Barra de progresso avança a cada segundo e corrige após seek no player.
 - [x] Fechar o player remove a seção de música do cartão.
 - [x] Dois players: o último a tocar é o exibido.
-- [ ] O cartão central abre com 440px de largura e raio 26.
-- [ ] Clicar no widget Música abre `music` sem timer; trocar de faixa atualiza sem fechar; clicar de novo fecha.
+- [x] O cartão central abre com 440px de largura e raio 26.
+- [x] Clicar no widget Música abre `music` sem timer; trocar de faixa atualiza sem fechar; clicar de novo fecha.

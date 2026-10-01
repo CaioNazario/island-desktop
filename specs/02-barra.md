@@ -56,8 +56,8 @@ Com modo fixo (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`, `note`, `music`
 ## Critérios de aceite
 
 - [x] As duas laterais têm sempre a mesma largura e a ilha fica centralizada no monitor.
-- [ ] Maximizar uma janela a deixa encostada em y=32 sem sobrepor a barra.
-- [ ] Em 1280px lógicos com a ilha em `wifi` (520px) e o ambiente Trabalho, nenhum texto da barra é cortado (widgets somem inteiros, spec 16).
+- [x] Maximizar uma janela a deixa encostada em y=32 sem sobrepor a barra.
+- [x] Em 1280px lógicos com a ilha em `wifi` (520px) e o ambiente Trabalho, nenhum texto da barra é cortado (widgets somem inteiros, spec 16).
 - [x] Conectar/desconectar um segundo monitor cria/remove a barra dele sem reiniciar a extensão.
 - [x] Uma janela em tela cheia esconde a barra só no monitor dela.
 - [x] Clique fora de um modo fixo fecha a ilha e não ativa a janela clicada.

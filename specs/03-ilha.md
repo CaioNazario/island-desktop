@@ -82,5 +82,5 @@ Modos fixos (inclusive `note` e `music` fixado) e o cartão central tomam o foco
 - [x] Segurar `Super+S` não faz a ilha piscar.
 - [x] Com o mouse sobre a ilha em `notif`, ela não fecha; ao sair, fecha 2500ms depois.
 - [x] Esc com o campo de senha focado fecha só o painel de senha; um segundo Esc fecha a ilha.
-- [ ] Testes de `island.ts` para `env` (só abre de `compact`/`env`, rearma), `note` como modo fixo e `music` fixado (sem timer, troca de faixa não fecha).
-- [ ] `env`, `note` e o cartão central (440) abrem com as medidas da tabela (±1px).
+- [x] Testes de `island.ts` para `env` (só abre de `compact`/`env`, rearma), `note` como modo fixo e `music` fixado (sem timer, troca de faixa não fecha).
+- [x] `env`, `note` e o cartão central (440) abrem com as medidas da tabela (±1px).
