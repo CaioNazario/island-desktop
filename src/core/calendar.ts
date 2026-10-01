@@ -112,8 +112,12 @@ function overlaps(event: CalendarEvent, begin: Date, end: Date): boolean {
   return event.end > begin && event.start < end;
 }
 
+function isAllDay(event: CalendarEvent, dayBegin: Date, dayEnd: Date): boolean {
+  return event.start <= dayBegin && event.end >= dayEnd;
+}
+
 function eventTime(event: CalendarEvent, dayBegin: Date, dayEnd: Date): string {
-  if (event.start <= dayBegin && event.end >= dayEnd) return 'Dia inteiro';
+  if (isAllDay(event, dayBegin, dayEnd)) return 'Dia inteiro';
   const start = formatClock(event.start);
   if (event.start.getTime() === event.end.getTime()) return start;
   return `${start} – ${formatClock(event.end)}`;
