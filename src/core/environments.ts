@@ -143,6 +143,14 @@ export function placeWidget(
   return placed;
 }
 
+export function removeWidget(env: Environment, id: WidgetId): Environment {
+  return {
+    ...env,
+    left: env.left.filter((w) => w !== id),
+    right: env.right.filter((w) => w !== id),
+  };
+}
+
 // Rolagem suave (specs/15-ambientes.md "Rolagem suave"; spike S8): o delta
 // chega em cliques de roda, ~10px de dedo cada.
 export const SWITCH_THRESHOLD = 11;

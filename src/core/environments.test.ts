@@ -3,6 +3,7 @@ import {
   defaultEnvironments,
   EnvironmentScroll,
   placeWidget,
+  removeWidget,
   removeEnvironment,
   sanitizeEnvironments,
   sanitizeIndex,
@@ -188,6 +189,14 @@ describe('placeWidget', () => {
   it('leaves the original untouched', () => {
     placeWidget(env, 'ai', 'right', null);
     expect(env).toMatchObject({ left: ['ai', 'event', 'pomodoro'], right: ['hw'] });
+  });
+});
+
+describe('removeWidget', () => {
+  it('takes the widget out of either pill', () => {
+    const env: Environment = { name: 'A', icon: 'house', left: ['ai'], right: ['hw', 'note'] };
+    expect(removeWidget(env, 'hw')).toMatchObject({ left: ['ai'], right: ['note'] });
+    expect(removeWidget(env, 'ai')).toMatchObject({ left: [], right: ['hw', 'note'] });
   });
 });
 
