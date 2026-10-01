@@ -7,11 +7,6 @@ Pontos que ninguém verificou ainda. Cada spike se resolve **antes** de implemen
 - **Pergunta**: o review do EGO aceita uma extensão que lê credenciais de CLIs de terceiros e chama endpoints não documentados com User-Agent de outro cliente?
 - **Pronto quando**: há uma resposta das diretrizes do EGO ou de um reviewer; enquanto isso, a instalação é só via `install.sh`.
 
-## S5 · Arrastar e soltar no St (antes da spec 17)
-
-- **Pergunta**: o `js/ui/dnd.js` do Shell 50 (`DND.makeDraggable`, `acceptDrop`/`handleDragOver` no alvo) funciona do painel do editor para as pílulas da barra, com o editor em grab modal e a barra em outra camada do `layoutManager`?
-- **Pronto quando**: há um protótipo arrastando um ator do editor para uma pílula e reordenando dentro dela, com o índice de destino calculado pelo x do ponteiro, e a API exata anotada na spec 17.
-
 ## S6 · Recarregar o stylesheet em runtime (antes da spec 19)
 
 - **Pergunta**: `St.ThemeContext.get_for_stage(global.stage).get_theme()` com `load_stylesheet`/`unload_stylesheet` reaplica as cores em todos os atores da Island sem recriá-los? Quanto custa cada recarga (dá para 10 por segundo durante o arraste)?

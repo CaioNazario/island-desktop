@@ -81,6 +81,15 @@ Com o `dnd.js` do Shell (spike S5):
 - Mover ou adicionar seleciona o widget movido e torna alvo a pílula de destino.
 - Soltar fora de uma pílula cancela.
 
+API medida no spike S5 (Shell 50):
+
+- Origem: `DND.makeDraggable(actor, {})` em cada widget da barra e em cada cartão do catálogo. O `actor._delegate` leva o id e a pílula de origem (ou catálogo), mais `getDragActor()` (um ator leve novo, não o widget) e `getDragActorSource()` (o próprio ator).
+- Alvo: o `WidgetArea` de cada pílula, com `_delegate.handleDragOver(source, actor, x, y)` devolvendo `DND.DragMotionResult.MOVE_DROP` e `_delegate.acceptDrop(source, actor, x, y)` devolvendo `true`. O `x` vem local à área.
+- Camadas: editor em `Main.layoutManager.modalDialogGroup` com `Main.pushModal(Main.uiGroup, { actionMode: Shell.ActionMode.POPUP })`. O drop acha o `WidgetArea` dentro de `Pill`/`RightPill` na barra, e arrastar a partir da barra funciona com o grab ativo.
+- Gravar o ambiente dentro do `acceptDrop` reconstrói os widgets da área e destrói a origem no meio do arraste: a gravação vai para um `GLib.idle_add`.
+- Índice de destino: o do widget sob o ponteiro (pela caixa alocada); fora de qualquer widget, o fim. Calcular pelo meio do widget mais próximo manda o espaço livre da pílula esquerda (que fica antes dos widgets) para o começo, contra a regra acima. O índice é sempre na lista de ids do ambiente, contando os widgets cortados por falta de espaço.
+- Não medido: se o `clicked` do `St.Button` continua chegando com o `makeDraggable` no mesmo ator (o clique seleciona/adiciona).
+
 ## Critérios de aceite
 
 - [ ] Testes de `placeWidget`: inserir no fim, antes de um widget, reordenar para frente/para trás na mesma pílula (ajuste de índice), trocar de pílula, widget já presente não duplica.
