@@ -7,13 +7,22 @@ const LABEL_MAX = 120;
 
 // Widget Música (specs/16-widgets.md `music`): ícone da fonte · título ·
 // artista · play/pause do estado, como o botão do modo (design/logic.js
-// `playIcon`). Sem player atual, some. O clique abre/fecha `music` fixado.
+// `playIcon`). Sem player atual, "Nada tocando" `neutral-400` e sem clique.
+// O clique abre/fecha `music` fixado.
 export function musicWidget(music: MusicSource, togglePinned: () => void): TopbarWidgetActor {
   const widget = new TopbarWidget(togglePinned, LABEL_MAX);
   const sync = (): void => {
     const track = music.track;
-    widget.visible = track !== null;
-    if (!track) return;
+    widget.clickable = track !== null;
+    if (!track) {
+      widget.display({
+        icon: 'music-note',
+        iconColor: colors.neutral400,
+        label: 'Nada tocando',
+        labelColor: colors.neutral400,
+      });
+      return;
+    }
     widget.display({
       icon: sourceGlyph(track.identity),
       iconColor: colors.accent400,
