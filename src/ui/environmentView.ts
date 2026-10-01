@@ -107,7 +107,7 @@ export const EnvironmentModeRow = GObject.registerClass(
     private sync(): void {
       const env = this.source.active;
       this.icon.gicon = phosphor(env.icon);
-      this.label.text = env.name;
+      this.label.text = env.name || 'Sem nome';
     }
   },
 );
