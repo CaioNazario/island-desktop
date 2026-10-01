@@ -48,6 +48,11 @@
       <default>['&lt;Super&gt;&lt;Control&gt;Left']</default>
       <summary>Ambiente anterior</summary>
     </key>
+    <key name="auto-hide" type="b">
+      <default>false</default>
+      <summary>Ocultar a barra automaticamente</summary>
+      <description>A barra some e reaparece com o ponteiro na borda de cima; editada no editor de ambientes.</description>
+    </key>
     <key name="countdown-name" type="s">
       <default>''</default>
       <summary>Nome da contagem regressiva</summary>
