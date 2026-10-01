@@ -6,8 +6,3 @@ Pontos que ninguém verificou ainda. Cada spike se resolve **antes** de implemen
 
 - **Pergunta**: o review do EGO aceita uma extensão que lê credenciais de CLIs de terceiros e chama endpoints não documentados com User-Agent de outro cliente?
 - **Pronto quando**: há uma resposta das diretrizes do EGO ou de um reviewer; enquanto isso, a instalação é só via `install.sh`.
-
-## S6 · Recarregar o stylesheet em runtime (antes da spec 19)
-
-- **Pergunta**: `St.ThemeContext.get_for_stage(global.stage).get_theme()` com `load_stylesheet`/`unload_stylesheet` reaplica as cores em todos os atores da Island sem recriá-los? Quanto custa cada recarga (dá para 10 por segundo durante o arraste)?
-- **Pronto quando**: há medida do tempo de recarga com a barra e a ilha abertas e a forma de aplicar anotada na spec 19. Se for lento, a prévia durante o arraste cai para "aplica ao soltar".

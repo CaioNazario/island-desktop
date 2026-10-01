@@ -15,7 +15,7 @@ O CSS do St não tem variáveis. Uma tabela única em `src/ui/tokens.ts` é a fo
 
 ### Realce
 
-`accent` e `accent-100…900` não são fixos: saem da matiz e saturação escolhidas (spec 19), e `accent` = `accent-500`. O padrão (289 / 100%) é `#f4f3ff #e6e4ff #d2cdff #b5acfa #9387dd #766ab9 #5a508f #3f3865 #28253e`. Os valores fixos do `tokens.css` (`#9184d9`, `#968ae0`…) não são usados: o design também troca pela escala calculada ao carregar.
+`accent` e `accent-100…900` são fixos: a escala que o design calcula ao carregar com matiz 289 e saturação 100%, e `accent` = `accent-500`. Os valores são `#f4f3ff #e6e4ff #d2cdff #b5acfa #9387dd #766ab9 #5a508f #3f3865 #28253e`. Os valores fixos do `tokens.css` (`#9184d9`, `#968ae0`…) não são usados: o design também troca pela escala calculada ao carregar. O design deixa escolher a matiz e a saturação; a Island não (fora de escopo, spec 00).
 
 ### Cores pré-calculadas
 

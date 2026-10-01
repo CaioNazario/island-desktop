@@ -21,8 +21,6 @@ O design v3 muda o padrão de `clickAction` para "Calendário compacto" e só ap
 | `switch-environment-next` | `as` | `['<Super><Control>Right']` | spec 15 (keybinding, sem UI) |
 | `switch-environment-previous` | `as` | `['<Super><Control>Left']` | spec 15 (keybinding, sem UI) |
 | `auto-hide` | `b` | `false` | spec 18 (editada no editor de ambientes) |
-| `accent-hue` | `u` (0–360) | `289` | spec 19 (editada na ilha) |
-| `accent-chroma` | `u` (0–200) | `100` | spec 19 (editada na ilha) |
 | `note-text` | `s` (até 80) | vazio | spec 16 (editada na ilha) |
 | `countdown-name` | `s` | vazio | spec 16 |
 | `countdown-date` | `s` (`AAAA-MM-DD`) | vazio | spec 16 |
@@ -48,7 +46,7 @@ Roda em outro processo e só conversa com a extensão via GSettings. Textos em p
   - Contagem regressiva: nome (até 20 caracteres) e data (seletor de data; "Limpar" apaga a data)
   - GitHub: estado do `gh`, "Conectado" ou "Não encontrado: rode `gh auth login`" (roda `gh auth status` ao abrir a página)
 
-Ambientes, auto-ocultar, cor de realce e nota não aparecem na janela: são editados no Shell (specs 16, 17 e 19).
+Ambientes, auto-ocultar e nota não aparecem na janela: são editados no Shell (specs 16 e 17).
 
 A notificação de dica do clima (spec 07) abre esta janela direto na página Clima, e o widget de contagem sem data (spec 16) na página Widgets. O `openPreferences()` do Shell não escolhe página, então a extensão grava `weather` em `prefs-page` antes de abrir; a janela mostra a página e zera a chave (também com a janela já aberta).
 

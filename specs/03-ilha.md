@@ -15,7 +15,7 @@ A máquina de estados vive em `src/core/island.ts` (pura, testada). A UI só ren
 | `volume` | 320 × 50 | 25 | transitório 1500ms | 08 |
 | `brightness` | 320 × 50 | 25 | transitório 1500ms | 08 |
 | `calendar` | 480 × 150 (semana) / 214 (mês) | 24 | fixo | 06 |
-| `quick` | 520 × 58, com linha de energia 106, com painel de realce 174 | 29 | fixo | 08, 09, 19 |
+| `quick` | 520 × 58, com linha de energia 106 | 29 | fixo | 08, 09 |
 | `wifi` | 520 × 292 (+48 energia, +58 senha, +76 senha com erro) | 26 | fixo | 08 |
 | `bt` | 520 × 348 (BT ligado) / 300 (desligado), +48 energia | 26 | fixo | 08 |
 | `ai` | 480 × (24 + 32 + p·108 − 6), p = provedores | 24 | fixo | 12 |
@@ -50,7 +50,7 @@ O cartão central (spec 05) também é um estado da ilha: 440 × altura do conte
 
 ## Regras de transição
 
-1. **Abrir por gatilho do usuário** (clique na barra ou num widget, `Super+S`): substitui qualquer modo e fecha cartão central, linha de energia, painel de realce e painel de senha.
+1. **Abrir por gatilho do usuário** (clique na barra ou num widget, `Super+S`): substitui qualquer modo e fecha cartão central, linha de energia e painel de senha.
 2. Clicar no gatilho do modo já aberto fecha a ilha.
 3. **Eventos automáticos nunca substituem modo fixo nem cartão aberto**:
    - notificação: regras da spec 04
@@ -61,7 +61,7 @@ O cartão central (spec 05) também é um estado da ilha: 440 × altura do conte
 6. **Timer transitório**: armado ao entrar no modo; ao vencer, volta a `compact` só se o modo ainda for o mesmo. `music` fixado não arma timer.
 7. **Hover** na ilha cancela o timer; sair do hover rearma o timer do modo atual.
 8. Interagir com um slider cancela o timer durante o arraste e rearma ao soltar.
-9. **Esc** fecha tudo (modo, cartão, linha de energia, painel de realce), exceto quando o campo de senha de Wi‑Fi tem foco: aí Esc só fecha o painel de senha. No modo `note`, Esc (e Enter) grava e fecha.
+9. **Esc** fecha tudo (modo, cartão, linha de energia), exceto quando o campo de senha de Wi‑Fi tem foco: aí Esc só fecha o painel de senha. No modo `note`, Esc (e Enter) grava e fecha.
 
 ## Foco de teclado
 

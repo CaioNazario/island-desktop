@@ -26,7 +26,6 @@ Depois do divisor, na linha de controles de `quick`, `wifi` e `bt`:
 - Qualquer ação fecha a ilha antes de executar.
 - "Diálogo nativo" = o mesmo `EndSessionDialog` do GNOME: contagem regressiva, aviso de apps com trabalho não salvo, e o usuário pode cancelar.
 - Trocar de modo, Esc ou clique fora fecham a linha de energia.
-- Linha de energia e painel de realce (spec 19) se excluem: abrir um fecha o outro.
 
 ## Fonte
 
