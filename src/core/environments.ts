@@ -139,6 +139,21 @@ export function placeWidget(
   return placed;
 }
 
+export interface WidgetPlace {
+  side: Side;
+  index: number;
+  /** Quantos widgets a pílula tem. */
+  count: number;
+}
+
+export function findWidget(env: Environment, id: WidgetId): WidgetPlace | null {
+  for (const side of ['left', 'right'] as const) {
+    const index = env[side].indexOf(id);
+    if (index !== -1) return { side, index, count: env[side].length };
+  }
+  return null;
+}
+
 export function removeWidget(env: Environment, id: WidgetId): Environment {
   return {
     ...env,

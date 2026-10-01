@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultEnvironments,
   EnvironmentScroll,
+  findWidget,
   placeWidget,
   removeWidget,
   removeEnvironment,
@@ -189,6 +190,19 @@ describe('placeWidget', () => {
   it('leaves the original untouched', () => {
     placeWidget(env, 'ai', 'right', null);
     expect(env).toMatchObject({ left: ['ai', 'event', 'pomodoro'], right: ['hw'] });
+  });
+});
+
+describe('findWidget', () => {
+  const env: Environment = { name: 'A', icon: 'house', left: ['ai', 'event'], right: ['hw'] };
+
+  it('tells the pill, the position and the pill size', () => {
+    expect(findWidget(env, 'event')).toEqual({ side: 'left', index: 1, count: 2 });
+    expect(findWidget(env, 'hw')).toEqual({ side: 'right', index: 0, count: 1 });
+  });
+
+  it('returns null for a widget outside the environment', () => {
+    expect(findWidget(env, 'note')).toBeNull();
   });
 });
 
