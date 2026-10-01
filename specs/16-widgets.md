@@ -136,9 +136,9 @@ Fonte de dado usada só por widget (hardware, IA, GitHub) roda apenas enquanto u
 
 ## Critérios de aceite
 
-- [ ] Testes puros: próximo evento (sem eventos, dia inteiro como reserva, ≤90 min, >90 min), fases do pomodoro (troca ao zerar, pausar e retomar), `daysUntil` (hoje, amanhã, passado, virada de ano), progresso do dia, parse das buscas do GitHub e textos no singular/plural.
-- [ ] Com a barra estreita, o `hw` perde NET, GPU e TEMP antes de qualquer widget sumir, e nenhum widget aparece cortado.
-- [ ] O pomodoro notifica a troca de fase e volta pausado, com o mesmo restante, depois de lock/unlock.
-- [ ] Sem `gh` instalado, o widget GitHub mostra "GitHub" sem erro no journal. Com login, os números batem com `gh search prs`.
-- [ ] Nota editada na ilha aparece no widget ao fechar e sobrevive a lock/unlock.
-- [ ] Ambiente sem `hw` nem `ai`: nenhuma leitura de `/proc` e nenhuma chamada HTTP de IA acontecem.
+- [x] Testes puros: próximo evento (sem eventos, dia inteiro como reserva, ≤90 min, >90 min), fases do pomodoro (troca ao zerar, pausar e retomar), `daysUntil` (hoje, amanhã, passado, virada de ano), progresso do dia, parse das buscas do GitHub e textos no singular/plural.
+- [ ] Com a barra estreita, o `hw` perde NET, GPU e TEMP antes de qualquer widget sumir, e nenhum widget aparece cortado. (adiado: testar com o editor da spec 17)
+- [x] O pomodoro notifica a troca de fase e volta pausado, com o mesmo restante, depois de lock/unlock.
+- [x] Sem `gh` instalado, o widget GitHub mostra "GitHub" sem erro no journal. Com login, os números batem com `gh search prs`.
+- [x] Nota editada na ilha aparece no widget ao fechar e sobrevive a lock/unlock.
+- [x] Ambiente sem `hw` nem `ai`: nenhuma leitura de `/proc` e nenhuma chamada HTTP de IA acontecem.
