@@ -92,8 +92,8 @@ API medida no spike S5 (Shell 50):
 
 ## Critérios de aceite
 
-- [ ] Testes de `placeWidget`: inserir no fim, antes de um widget, reordenar para frente/para trás na mesma pílula (ajuste de índice), trocar de pílula, widget já presente não duplica.
-- [ ] Criar, renomear, trocar ícone e excluir ambiente reflete na barra na hora e sobrevive a lock/unlock.
-- [ ] O Padrão não mostra "Excluir ambiente"; com 6 ambientes, "Novo" some.
-- [ ] Arrastar um widget do catálogo para a pílula direita e reordenar na barra funcionam sem deixar ator órfão (Looking Glass).
-- [ ] Esc e clique no fundo fecham o editor; clique no fundo não chega à janela embaixo.
+- [x] Testes de `placeWidget`: inserir no fim, antes de um widget, reordenar para frente/para trás na mesma pílula (ajuste de índice), trocar de pílula, widget já presente não duplica.
+- [x] Criar, renomear, trocar ícone e excluir ambiente reflete na barra na hora e sobrevive a lock/unlock.
+- [x] O Padrão não mostra "Excluir ambiente"; com 6 ambientes, "Novo" some.
+- [x] Arrastar um widget do catálogo para a pílula direita e reordenar na barra funcionam sem deixar ator órfão (Looking Glass).
+- [x] Esc e clique no fundo fecham o editor; clique no fundo não chega à janela embaixo.
