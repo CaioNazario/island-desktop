@@ -65,7 +65,8 @@ Linha de 24px, padding 0 9px, gap 6px, 12px/500, `text`, dígitos tabulares, sem
 - Fonte: eventos de hoje da spec 06.
 - Próximo = primeiro evento com hora (não "dia inteiro") que começa depois de agora.
 - Rótulo: nome do evento. Sub: `em N min` se começa em até 90 min, senão `HH:MM`.
-- Sem próximo: rótulo "Sem eventos", sub "hoje".
+- Sem próximo: o primeiro evento de dia inteiro de hoje, com sub "dia inteiro".
+- Sem nenhum dos dois: rótulo "Sem eventos", sub "hoje".
 - Atualiza a cada minuto e quando os eventos mudam.
 
 ### `pomodoro`
@@ -135,7 +136,7 @@ Fonte de dado usada só por widget (hardware, IA, GitHub) roda apenas enquanto u
 
 ## Critérios de aceite
 
-- [ ] Testes puros: próximo evento (sem eventos, dia inteiro, ≤90 min, >90 min), fases do pomodoro (troca ao zerar, pausar e retomar), `daysUntil` (hoje, amanhã, passado, virada de ano), progresso do dia, parse das buscas do GitHub e textos no singular/plural.
+- [ ] Testes puros: próximo evento (sem eventos, dia inteiro como reserva, ≤90 min, >90 min), fases do pomodoro (troca ao zerar, pausar e retomar), `daysUntil` (hoje, amanhã, passado, virada de ano), progresso do dia, parse das buscas do GitHub e textos no singular/plural.
 - [ ] Com a barra estreita, o `hw` perde NET, GPU e TEMP antes de qualquer widget sumir, e nenhum widget aparece cortado.
 - [ ] O pomodoro notifica a troca de fase e volta pausado, com o mesmo restante, depois de lock/unlock.
 - [ ] Sem `gh` instalado, o widget GitHub mostra "GitHub" sem erro no journal. Com login, os números batem com `gh search prs`.
