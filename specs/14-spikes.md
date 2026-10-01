@@ -11,8 +11,3 @@ Pontos que ninguém verificou ainda. Cada spike se resolve **antes** de implemen
 
 - **Pergunta**: `St.ThemeContext.get_for_stage(global.stage).get_theme()` com `load_stylesheet`/`unload_stylesheet` reaplica as cores em todos os atores da Island sem recriá-los? Quanto custa cada recarga (dá para 10 por segundo durante o arraste)?
 - **Pronto quando**: há medida do tempo de recarga com a barra e a ilha abertas e a forma de aplicar anotada na spec 19. Se for lento, a prévia durante o arraste cai para "aplica ao soltar".
-
-## S9 · Barreira de pressão para o auto-ocultar (antes da spec 18)
-
-- **Pergunta**: `Layout.PressureBarrier` + `Meta.Barrier` na borda de cima de cada monitor funcionam com o strut removido e com janela maximizada? Que limiar e tempo (o canto ativo usa 100px em 1000ms) dão uma revelação sem disparo acidental?
-- **Pronto quando**: há protótipo revelando a barra por pressão em dois monitores, e os valores estão na spec 18.

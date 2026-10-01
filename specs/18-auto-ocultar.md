@@ -18,7 +18,13 @@ Opcional, desligado por padrão. Liga pelo editor (spec 17, linha 5) e fica na c
 
 ## Revelar pela borda
 
-O design usa uma faixa sensível de 6px no topo. No Shell, isso roubaria o clique da primeira linha de pixels das janelas maximizadas (abas do navegador encostadas no topo). A Island usa uma **barreira de pressão** no topo de cada monitor (`Layout.PressureBarrier` do Shell, o mesmo mecanismo do canto ativo): empurrar o ponteiro contra a borda revela a barra, e só encostar não. Limiar e tempo no spike S9.
+O design usa uma faixa sensível de 6px no topo. No Shell, isso roubaria o clique da primeira linha de pixels das janelas maximizadas (abas do navegador encostadas no topo). A Island usa uma **barreira de pressão** no topo de cada monitor (`Layout.PressureBarrier` do Shell, o mesmo mecanismo do canto ativo): empurrar o ponteiro contra a borda revela a barra, e só encostar não. 
+API medida no spike S9 (Shell 50, um monitor 1920×1080):
+
+- Uma `Meta.Barrier({ backend: global.backend, x1: monitor.x, x2: monitor.x + monitor.width, y1: monitor.y, y2: monitor.y, directions: Meta.BarrierDirection.POSITIVE_Y })` por monitor, dentro de um `Layout.PressureBarrier(100, 1000, Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW)` (os valores do canto ativo); o sinal `trigger` revela a barra. O `PressureBarrier` existe no runtime mas não está nos tipos do `@girs/gnome-shell`.
+- Funciona sem strut e com janela maximizada encostada em y=0. Clicar nas abas do navegador maximizado não dispara; empurrar contra a borda dispara. Não briga com o canto ativo.
+- Recriar o `PressureBarrier` e a barreira no `monitors-changed`; no disable, `destroy()` nos dois.
+- Não medido: dois monitores (sem segundo monitor para testar).
 
 ## Por monitor
 
