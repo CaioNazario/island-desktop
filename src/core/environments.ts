@@ -132,11 +132,7 @@ export function placeWidget(
   at: number | null,
 ): Environment {
   const from = env[side].indexOf(id);
-  const placed = {
-    ...env,
-    left: env.left.filter((w) => w !== id),
-    right: env.right.filter((w) => w !== id),
-  };
+  const placed = removeWidget(env, id);
   let index = at ?? placed[side].length;
   if (from !== -1 && from < index) index--;
   placed[side].splice(Math.max(0, Math.min(placed[side].length, index)), 0, id);
