@@ -30,5 +30,5 @@ A tabela de ícones `ph-battery-*` por nível saiu: a barra não usa mais ícone
 
 ## Critérios de aceite
 
-- [ ] Testes de `battery.ts` atualizados para o desenho: largura do preenchimento, faixas de cor e raio de carga.
-- [ ] Ligar/desligar o carregador mostra/esconde o raio em até 2s; o preenchimento acompanha o nível.
+- [x] Testes de `battery.ts` atualizados para o desenho: largura do preenchimento, faixas de cor e raio de carga.
+- [x] Ligar/desligar o carregador mostra/esconde o raio em até 2s; o preenchimento acompanha o nível.
