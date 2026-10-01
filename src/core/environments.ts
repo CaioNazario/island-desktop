@@ -17,6 +17,32 @@ export const WIDGET_IDS = [
 
 export type WidgetId = (typeof WIDGET_IDS)[number];
 
+/** Cartão do catálogo (specs/16-widgets.md "Catálogo"); ícone como em `ui/icons.ts`. */
+export const WIDGET_CATALOG: Record<WidgetId, { name: string; icon: string; description: string }> =
+  {
+    ai: { name: 'Uso de IA', icon: 'sparkle', description: 'Sessão e limite semanal' },
+    hw: { name: 'Hardware', icon: 'cpu', description: 'CPU, RAM, GPU, temperatura e rede' },
+    event: {
+      name: 'Próximo evento',
+      icon: 'calendar-blank',
+      description: 'O próximo compromisso do dia',
+    },
+    pomodoro: { name: 'Pomodoro', icon: 'timer', description: 'Ciclos de foco e pausa' },
+    music: { name: 'Música', icon: 'music-note', description: 'O que está tocando agora' },
+    github: { name: 'GitHub', icon: 'github-logo', description: 'PRs esperando revisão' },
+    progress: {
+      name: 'Progresso do dia',
+      icon: 'hourglass-medium',
+      description: 'Quanto do dia já passou',
+    },
+    countdown: {
+      name: 'Contagem regressiva',
+      icon: 'airplane-tilt',
+      description: 'Dias até a data que importa',
+    },
+    note: { name: 'Nota', icon: 'note', description: 'Um recado fixo na barra' },
+  };
+
 /** Glifos Phosphor de `ENV_ICONS` (`ph ph-house` → `house`, ver `ui/icons.ts`). */
 export const ENV_ICONS = [
   'house',
