@@ -54,7 +54,7 @@ Linha de 24px, padding 0 9px, gap 6px, 12px/500, `text`, dígitos tabulares, sem
 | `hw` | spec 10 | abre/fecha `quick` |
 | `event` | ícone `ph-calendar-blank` · rótulo (máx. 130px) · sub | abre `calendar` |
 | `pomodoro` | anel · rótulo `mm:ss` · sub | alterna rodando/pausado |
-| `music` | ícone da fonte (spec 05) `accent-400` · título (máx. 120px) · sub artista · ícone final `ph-fill ph-play`/`ph-pause` do estado | abre/fecha `music` fixado |
+| `music` | ícone da fonte (spec 05) `accent-400` · título (máx. 120px) · sub artista · ícone final `ph-fill ph-play`/`ph-pause` do estado | com player: abre/fecha `music` fixado |
 | `github` | ícone `ph-fill ph-github-logo` · rótulo · sub | nenhum |
 | `progress` | ícone `ph-hourglass-medium` · "Dia" · barra · sub `%` | nenhum |
 | `countdown` | ícone `ph-airplane-tilt` · rótulo · sub | só sem data configurada: abre as preferências na página Widgets |
@@ -83,7 +83,8 @@ Linha de 24px, padding 0 9px, gap 6px, 12px/500, `text`, dígitos tabulares, sem
 
 ### `music`
 
-- Dados do player atual (spec 05). Sem player atual, o widget some (não ocupa espaço).
+- Dados do player atual (spec 05).
+- Sem player atual, o widget continua na barra: ícone `ph-music-note` e rótulo "Nada tocando", ambos `neutral-400`, sem sub, sem ícone final e sem clique.
 - Clique abre o modo `music` **fixado** (spec 05); clicar de novo com ele aberto fecha.
 
 ### `github`
