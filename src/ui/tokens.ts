@@ -30,9 +30,11 @@ export const colors = {
 
 // oklch()/color-mix() convertidos para hex/rgba equivalentes (St não entende as funções CSS4).
 export const derivedColors = {
-  alertRed: '#f75d59', // IA ≥90%, TEMP ≥70°, bateria ≤20%
+  alertRed: '#f75d59', // IA ≥90%, TEMP ≥70°
   alertText: '#fd736d', // texto de alerta (IA ≥90%, erro de senha)
-  batteryGreen: '#5fd37f', // bateria ≥80%
+  batteryRed: '#c62f2f', // bateria ≤20%, sólido
+  batteryGreen: '#2e9e4f', // bateria ≥90%, sólido
+  batteryInk: '#000000', // borda e número da bateria
   powerOpenBg: '#932b2a', // fundo do botão Energia aberto
   powerOffText: '#ff958d', // texto "Desligar"
   passwordErrorBorder: '#bd413f', // borda do campo de senha com erro
