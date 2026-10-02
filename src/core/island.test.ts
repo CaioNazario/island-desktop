@@ -165,6 +165,18 @@ describe('IslandState', () => {
     expect(state.mode).toBe('compact');
   });
 
+  it('regra 7: notificação nova com o ponteiro em cima não arma o timer', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openNotification(false);
+    state.hoverStart();
+
+    state.openNotification(false);
+    expect(scheduler.pendingCount).toBe(0);
+    scheduler.advance(10_000);
+    expect(state.mode).toBe('notif');
+  });
+
   it('regra 8: arrastar um slider cancela o timer e soltar rearma', () => {
     const scheduler = new FakeScheduler();
     const state = new IslandState(scheduler);
