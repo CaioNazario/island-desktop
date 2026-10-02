@@ -63,7 +63,7 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 | `make lint` | ESLint + Prettier + `tsc --noEmit` |
 | `make build` | `tsc` + `glib-compile-schemas` |
 | `make dev` | build + Shell aninhado: `dbus-run-session gnome-shell --devkit --wayland` |
-| `make smoke` | **Ainda não existe; criar antes de usar.** Sobe o Shell headless, faz ciclos de enable/disable e falha se o journal tiver `JS ERROR` ou `Gjs-CRITICAL` |
+| `make smoke` | build + Shell headless isolado em `dist/smoke` (HOME, dconf e extensões próprios): 20 ciclos de enable/disable, falha se a extensão não ficar ativa ou se o log do Shell tiver erro ou aviso de JS (`SMOKE_CYCLES=n` muda os ciclos) |
 | `./install.sh` / `./install.sh --uninstall` | instala em `~/.local/share/gnome-shell/extensions/island@caionazario.dev/` |
 
 - Shell headless: `dbus-run-session -- gnome-shell --headless --virtual-monitor 1600x900`.
