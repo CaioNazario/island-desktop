@@ -1,7 +1,7 @@
 // Bateria desenhada da pílula direita (specs/11-bateria.md; design/logic.js
 // `batColor`/`batText`/`batFillW`/`batNum`/`chgD`).
 
-/** `good` ≥80 (verde), `low` ≤20 (vermelho no desenho e no número), `normal` entre. */
+/** `good` ≥90 (verde), `low` ≤20 (vermelho), `normal` entre (cinza). */
 export type BatteryTone = 'good' | 'normal' | 'low';
 
 export interface BatteryDisplay {
@@ -15,7 +15,7 @@ export interface BatteryDisplay {
 }
 
 function tone(percent: number): BatteryTone {
-  if (percent >= 80) return 'good';
+  if (percent >= 90) return 'good';
   if (percent <= 20) return 'low';
   return 'normal';
 }

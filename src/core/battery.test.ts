@@ -13,8 +13,8 @@ describe('batteryDisplay', () => {
 
   it.each([
     [100, 'good'],
-    [80, 'good'],
-    [79, 'normal'],
+    [90, 'good'],
+    [89, 'normal'],
     [21, 'normal'],
     [20, 'low'],
     [0, 'low'],
@@ -35,16 +35,16 @@ describe('batteryDisplay', () => {
   });
 
   it('keeps the level colors while charging', () => {
-    expect(batteryDisplay(85, true).tone).toBe('good');
+    expect(batteryDisplay(95, true).tone).toBe('good');
     expect(batteryDisplay(50, true).tone).toBe('normal');
     expect(batteryDisplay(15, true).tone).toBe('low');
   });
 
   it('rounds the UPower percentage before applying the thresholds', () => {
-    expect(batteryDisplay(79.6, false)).toEqual({
+    expect(batteryDisplay(89.6, false)).toEqual({
       tone: 'good',
-      fill: 0.8,
-      number: '80',
+      fill: 0.9,
+      number: '90',
       bolt: false,
     });
     expect(batteryDisplay(20.4, false)).toEqual({
