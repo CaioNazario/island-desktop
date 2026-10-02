@@ -25,42 +25,52 @@ import type { WidgetAreaActor } from './widgetArea.js';
 const BATTERY_COLOR: Record<BatteryTone, string> = {
   good: derivedColors.batteryGreen,
   normal: colors.neutral300,
-  low: derivedColors.alertRed,
+  low: derivedColors.batteryRed,
 };
+// Fundo da parte vazia: claro o bastante para a borda e o número pretos.
+const BATTERY_TRACK = colors.neutral600;
 
-// Corpo 28×15 com borda 1.5px e padding 1.5px: sobra 22×9 para o
-// preenchimento. No St, `width`/`height` do estilo são a caixa de conteúdo.
-const BATTERY_BODY = { inner: { width: 22, height: 9 }, edge: 1.5 };
+// Corpo 26×12 com borda 1px: sobra 24×10 para o preenchimento, sem respiro.
+// No St, `width`/`height` do estilo são a caixa de conteúdo.
+const BATTERY_BODY = { inner: { width: 24, height: 10 }, edge: 1, radius: 3 };
 const BATTERY_FILL_MS = 300;
-// `letter-spacing: -0.02em` do design em 9.5px.
-const BATTERY_NUMBER_STYLE =
-  'font-size: 9.5px; font-weight: 600; letter-spacing: -0.19px; font-feature-settings: "tnum";';
-
-/** `color-mix(in oklch, <cor> 38%, transparent)` do preenchimento (spec 01). */
-function fillColor(hex: string): string {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return `rgba(${r},${g},${b},0.38)`;
-}
+// `letter-spacing: -0.02em` em 8px.
+const BATTERY_NUMBER_STYLE = `font-size: 8px; font-weight: 600; letter-spacing: -0.16px; font-feature-settings: "tnum"; color: ${derivedColors.batteryInk};`;
 
 // Bateria (specs/11-bateria.md): desenho (corpo + polo) e raio só
 // carregando, gap 4px, padding 0 10px. Sem bateria o botão some.
 function batteryButton(battery: BatterySource, onClick: () => void): BarButtonActor {
-  const { inner, edge } = BATTERY_BODY;
-  // Caixa no fluxo em vez de posição fixa: o preenchimento começa dentro do
-  // padding e herda a altura interna.
+  const { inner, edge, radius } = BATTERY_BODY;
+  // Caixa no fluxo em vez de posição fixa: o preenchimento começa dentro da
+  // borda e herda a altura interna.
   const fill = new St.Widget({ width: 0 });
-  const frame = new St.BoxLayout({ clip_to_allocation: true });
+  const frame = new St.BoxLayout({
+    style: `
+      width: ${inner.width}px; height: ${inner.height}px;
+      border: ${edge}px solid ${derivedColors.batteryInk}; border-radius: ${radius}px;
+      background-color: ${BATTERY_TRACK};
+    `,
+    clip_to_allocation: true,
+  });
   frame.add_child(fill);
   // Número centralizado sobre o corpo: sem expand, o BinLayout centraliza no
   // tamanho natural (ver o sino abaixo).
   const number = new St.Label({
+    style: BATTERY_NUMBER_STYLE,
     x_align: Clutter.ActorAlign.CENTER,
     y_align: Clutter.ActorAlign.CENTER,
   });
   const body = new St.Widget({ layout_manager: new Clutter.BinLayout() });
   body.add_child(frame);
   body.add_child(number);
-  const pole = new St.Widget({ width: 2, height: 6, y_align: Clutter.ActorAlign.CENTER });
+  // Polo fora do corpo, sobre o fundo escuro da pílula: preto sumiria, então
+  // vai na cor da parte vazia.
+  const pole = new St.Widget({
+    width: 2,
+    height: 4,
+    style: `border-radius: 0 1px 1px 0; background-color: ${BATTERY_TRACK};`,
+    y_align: Clutter.ActorAlign.CENTER,
+  });
   const drawing = new St.BoxLayout({ style: 'spacing: 1px;', y_align: Clutter.ActorAlign.CENTER });
   drawing.add_child(body);
   drawing.add_child(pole);
@@ -79,20 +89,18 @@ function batteryButton(battery: BatterySource, onClick: () => void): BarButtonAc
     if (!button.visible) return;
     const display = batteryDisplay(battery.percentage, battery.charging);
     const color = BATTERY_COLOR[display.tone];
-    frame.style = `
-      width: ${inner.width}px; height: ${inner.height}px;
-      border: ${edge}px solid ${color}; border-radius: 4px; padding: ${edge}px;
-    `;
-    fill.style = `border-radius: 2px; background-color: ${fillColor(color)};`;
+    const width = Math.round(inner.width * display.fill);
+    // Raio interno = raio do corpo − borda; a ponta direita só arredonda cheia.
+    const fillRadius = radius - edge;
+    const corners =
+      width === inner.width ? `${fillRadius}px` : `${fillRadius}px 0 0 ${fillRadius}px`;
+    fill.style = `border-radius: ${corners}; background-color: ${color};`;
     fill.ease({
-      width: Math.round(inner.width * display.fill),
+      width,
       duration: BATTERY_FILL_MS,
       mode: Clutter.AnimationMode.EASE,
     });
     number.text = display.number;
-    const textColor = display.tone === 'low' ? derivedColors.alertRed : colors.text;
-    number.style = `${BATTERY_NUMBER_STYLE} color: ${textColor};`;
-    pole.style = `border-radius: 0 1px 1px 0; background-color: ${color};`;
     bolt.visible = display.bolt;
     bolt.style = `color: ${color};`;
   };
