@@ -2,6 +2,7 @@
 // `calendar`, `calWeeks`, `todayLabel`, `events`).
 
 import { formatClock, formatDay } from './clock.js';
+import { startOfDay } from './dayTracker.js';
 
 // Semana começando na segunda, mês completo em semanas inteiras.
 export const WEEKDAY_HEADERS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -100,10 +101,6 @@ export interface TodayEvent {
   name: string;
   time: string;
   dot: EventDot;
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 // Mesma regra do Shell (`_eventOverlapsInterval`): inclui eventos de duração zero.

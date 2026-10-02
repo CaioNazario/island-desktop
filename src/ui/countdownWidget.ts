@@ -2,6 +2,7 @@ import type Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
 import { countdownView } from '../core/countdown.js';
+import { DayTracker } from '../core/dayTracker.js';
 import { TopbarWidget, type TopbarWidgetActor } from './topbarWidget.js';
 import { colors } from './tokens.js';
 
@@ -35,14 +36,10 @@ export function countdownWidget(
   };
   // Por comparação de data, não por timer até a meia-noite: o relógio
   // monotônico para na suspensão (como em system/calendarEvents.ts).
-  let day = new Date().toDateString();
+  const dayTracker = new DayTracker(new Date());
   sync();
   const timerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, DAY_CHECK_SECONDS, () => {
-    const today = new Date().toDateString();
-    if (today !== day) {
-      day = today;
-      sync();
-    }
+    if (dayTracker.advance(new Date())) sync();
     return GLib.SOURCE_CONTINUE;
   });
 
