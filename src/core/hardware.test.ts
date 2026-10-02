@@ -45,6 +45,10 @@ describe('parseCpuTimes', () => {
     expect(parseCpuTimes('cpu0 1 2 3 4 5\n')).toBeNull();
     expect(parseCpuTimes('')).toBeNull();
   });
+
+  it('returns null for a non-numeric field instead of NaN', () => {
+    expect(parseCpuTimes('cpu  10 20 abc 40 5 0 0 0\n')).toBeNull();
+  });
 });
 
 describe('cpuUsage', () => {
