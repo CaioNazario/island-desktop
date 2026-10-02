@@ -196,6 +196,19 @@ describe('IslandState', () => {
     expect(state.mode).toBe('compact');
   });
 
+  it('spec 05: controle do player rearma o timer do music transitório', () => {
+    const scheduler = new FakeScheduler();
+    const state = new IslandState(scheduler);
+    state.openAutomatic('music');
+
+    scheduler.advance(2000);
+    state.keepAlive();
+    scheduler.advance(2499);
+    expect(state.mode).toBe('music');
+    scheduler.advance(1);
+    expect(state.mode).toBe('compact');
+  });
+
   it('regra 9: Esc com senha focada fecha só o campo, um segundo Esc fecha a ilha', () => {
     const state = new IslandState(new FakeScheduler());
     state.openFromTrigger('wifi');
