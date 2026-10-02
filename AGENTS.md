@@ -100,7 +100,7 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 
 - TDD em `src/core`: teste vermelho primeiro, depois o código.
 - Teste que precisa de um serviço usa um fake nomeado que implementa a interface dele (`FakeMprisService`), não stub inline. Não crie fake que nenhum teste usa.
-- Bug fix entra com teste de regressão.
+- Bug fix entra com teste de regressão. Fix em `ui/`, que não tem testes: se a lógica do fix cabe em `core/`, ela vai para lá com o teste; se não cabe, o corpo do commit descreve o teste manual que confirmou a correção.
 
 ## Regras de trabalho
 
