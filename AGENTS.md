@@ -99,7 +99,7 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 ## Testes
 
 - TDD em `src/core`: teste vermelho primeiro, depois o código.
-- Serviços são testados contra fakes nomeados que implementam a interface (`FakeMprisService`), não stubs inline.
+- Teste que precisa de um serviço usa um fake nomeado que implementa a interface dele (`FakeMprisService`), não stub inline. Não crie fake que nenhum teste usa.
 - Bug fix entra com teste de regressão.
 
 ## Regras de trabalho
