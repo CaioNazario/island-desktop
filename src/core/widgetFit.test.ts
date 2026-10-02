@@ -15,6 +15,15 @@ describe('fitWidgets', () => {
     expect(fitWidgets([hw, fixed(80)], 172, 2, 'end')).toEqual([90, 80]);
   });
 
+  it('o excesso passa de um widget para o seguinte sem encolher além do necessário', () => {
+    // 100 + 100 = 200; sobra 160: o primeiro perde 20 (até o mínimo), o segundo os outros 20.
+    const sizes = [
+      { natural: 100, min: 80 },
+      { natural: 100, min: 50 },
+    ];
+    expect(fitWidgets(sizes, 160, 0, 'end')).toEqual([80, 80]);
+  });
+
   it('sem espaço nem com o hw no mínimo, some o widget mais longe da ilha', () => {
     // Direita: a ilha fica no começo, some o último.
     expect(fitWidgets([hw, fixed(80), fixed(60)], 180, 2, 'end')).toEqual([98, 80, null]);
