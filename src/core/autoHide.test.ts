@@ -25,6 +25,7 @@ describe('AutoHide', () => {
     expect(autoHide.revealed).toBe(true);
     autoHide.pointerLeft();
     expect(autoHide.shown(idle)).toBe(false);
+    expect(autoHide.revealed).toBe(false);
   });
 
   it('shows the bar on reveal until the pointer leaves', () => {
