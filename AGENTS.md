@@ -75,7 +75,7 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 - Arquivos de no máximo 400 linhas (exceto os extraídos em `design/`). Antes de passar disso, divida o módulo.
 - Nomes únicos e greppáveis. Evite `data`, `handler`, `Manager`, `Service` sozinhos.
 - Sem `any`. API sem tipo no `@girs`: declare o tipo localmente, com comentário apontando o arquivo e a tag do gnome-shell de onde ele veio.
-- Mensagem de erro inclui o valor recebido e o formato esperado.
+- Mensagem de erro inclui o valor recebido e o formato esperado, exceto quando o valor é credencial.
 - Sem duplicação: extraia a lógica compartilhada para `core/`.
 
 ## Comentários
@@ -86,7 +86,8 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 
 ## Segredos
 
-- Credencial de IA só via libsecret. Nunca em GSettings, log, fixture, teste ou commit.
+- A Island não guarda credencial: usa a dos CLIs já logados, só leitura, e nunca escreve nem renova token. Claude e Codex pelos arquivos dos próprios CLIs (`~/.claude/.credentials.json`, `~/.codex/auth.json`, spec 12); GitHub por `gh auth token` (spec 16).
+- Token só em memória. Nunca em GSettings, log, mensagem de erro, fixture, teste ou commit; a saída do `gh` não vai para o log.
 - Antes de commitar, confira `git diff --cached` procurando token, key ou `.env`.
 
 ## Nunca sem perguntar
@@ -124,4 +125,4 @@ Problema já encontrado e sua solução. Adicione aqui toda vez que algo custar 
 - [ ] Spec afetada atualizada no mesmo commit
 - [ ] Tudo que `enable()` cria, `disable()` desfaz
 - [ ] Nenhum I/O síncrono no main loop
-- [ ] Nenhuma credencial fora do libsecret
+- [ ] Nenhum token em log, GSettings, mensagem de erro ou teste
