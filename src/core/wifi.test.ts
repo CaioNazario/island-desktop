@@ -36,6 +36,11 @@ describe('buildNetworkList', () => {
     expect(list[0]?.hasProfile).toBe(true);
   });
 
+  it('keeps an SSID without any saved profile as unsaved', () => {
+    const list = buildNetworkList([ap('Casa', 40), ap('Casa', 90)], null);
+    expect(list[0]?.hasProfile).toBe(false);
+  });
+
   it('drops hidden networks without SSID', () => {
     expect(buildNetworkList([ap('', 99), ap('Casa', 50)], null).map((n) => n.ssid)).toEqual([
       'Casa',
@@ -56,6 +61,14 @@ describe('buildNetworkList', () => {
       ['A', 'connected'],
       ['B', 'idle'],
     ]);
+  });
+
+  it('puts a weak active network first among several stronger ones', () => {
+    const list = buildNetworkList([ap('A', 90), ap('B', 80), ap('C', 10), ap('D', 70)], {
+      ssid: 'C',
+      status: 'connected',
+    });
+    expect(list.map((n) => n.ssid)).toEqual(['C', 'A', 'B', 'D']);
   });
 
   it('marks a network being activated as connecting', () => {
