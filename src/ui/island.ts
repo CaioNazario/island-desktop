@@ -50,7 +50,7 @@ import { colors, effects } from './tokens.js';
 const CLOCK_TICK_SECONDS = 15;
 const ISLAND_RING = 1;
 
-const COMPACT_TEXT_STYLE = `
+const compactTextStyle = (): string => `
   color: ${colors.text};
   font-weight: 500;
   font-size: 13px;
@@ -146,14 +146,14 @@ export const Island = GObject.registerClass(
       this.onPressOutside = onPressOutside;
 
       this.clockLabel = new St.Label({
-        style: COMPACT_TEXT_STYLE,
+        style: compactTextStyle(),
         y_align: Clutter.ActorAlign.CENTER,
       });
       // `[clima] · [hora] · [dia]`: sem clima, o item e seu separador somem.
       const weatherItem = new WeatherItem(system.weather);
       const weatherSeparator = new St.Label({
         text: ' · ',
-        style: COMPACT_TEXT_STYLE,
+        style: compactTextStyle(),
         y_align: Clutter.ActorAlign.CENTER,
       });
       weatherItem.bind_property(

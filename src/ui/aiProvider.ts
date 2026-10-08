@@ -11,11 +11,10 @@ export const PROVIDER_META: Record<ProviderId, { name: string; icon: string }> =
 export const aiIconName = 'sparkle';
 
 /** Cores por nível (sessão e semanal): barra e texto do %. */
-export const LEVEL_COLORS: Record<UsageLevel, { bar: string; text: string }> = {
-  normal: { bar: colors.accent, text: colors.text },
-  high: { bar: colors.accent300, text: colors.text },
-  critical: { bar: derivedColors.alertRed, text: derivedColors.alertText },
-};
+export function levelColors(level: UsageLevel): { bar: string; text: string } {
+  if (level === 'critical') return { bar: derivedColors.alertRed, text: derivedColors.alertText };
+  return { bar: level === 'high' ? colors.accent300 : colors.accent, text: colors.text };
+}
 
 /** Aviso do cartão em Pango markup; `null` quando não há o que avisar. */
 export function statusNotice(id: ProviderId, status: ProviderStatus): string | null {

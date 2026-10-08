@@ -6,7 +6,7 @@ import { formatPercent, type ProviderId, usageLevel } from '../core/aiUsage.js';
 import type { AiUsageSource, ProviderSnapshot } from '../system/aiUsage.js';
 import { BarButton } from './barButton.js';
 import { phosphor } from './icons.js';
-import { aiIconName, LEVEL_COLORS, PROVIDER_META } from './aiProvider.js';
+import { aiIconName, levelColors, PROVIDER_META } from './aiProvider.js';
 import { colors } from './tokens.js';
 
 const MINI_BAR = { width: 26, height: 4, radius: 2 };
@@ -61,7 +61,7 @@ const ProviderItem = GObject.registerClass(
 
     display(provider: ProviderSnapshot): void {
       const session = provider.usage?.session;
-      const level = LEVEL_COLORS[usageLevel(session?.percent ?? 0)];
+      const level = levelColors(usageLevel(session?.percent ?? 0));
       this.percentLabel.text = session ? formatPercent(session.percent) : '—';
       this.percentLabel.style = `${PERCENT_STYLE} color: ${session ? level.text : colors.neutral500};`;
       this.fill.style = `background-color: ${level.bar}; border-radius: ${MINI_BAR.radius}px;`;

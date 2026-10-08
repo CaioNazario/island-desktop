@@ -26,7 +26,6 @@ const AUTO_HIDE_KEY = 'auto-hide';
 const SWITCH_MS = 200;
 const USED_OPACITY = Math.round(0.45 * 255);
 const LIMIT_OPACITY = Math.round(0.35 * 255);
-const DANGER = derivedColors.powerOffText;
 
 function icon(glyph: string, size: number, color: string): St.Icon {
   return new St.Icon({
@@ -157,7 +156,7 @@ export class EnvironmentEditor {
     environmentRow.add_child(this.icons);
     environmentRow.add_child(new St.Widget({ x_expand: true }));
     this.deleteButton = button(
-      iconText('trash', 14, 'Excluir ambiente', DANGER, 12),
+      iconText('trash', 14, 'Excluir ambiente', derivedColors.powerOffText, 12),
       (hover) =>
         `height: 30px; padding: 0 12px; border-radius: 15px; background-color: ${hover ? colors.neutral900 : 'transparent'};`,
       () => this.deleteEnvironment(),
@@ -425,7 +424,7 @@ export class EnvironmentEditor {
     );
     actions.add_child(
       button(
-        iconText('minus-circle', 13, 'Remover', DANGER, 11.5),
+        iconText('minus-circle', 13, 'Remover', derivedColors.powerOffText, 11.5),
         (hover) =>
           `height: 28px; padding: 0 10px; border-radius: 14px; background-color: ${hover ? colors.neutral800 : 'transparent'};`,
         () => this.session.remove(id),

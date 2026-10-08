@@ -10,10 +10,9 @@ export interface RoundButtonColors {
   fg: string;
 }
 
-export const ROUND_BUTTON_RESTING: RoundButtonColors = {
-  bg: colors.neutral800,
-  fg: colors.neutral300,
-};
+export function roundButtonResting(): RoundButtonColors {
+  return { bg: colors.neutral800, fg: colors.neutral300 };
+}
 
 // Botão 32×32 raio 16 depois do divisor da linha de controles
 // (specs/09-sessao-energia.md): hover `neutral-700` / `text`, pressionado
@@ -26,7 +25,7 @@ export const RoundButton = GObject.registerClass(
     constructor(
       glyph: string,
       onClick: () => void,
-      resting: () => RoundButtonColors = () => ROUND_BUTTON_RESTING,
+      resting: () => RoundButtonColors = roundButtonResting,
     ) {
       super({
         child: new St.Icon({ gicon: phosphor(glyph), icon_size: 15 }),

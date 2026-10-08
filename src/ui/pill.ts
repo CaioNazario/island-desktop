@@ -7,17 +7,16 @@ import { colors, layout } from './tokens.js';
 /** Anel na edição (specs/17-editor-ambientes.md "Barra durante a edição"). */
 export type PillRing = 'normal' | 'target' | 'other';
 
-const RING_COLOR: Record<PillRing, string> = {
-  normal: colors.neutral800,
-  target: colors.accent,
-  other: colors.neutral700,
-};
+function ringColor(ring: PillRing): string {
+  if (ring === 'target') return colors.accent;
+  return ring === 'other' ? colors.neutral700 : colors.neutral800;
+}
 
 function pillStyle(ring: PillRing): string {
   return `
     background-color: ${colors.bg};
     border-radius: ${layout.pillRadius}px;
-    border: ${layout.pillRingWidth}px solid ${RING_COLOR[ring]};
+    border: ${layout.pillRingWidth}px solid ${ringColor(ring)};
     padding: 0 ${layout.pillPaddingH}px;
   `;
 }

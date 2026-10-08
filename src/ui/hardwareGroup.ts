@@ -15,11 +15,10 @@ import { colors, derivedColors, typography } from './tokens.js';
 
 const BLOCK_ORDER: readonly HardwareBlockId[] = ['cpu', 'ram', 'gpu', 'temp', 'net'];
 
-const TONE_COLOR: Record<HardwareTone, string> = {
-  normal: colors.text,
-  busy: colors.accent300,
-  hot: derivedColors.alertRed,
-};
+function toneColor(tone: HardwareTone): string {
+  if (tone === 'hot') return derivedColors.alertRed;
+  return tone === 'busy' ? colors.accent300 : colors.text;
+}
 
 // `letter-spacing: .08em` do design, convertido para px no tamanho do rótulo.
 const LABEL_LETTER_SPACING = typography.sizes.hardwareLabel * 0.08;
@@ -98,7 +97,7 @@ const HardwareBlockView = GObject.registerClass(
     display(block: HardwareBlock): void {
       this.titleLabel.text = block.label;
       this.valueLabel.text = block.value;
-      this.valueLabel.style = `${VALUE_STYLE} color: ${TONE_COLOR[block.tone]};`;
+      this.valueLabel.style = `${VALUE_STYLE} color: ${toneColor(block.tone)};`;
       this.visible = true;
     }
   },

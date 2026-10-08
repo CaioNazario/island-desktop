@@ -22,20 +22,20 @@ import { Pill } from './pill.js';
 import { colors, derivedColors } from './tokens.js';
 import type { WidgetAreaActor } from './widgetArea.js';
 
-const BATTERY_COLOR: Record<BatteryTone, string> = {
-  good: derivedColors.batteryGreen,
-  normal: colors.neutral300,
-  low: derivedColors.batteryRed,
-};
+function batteryColor(tone: BatteryTone): string {
+  if (tone === 'good') return derivedColors.batteryGreen;
+  return tone === 'low' ? derivedColors.batteryRed : colors.neutral300;
+}
 // Fundo da parte vazia: claro o bastante para a borda e o número pretos.
-const BATTERY_TRACK = colors.neutral600;
+const batteryTrack = (): string => colors.neutral600;
 
 // Corpo 26×12 com borda 1px: sobra 24×10 para o preenchimento, sem respiro.
 // No St, `width`/`height` do estilo são a caixa de conteúdo.
 const BATTERY_BODY = { inner: { width: 24, height: 10 }, edge: 1, radius: 3 };
 const BATTERY_FILL_MS = 300;
 // `letter-spacing: -0.02em` em 8px.
-const BATTERY_NUMBER_STYLE = `font-size: 8px; font-weight: 600; letter-spacing: -0.16px; font-feature-settings: "tnum"; color: ${derivedColors.batteryInk};`;
+const batteryNumberStyle = (): string =>
+  `font-size: 8px; font-weight: 600; letter-spacing: -0.16px; font-feature-settings: "tnum"; color: ${derivedColors.batteryInk};`;
 
 // Bateria (specs/11-bateria.md): desenho (corpo + polo) e raio só
 // carregando, gap 4px, padding 0 10px. Sem bateria o botão some.
@@ -48,7 +48,7 @@ function batteryButton(battery: BatterySource, onClick: () => void): BarButtonAc
     style: `
       width: ${inner.width}px; height: ${inner.height}px;
       border: ${edge}px solid ${derivedColors.batteryInk}; border-radius: ${radius}px;
-      background-color: ${BATTERY_TRACK};
+      background-color: ${batteryTrack()};
     `,
     clip_to_allocation: true,
   });
@@ -56,7 +56,7 @@ function batteryButton(battery: BatterySource, onClick: () => void): BarButtonAc
   // Número centralizado sobre o corpo: sem expand, o BinLayout centraliza no
   // tamanho natural (ver o sino abaixo).
   const number = new St.Label({
-    style: BATTERY_NUMBER_STYLE,
+    style: batteryNumberStyle(),
     x_align: Clutter.ActorAlign.CENTER,
     y_align: Clutter.ActorAlign.CENTER,
   });
@@ -68,7 +68,7 @@ function batteryButton(battery: BatterySource, onClick: () => void): BarButtonAc
   const pole = new St.Widget({
     width: 2,
     height: 4,
-    style: `border-radius: 0 1px 1px 0; background-color: ${BATTERY_TRACK};`,
+    style: `border-radius: 0 1px 1px 0; background-color: ${batteryTrack()};`,
     y_align: Clutter.ActorAlign.CENTER,
   });
   const drawing = new St.BoxLayout({ style: 'spacing: 1px;', y_align: Clutter.ActorAlign.CENTER });
@@ -88,7 +88,7 @@ function batteryButton(battery: BatterySource, onClick: () => void): BarButtonAc
     button.visible = battery.available;
     if (!button.visible) return;
     const display = batteryDisplay(battery.percentage, battery.charging);
-    const color = BATTERY_COLOR[display.tone];
+    const color = batteryColor(display.tone);
     const width = Math.round(inner.width * display.fill);
     // Raio interno = raio do corpo − borda; a ponta direita só arredonda cheia.
     const fillRadius = radius - edge;

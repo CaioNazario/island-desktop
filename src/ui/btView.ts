@@ -33,14 +33,22 @@ import { colors } from './tokens.js';
 
 const SPIN_DURATION_MS = 1200;
 
-const STATUS: Record<DeviceStatus, { text: string; color: string }> = {
-  connected: { text: 'Conectado', color: colors.accent300 },
-  disconnected: { text: 'Desconectado', color: colors.neutral500 },
-  pair: { text: 'Parear', color: colors.accent300 },
-  connecting: { text: 'Conectando…', color: colors.neutral400 },
-  disconnecting: { text: 'Desconectando…', color: colors.neutral400 },
-  pairing: { text: 'Pareando…', color: colors.neutral400 },
-};
+function deviceStatusText(status: DeviceStatus): { text: string; color: string } {
+  switch (status) {
+    case 'connected':
+      return { text: 'Conectado', color: colors.accent300 };
+    case 'disconnected':
+      return { text: 'Desconectado', color: colors.neutral500 };
+    case 'pair':
+      return { text: 'Parear', color: colors.accent300 };
+    case 'connecting':
+      return { text: 'Conectando…', color: colors.neutral400 };
+    case 'disconnecting':
+      return { text: 'Desconectando…', color: colors.neutral400 };
+    case 'pairing':
+      return { text: 'Pareando…', color: colors.neutral400 };
+  }
+}
 
 export interface BtViewCallbacks extends ControlsRowOptions {
   /** O rádio ligou/desligou: a ilha muda de altura. */
@@ -102,7 +110,7 @@ function batteryBadge(percent: number): St.BoxLayout {
 }
 
 function statusLabel(status: DeviceStatus): St.Label {
-  const { text, color } = STATUS[status];
+  const { text, color } = deviceStatusText(status);
   return new St.Label({
     text,
     style: `font-size: 11px; color: ${color};`,
