@@ -170,7 +170,7 @@ export const Island = GObject.registerClass(
       compact.add_child(weatherSeparator);
       compact.add_child(this.clockLabel);
       const drag = { start: () => this.state.dragStart(), end: () => this.state.dragEnd() };
-      this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 7, system.volume, drag);
+      this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 6, system.volume, drag);
       this.brightnessRow = new SliderRow(brightnessIconName, 6, system.brightness, drag);
       // "abre wifi; em wifi, volta a quick" (specs/08) — não é a regra 2 da
       // spec 03 (gatilho fecha a ilha): o tile vive dentro de quick/wifi/bt.

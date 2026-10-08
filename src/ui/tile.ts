@@ -16,16 +16,16 @@ function styleFor(on: boolean): string {
   const bg = on ? colors.accent600 : colors.neutral800;
   const fg = on ? colors.neutral100 : colors.neutral300;
   return `
-    width: 38px;
-    height: 38px;
-    border-radius: 19px;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
     background-color: ${bg};
     color: ${fg};
     transition-duration: ${TRANSITION_MS}ms;
   `;
 }
 
-// Tile 38×38 ligado/desligado (specs/08-controles-rapidos.md). Usado pelos
+// Tile 32×32 ligado/desligado (specs/08-controles-rapidos.md). Usado pelos
 // tiles de Wi-Fi, Bluetooth, modo noturno e não perturbe da linha de
 // controles de `quick`/`wifi`/`bt`.
 export const Tile = GObject.registerClass(
@@ -43,7 +43,7 @@ export const Tile = GObject.registerClass(
 
       this.source = source;
 
-      this.icon = new St.Icon({ gicon: phosphor(iconName), icon_size: 17 });
+      this.icon = new St.Icon({ gicon: phosphor(iconName), icon_size: 15 });
       this.set_child(this.icon);
 
       this.connectObject(

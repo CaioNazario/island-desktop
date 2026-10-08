@@ -55,7 +55,7 @@ export const ControlsRow = GObject.registerClass(
 
     constructor(system: IslandSystem, drag: DragHooks, options: ControlsRowOptions) {
       super({
-        style: 'height: 58px; padding: 0 10px; spacing: 8px;',
+        style: 'height: 46px; padding: 0 7px; spacing: 6px;',
         y_align: Clutter.ActorAlign.CENTER,
         x_expand: true,
       });

@@ -24,7 +24,7 @@ function singleLine(label: St.Label): St.Label {
   return label;
 }
 
-// Capa 56×56 raio 12. `file://` (todos os navegadores das amostras) vira
+// Capa 40×40 raio 20 (círculo). `file://` (todos os navegadores das amostras) vira
 // fundo CSS, que o St recorta no raio; `http(s)://` (Spotify nativo) vai num
 // `St.Icon` como no Shell (js/ui/messageList.js), que baixa pelo GVfs mas
 // não arredonda. Sem capa: bloco `accent-900` com a nota `accent-300`.
@@ -204,13 +204,13 @@ export const MusicModeRow = GObject.registerClass(
 
     constructor(music: MusicSource, onControlUsed: () => void) {
       super({
-        style: 'padding: 0 14px; spacing: 14px;',
+        style: 'padding: 0 14px 0 9px; spacing: 12px;',
         width: 500,
-        height: 82,
+        height: 58,
       });
       this.music = music;
 
-      this.cover = new MusicCover(56, 12);
+      this.cover = new MusicCover(40, 20);
       this.add_child(this.cover);
 
       const text = new St.BoxLayout({
@@ -228,7 +228,7 @@ export const MusicModeRow = GObject.registerClass(
       text.add_child(this.titleLabel);
 
       const progress = new St.BoxLayout({
-        style: `spacing: 8px; margin-top: 6px; color: ${colors.neutral500}; font-size: 10px; font-feature-settings: "tnum";`,
+        style: `spacing: 8px; margin-top: 3px; color: ${colors.neutral500}; font-size: 10px; font-feature-settings: "tnum";`,
       });
       this.positionLabel = new St.Label({ y_align: Clutter.ActorAlign.CENTER });
       this.bar = new MusicProgressBar();
@@ -241,13 +241,13 @@ export const MusicModeRow = GObject.registerClass(
 
       this.controls = new MusicControls(
         music,
-        { side: 34, sideIcon: 17, main: 38, mainIcon: 22, spacing: 4 },
+        { side: 30, sideIcon: 17, main: 34, mainIcon: 22, spacing: 4 },
         onControlUsed,
       );
       this.add_child(this.controls);
 
       this.sourceIcon = new St.Icon({
-        icon_size: 22,
+        icon_size: 19,
         style: `color: ${colors.accent400};`,
         y_align: Clutter.ActorAlign.CENTER,
       });
