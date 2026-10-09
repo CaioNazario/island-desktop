@@ -24,7 +24,7 @@ import { Island, type IslandActor, type IslandSystem } from './island.js';
 import { Pill, type PillActor } from './pill.js';
 import { RightPill, type RightPillActor } from './rightPill.js';
 import { easeBezier } from './spring.js';
-import { colors, effects, layout } from './tokens.js';
+import { colors, derivedColors, effects, layout } from './tokens.js';
 import { WidgetArea, type WidgetAreaActor } from './widgetArea.js';
 
 // Brilho `accent` 22% de 18px da pílula-alvo na edição (specs/17-editor-ambientes.md
@@ -37,7 +37,7 @@ function pillGlow(): St.Widget {
     style: `
       background-color: ${colors.bg};
       border-radius: ${layout.pillRadius}px;
-      box-shadow: 0 0 18px rgba(145,132,217,0.22);
+      box-shadow: 0 0 18px ${derivedColors.accentGlow};
     `,
   });
 }

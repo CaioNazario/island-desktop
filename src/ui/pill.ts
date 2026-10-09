@@ -2,7 +2,7 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-import { colors, layout } from './tokens.js';
+import { colors, layout, surfaces } from './tokens.js';
 
 /** Anel na edição (specs/17-editor-ambientes.md "Barra durante a edição"). */
 export type PillRing = 'normal' | 'target' | 'other';
@@ -14,7 +14,7 @@ function ringColor(ring: PillRing): string {
 
 function pillStyle(ring: PillRing): string {
   return `
-    background-color: ${colors.bg};
+    background-color: ${surfaces.lane};
     border-radius: ${layout.pillRadius}px;
     border: ${layout.pillRingWidth}px solid ${ringColor(ring)};
     padding: 0 ${layout.pillPaddingH}px;

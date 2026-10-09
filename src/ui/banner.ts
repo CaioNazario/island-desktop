@@ -5,7 +5,7 @@ import St from 'gi://St';
 
 import type { NotificationEntry } from '../system/notifications.js';
 import { NotificationRow, type NotificationRowActor } from './notificationRow.js';
-import { colors, effects } from './tokens.js';
+import { colors, effects, surfaces } from './tokens.js';
 
 const BANNER_MS = 2600;
 export const BANNER_WIDTH = 380;
@@ -55,7 +55,7 @@ export const Banner = GObject.registerClass(
         style: `
           padding: 0 12px;
           border-radius: ${BANNER_RADIUS}px;
-          background-color: ${colors.bg};
+          background-color: ${surfaces.island};
           border: 1px solid ${colors.neutral800};
         `,
       });

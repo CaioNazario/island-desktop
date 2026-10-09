@@ -18,7 +18,8 @@ import {
 } from '../core/environments.js';
 import type { EditSession } from './editSession.js';
 import { phosphor } from './icons.js';
-import { colors, derivedColors } from './tokens.js';
+import { withAlpha } from '../core/color.js';
+import { colors, derivedColors, surfaces } from './tokens.js';
 import { makeWidgetDraggable } from './widgetArea.js';
 
 const PANEL = { width: 880, top: 48 };
@@ -108,13 +109,13 @@ export class EnvironmentEditor {
     // Fundo: `bg` 50%, sem o blur do design.
     this.backdrop = new St.Widget({
       reactive: true,
-      style: 'background-color: rgba(22,24,38,0.5);',
+      style: `background-color: ${withAlpha(colors.bg, 0.5)};`,
     });
     this.backdrop.add_constraint(
       new Clutter.BindConstraint({ source: global.stage, coordinate: Clutter.BindCoordinate.ALL }),
     );
 
-    // Painel: `bg` 94%, anel `neutral-800`, sem blur e sem sombra.
+    // Painel: `surfaces.panel` (`bg` 94% no Nocturne), anel `neutral-800`, sem blur e sem sombra.
     const panel = new St.BoxLayout({
       orientation: Clutter.Orientation.VERTICAL,
       reactive: true,
@@ -123,7 +124,7 @@ export class EnvironmentEditor {
         padding: 16px;
         spacing: 14px;
         border-radius: 20px;
-        background-color: rgba(22,24,38,0.94);
+        background-color: ${surfaces.panel};
         border: 1px solid ${colors.neutral800};
         color: ${colors.text};
       `,
