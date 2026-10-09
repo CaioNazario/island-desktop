@@ -21,30 +21,16 @@ import type { GSettingsToggle } from '../system/toggleSetting.js';
 import type { SystemVolume } from '../system/volume.js';
 import type { WeatherSource } from '../system/weather.js';
 import type { SystemWifi } from '../system/wifi.js';
-import { AiModeView, type AiModeViewActor } from './aiView.js';
-import { NoteView, type NoteViewActor } from './noteView.js';
-import { BtView, type BtViewActor } from './btView.js';
-import { CalendarModeView, type CalendarModeViewActor } from './calendarView.js';
-import { CenterCard, type CenterCardActor } from './centerCard.js';
-import { ControlsRow, type ControlsRowActor, type ControlsRowOptions } from './controlsRow.js';
-import { brightnessIconName, volumeIconName } from './icons.js';
 import { compactContent } from './islandCompact.js';
+import { buildIslandViews, type IslandViews } from './islandViews.js';
 import {
   hideLayer,
   IslandSurface,
   type IslandSurfaceActor,
   type LayerId,
-  modeLayer,
   showLayer,
 } from './modeLayer.js';
-import { MusicModeRow } from './musicView.js';
-import { notifContent, type NotificationRowActor } from './notificationRow.js';
-import { IslandPowerToggle, quickContent } from './powerRow.js';
-import { SliderRow, type SliderRowActor } from './sliderRow.js';
 import { easeSpring } from './spring.js';
-import { StackView, type StackViewActor } from './stackView.js';
-import { EnvironmentModeRow } from './environmentView.js';
-import { WifiView, type WifiViewActor } from './wifiView.js';
 import { colors, effects } from './tokens.js';
 
 const CLOCK_TICK_SECONDS = 15;
@@ -86,19 +72,7 @@ export const Island = GObject.registerClass(
     private readonly onEscape: () => void;
     private readonly onPressOutside: (target: Clutter.Actor) => boolean;
     private readonly clockLabel: St.Label;
-    private readonly volumeRow: SliderRowActor;
-    private readonly brightnessRow: SliderRowActor;
-    private readonly quickRow: ControlsRowActor;
-    private readonly wifiView: WifiViewActor;
-    private readonly btView: BtViewActor;
-    private readonly notifRow: NotificationRowActor;
-    private readonly stackView: StackViewActor;
-    private readonly calendarView: CalendarModeViewActor;
-    private readonly card: CenterCardActor;
-    private readonly aiView: AiModeViewActor;
-    private readonly noteView: NoteViewActor;
-    private readonly layers: ReadonlyMap<LayerId, St.Widget>;
-    private readonly power: IslandPowerToggle;
+    private readonly views: IslandViews;
     private clockTimerId: number | null = null;
     private isTargetMonitor = false;
     private contentMode: LayerId = 'compact';
@@ -140,83 +114,9 @@ export const Island = GObject.registerClass(
 
       const compact = compactContent(system.weather);
       this.clockLabel = compact.clockLabel;
-      const drag = { start: () => this.state.dragStart(), end: () => this.state.dragEnd() };
-      this.volumeRow = new SliderRow(() => volumeIconName(system.volume), 6, system.volume, drag);
-      this.brightnessRow = new SliderRow(brightnessIconName, 6, system.brightness, drag);
-      // "abre wifi; em wifi, volta a quick" (specs/08) — não é a regra 2 da
-      // spec 03 (gatilho fecha a ilha): o tile vive dentro de quick/wifi/bt.
-      this.power = new IslandPowerToggle(state);
-      const controls: ControlsRowOptions = {
-        onWifiTileClick: () =>
-          this.state.openFromTrigger(this.state.mode === 'wifi' ? 'quick' : 'wifi'),
-        onBtTileClick: () => this.state.openFromTrigger(this.state.mode === 'bt' ? 'quick' : 'bt'),
-        // Fecha antes de abrir: sem o grab, a janela do app recebe o foco.
-        onSettingsClick: () => {
-          this.state.closeAll();
-          system.session.openSettings();
-        },
-        power: this.power,
-        onPowerAction: (action) => {
-          this.state.closeAll();
-          system.session.run(action);
-        },
-      };
-      this.quickRow = new ControlsRow(system, drag, controls);
-      this.wifiView = new WifiView(system, drag, {
-        ...controls,
-        onSizeChanged: () => this.resize(),
-        onLeave: () => this.state.closeAll(),
-      });
-      this.btView = new BtView(system, drag, {
-        ...controls,
-        onSizeChanged: () => this.resize(),
-        onLeave: () => this.state.closeAll(),
-      });
-
-      // × fecha a ilha; a notificação continua na lista.
-      const notif = notifContent(() => this.state.closeAll());
-      this.notifRow = notif.row;
-
-      this.stackView = new StackView(system.notifications, {
-        onSizeChanged: () => this.resize(),
-        onActivate: (entry: NotificationEntry) => {
-          this.state.closeAll();
-          entry.activate();
-        },
-      });
-
-      this.calendarView = new CalendarModeView(system.calendar, {
-        onSizeChanged: () => this.resize(),
-      });
-
-      this.card = new CenterCard(system.music, system.calendar, {
-        onSizeChanged: () => this.resize(),
-      });
-
-      this.aiView = new AiModeView(system.aiUsage, {
-        onSizeChanged: () => this.resize(),
-      });
-
-      this.noteView = new NoteView(system.settings, () => this.state.closeAll());
-
-      this.layers = new Map<LayerId, St.Widget>([
-        ['compact', modeLayer(compact.actor)],
-        ['notif', modeLayer(notif.content)],
-        ['stack', modeLayer(this.stackView)],
-        ['music', modeLayer(new MusicModeRow(system.music, () => this.state.keepAlive()))],
-        ['volume', modeLayer(this.volumeRow)],
-        ['brightness', modeLayer(this.brightnessRow)],
-        ['calendar', modeLayer(this.calendarView)],
-        ['quick', modeLayer(quickContent(this.quickRow, system.session, controls))],
-        ['wifi', modeLayer(this.wifiView)],
-        ['bt', modeLayer(this.btView)],
-        ['ai', modeLayer(this.aiView)],
-        ['env', modeLayer(new EnvironmentModeRow(system.environments))],
-        ['note', modeLayer(this.noteView)],
-        ['card', modeLayer(this.card)],
-      ]);
+      this.views = buildIslandViews(state, system, compact.actor, () => this.resize());
       this.syncLayerSize('compact');
-      this.surface.add_child(this.layers.get('compact')!);
+      this.surface.add_child(this.views.layers.get('compact')!);
 
       this.applySize(getSize('compact'), false);
       this.updateClock();
@@ -268,7 +168,7 @@ export const Island = GObject.registerClass(
         (_actor: St.Widget, event: Clutter.Event) => {
           if (event.get_key_symbol() === Clutter.KEY_Escape) {
             // Regra 9 da spec 03: com o painel de senha aberto, Esc fecha só ele.
-            if (this.contentMode === 'wifi' && this.wifiView.closePasswordIfOpen())
+            if (this.contentMode === 'wifi' && this.views.wifiView.closePasswordIfOpen())
               return Clutter.EVENT_STOP;
             this.onEscape();
             return Clutter.EVENT_STOP;
@@ -285,9 +185,9 @@ export const Island = GObject.registerClass(
         CLOCK_TICK_SECONDS,
         () => {
           this.updateClock();
-          this.notifRow.refreshTime();
-          this.stackView.refreshTimes();
-          this.aiView.refreshTimes();
+          this.views.notifRow.refreshTime();
+          this.views.stackView.refreshTimes();
+          this.views.aiView.refreshTimes();
           return GLib.SOURCE_CONTINUE;
         },
       );
@@ -295,12 +195,12 @@ export const Island = GObject.registerClass(
 
     /** Conteúdo do `notif`; o `BarManager` chama antes de abrir o modo. */
     setNotification(entry: NotificationEntry): void {
-      this.notifRow.setEntry(entry);
+      this.views.notifRow.setEntry(entry);
     }
 
     /** Notificação nova com `stack` aberto (specs/04-notificacoes.md). */
     flashStack(entry: NotificationEntry): void {
-      this.stackView.flash(entry);
+      this.views.stackView.flash(entry);
     }
 
     /** Chamado pelo `BarManager` a cada mudança de modo ou de monitor-alvo. */
@@ -310,7 +210,7 @@ export const Island = GObject.registerClass(
       debugLog(
         `render target=${isTargetMonitor} mode=${this.state.mode} card=${this.state.cardOpen} content=${this.contentMode} -> ${mode}`,
       );
-      this.power.sync();
+      this.views.power.sync();
       this.showContentFor(mode);
       this.resize();
       this.syncExpanded(mode !== 'compact');
@@ -325,7 +225,7 @@ export const Island = GObject.registerClass(
 
     /** Depois do grab modal, que leva o foco para a ilha: o campo da nota o pega de volta. */
     focusContent(): void {
-      if (this.contentMode === 'note') this.noteView.focus();
+      if (this.contentMode === 'note') this.views.noteView.focus();
     }
 
     private containsPointer(event: Clutter.Event): boolean {
@@ -365,21 +265,21 @@ export const Island = GObject.registerClass(
     }
 
     private sizeFor(mode: LayerId): Size {
-      if (mode === 'card') return this.card.islandSize(ISLAND_RING);
+      if (mode === 'card') return this.views.card.islandSize(ISLAND_RING);
       return getSize(mode, this.sizeContext());
     }
 
     private sizeContext(): SizeContext {
       const powerOpen = this.state.powerOpen;
       return {
-        stackItemCount: this.stackView.itemCount,
-        calendarView: this.calendarView.view,
+        stackItemCount: this.views.stackView.itemCount,
+        calendarView: this.views.calendarView.view,
         quickEnergyOpen: powerOpen,
         wifiEnergyOpen: powerOpen,
-        wifiPasswordField: this.wifiView.passwordField,
-        btOn: this.btView.radioIsOn,
+        wifiPasswordField: this.views.wifiView.passwordField,
+        btOn: this.views.btView.radioIsOn,
         btEnergyOpen: powerOpen,
-        providerCount: this.aiView.providerCount,
+        providerCount: this.views.aiView.providerCount,
       };
     }
 
@@ -391,29 +291,31 @@ export const Island = GObject.registerClass(
       const instant = tiles(previous) && tiles(mode);
 
       // Os demais modos ainda não têm conteúdo (specs 04+): a ilha fica vazia.
-      const outgoing = this.layers.get(previous);
+      const outgoing = this.views.layers.get(previous);
       if (outgoing) hideLayer(this.surface, outgoing, previous, instant);
       // Antes de medir a camada, e fora da tela: volta a Semana sem animar.
-      if (mode === 'calendar') this.calendarView.reset();
-      if (mode === 'card') this.card.reset();
-      const incoming = this.layers.get(mode);
+      if (mode === 'calendar') this.views.calendarView.reset();
+      if (mode === 'card') this.views.card.reset();
+      const incoming = this.views.layers.get(mode);
       if (incoming) {
         // Medir só na tela: fora do stage o St mede sem CSS (e avisa no log).
         showLayer(this.surface, incoming, mode, instant);
         this.syncLayerSize(mode);
       }
-      if (previous === 'bt') this.btView.onClose();
-      if (previous === 'note') this.noteView.onClose();
-      if (mode === 'note') this.noteView.onOpen();
-      if (mode === 'wifi') this.wifiView.onOpen();
-      if (mode === 'bt') this.btView.onOpen();
-      if (mode === 'ai') this.aiView.onOpen();
+      if (previous === 'bt') this.views.btView.onClose();
+      if (previous === 'note') this.views.noteView.onClose();
+      if (mode === 'note') this.views.noteView.onOpen();
+      if (mode === 'wifi') this.views.wifiView.onOpen();
+      if (mode === 'bt') this.views.btView.onOpen();
+      if (mode === 'ai') this.views.aiView.onOpen();
     }
 
     // As camadas ficam dentro do anel da `surface`.
     private syncLayerSize(mode: LayerId): void {
       const size = this.sizeFor(mode);
-      this.layers.get(mode)?.set_size(size.width - 2 * ISLAND_RING, size.height - 2 * ISLAND_RING);
+      this.views.layers
+        .get(mode)
+        ?.set_size(size.width - 2 * ISLAND_RING, size.height - 2 * ISLAND_RING);
     }
 
     private updateClock(): void {
@@ -442,7 +344,7 @@ export const Island = GObject.registerClass(
       }
       // Só as camadas visíveis (a atual e a que ainda sai) são filhas da
       // ilha e morrem junto com ela; as demais precisam ser destruídas à mão.
-      for (const layer of this.layers.values()) {
+      for (const layer of this.views.layers.values()) {
         if (layer.get_parent() === null) layer.destroy();
       }
     }
