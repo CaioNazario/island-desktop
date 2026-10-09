@@ -57,6 +57,19 @@ export interface IslandSystem {
   openPreferences: (page: string) => void;
 }
 
+function accentLine(): St.Widget {
+  return new St.Widget({
+    style: `background-color: ${colors.accent}; border-radius: 0 0 2px 2px;`,
+    width: 36,
+    height: 2,
+    opacity: 0,
+    x_expand: true,
+    y_expand: true,
+    x_align: Clutter.ActorAlign.CENTER,
+    y_align: Clutter.ActorAlign.START,
+  });
+}
+
 // Ator da ilha central (specs/03-ilha.md). O estado é único e compartilhado
 // entre monitores (specs/02-barra.md); esta view só renderiza o modo atual
 // quando `isTarget` é true, e fica em `compact` nos demais monitores.
@@ -95,16 +108,7 @@ export const Island = GObject.registerClass(
       this.surface = new IslandSurface(ISLAND_RING);
       this.add_child(this.surface);
 
-      this.accentLine = new St.Widget({
-        style: `background-color: ${colors.accent}; border-radius: 0 0 2px 2px;`,
-        width: 36,
-        height: 2,
-        opacity: 0,
-        x_expand: true,
-        y_expand: true,
-        x_align: Clutter.ActorAlign.CENTER,
-        y_align: Clutter.ActorAlign.START,
-      });
+      this.accentLine = accentLine();
       this.add_child(this.accentLine);
 
       this.state = state;
@@ -120,77 +124,8 @@ export const Island = GObject.registerClass(
 
       this.applySize(getSize('compact'), false);
       this.updateClock();
-
-      // Gesto, não `button-press-event`: um ator que devolve EVENT_STOP no
-      // press cancela os gestos da cadeia, inclusive o `ClickGesture` dos
-      // `St.Button` do conteúdo (tiles, switch). Com o cartão aberto, o clique
-      // é do conteúdo dele: fecha só por Esc ou clique fora.
-      const clickGesture = new Clutter.ClickGesture();
-      clickGesture.connectObject(
-        'recognize',
-        () => {
-          if (this.contentMode !== 'card') this.onIslandClick();
-        },
-        this,
-      );
-      this.add_action(clickGesture);
-
-      this.connectObject(
-        // Com o grab modal, o clique fora da ilha é entregue a ela: fecha
-        // tudo, como os menus do Shell. STOP para não virar clique na ilha
-        // (já em `compact`, abriria o cartão central).
-        'captured-event',
-        (_actor: St.Widget, event: Clutter.Event) => {
-          const type = event.type();
-          if (type !== Clutter.EventType.BUTTON_PRESS && type !== Clutter.EventType.TOUCH_BEGIN)
-            return Clutter.EVENT_PROPAGATE;
-          const target = global.stage.get_event_actor(event);
-          if (target && this.contains(target)) return Clutter.EVENT_PROPAGATE;
-          // O banner fica fora da ilha e do grab (specs/04-notificacoes.md).
-          if (target && this.onPressOutside(target)) return Clutter.EVENT_STOP;
-          this.state.closeAll();
-          return Clutter.EVENT_STOP;
-        },
-        'enter-event',
-        (_actor: St.Widget, event: Clutter.Event) => {
-          debugLog(this.crossingLog('enter', event));
-          // Com o grab modal, o Clutter entrega crossings à ilha mesmo com o
-          // ponteiro fora dela; sem o `leave` correspondente depois do
-          // `popModal`, o hover ficaria preso e os transitórios não fechariam.
-          if (this.isTargetMonitor && this.containsPointer(event)) this.state.hoverStart();
-        },
-        'leave-event',
-        (_actor: St.Widget, event: Clutter.Event) => {
-          debugLog(this.crossingLog('leave', event));
-          if (this.isTargetMonitor) this.state.hoverEnd();
-        },
-        'key-press-event',
-        (_actor: St.Widget, event: Clutter.Event) => {
-          if (event.get_key_symbol() === Clutter.KEY_Escape) {
-            // Regra 9 da spec 03: com o painel de senha aberto, Esc fecha só ele.
-            if (this.contentMode === 'wifi' && this.views.wifiView.closePasswordIfOpen())
-              return Clutter.EVENT_STOP;
-            this.onEscape();
-            return Clutter.EVENT_STOP;
-          }
-          return Clutter.EVENT_PROPAGATE;
-        },
-        'destroy',
-        () => this.onDestroy(),
-        this,
-      );
-
-      this.clockTimerId = GLib.timeout_add_seconds(
-        GLib.PRIORITY_DEFAULT,
-        CLOCK_TICK_SECONDS,
-        () => {
-          this.updateClock();
-          this.views.notifRow.refreshTime();
-          this.views.stackView.refreshTimes();
-          this.views.aiView.refreshTimes();
-          return GLib.SOURCE_CONTINUE;
-        },
-      );
+      this.connectInput();
+      this.startClock();
     }
 
     /** Conteúdo do `notif`; o `BarManager` chama antes de abrir o modo. */
@@ -226,6 +161,87 @@ export const Island = GObject.registerClass(
     /** Depois do grab modal, que leva o foco para a ilha: o campo da nota o pega de volta. */
     focusContent(): void {
       if (this.contentMode === 'note') this.views.noteView.focus();
+    }
+
+    // Gesto, não `button-press-event`: um ator que devolve EVENT_STOP no
+    // press cancela os gestos da cadeia, inclusive o `ClickGesture` dos
+    // `St.Button` do conteúdo (tiles, switch). Com o cartão aberto, o clique
+    // é do conteúdo dele: fecha só por Esc ou clique fora.
+    private connectInput(): void {
+      const clickGesture = new Clutter.ClickGesture();
+      clickGesture.connectObject(
+        'recognize',
+        () => {
+          if (this.contentMode !== 'card') this.onIslandClick();
+        },
+        this,
+      );
+      this.add_action(clickGesture);
+
+      this.connectObject(
+        'captured-event',
+        (_actor: St.Widget, event: Clutter.Event) => this.onCapturedEvent(event),
+        'enter-event',
+        (_actor: St.Widget, event: Clutter.Event) => this.onPointerEnter(event),
+        'leave-event',
+        (_actor: St.Widget, event: Clutter.Event) => this.onPointerLeave(event),
+        'key-press-event',
+        (_actor: St.Widget, event: Clutter.Event) => this.onKeyPress(event),
+        'destroy',
+        () => this.onDestroy(),
+        this,
+      );
+    }
+
+    // Com o grab modal, o clique fora da ilha é entregue a ela: fecha
+    // tudo, como os menus do Shell. STOP para não virar clique na ilha
+    // (já em `compact`, abriria o cartão central).
+    private onCapturedEvent(event: Clutter.Event): boolean {
+      const type = event.type();
+      if (type !== Clutter.EventType.BUTTON_PRESS && type !== Clutter.EventType.TOUCH_BEGIN)
+        return Clutter.EVENT_PROPAGATE;
+      const target = global.stage.get_event_actor(event);
+      if (target && this.contains(target)) return Clutter.EVENT_PROPAGATE;
+      // O banner fica fora da ilha e do grab (specs/04-notificacoes.md).
+      if (target && this.onPressOutside(target)) return Clutter.EVENT_STOP;
+      this.state.closeAll();
+      return Clutter.EVENT_STOP;
+    }
+
+    private onPointerEnter(event: Clutter.Event): void {
+      debugLog(this.crossingLog('enter', event));
+      // Com o grab modal, o Clutter entrega crossings à ilha mesmo com o
+      // ponteiro fora dela; sem o `leave` correspondente depois do
+      // `popModal`, o hover ficaria preso e os transitórios não fechariam.
+      if (this.isTargetMonitor && this.containsPointer(event)) this.state.hoverStart();
+    }
+
+    private onPointerLeave(event: Clutter.Event): void {
+      debugLog(this.crossingLog('leave', event));
+      if (this.isTargetMonitor) this.state.hoverEnd();
+    }
+
+    private onKeyPress(event: Clutter.Event): boolean {
+      if (event.get_key_symbol() !== Clutter.KEY_Escape) return Clutter.EVENT_PROPAGATE;
+      // Regra 9 da spec 03: com o painel de senha aberto, Esc fecha só ele.
+      if (this.contentMode === 'wifi' && this.views.wifiView.closePasswordIfOpen())
+        return Clutter.EVENT_STOP;
+      this.onEscape();
+      return Clutter.EVENT_STOP;
+    }
+
+    private startClock(): void {
+      this.clockTimerId = GLib.timeout_add_seconds(
+        GLib.PRIORITY_DEFAULT,
+        CLOCK_TICK_SECONDS,
+        () => {
+          this.updateClock();
+          this.views.notifRow.refreshTime();
+          this.views.stackView.refreshTimes();
+          this.views.aiView.refreshTimes();
+          return GLib.SOURCE_CONTINUE;
+        },
+      );
     }
 
     private containsPointer(event: Clutter.Event): boolean {
