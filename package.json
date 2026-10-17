@@ -1,20 +1,15 @@
 {
   "name": "island",
-  "version": "0.1.0",
-  "description": "GNOME Shell extension: Dynamic Island topbar",
+  "version": "2.0.0",
+  "description": "Omarchy bar plugin: three floating pills with a Dynamic Island",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "lint": "eslint . && prettier --check . && tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json"
+    "lint": "make lint",
+    "build": "make build"
   },
   "devDependencies": {
-    "@girs/geoclue-2.0": "^4.9.0",
-    "@girs/gjs": "^5.4.0",
-    "@girs/gnome-shell": "^50.0.4",
-    "@girs/gweather-4.0": "^4.9.0",
-    "@girs/soup-3.0": "^4.9.0",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.4.2",

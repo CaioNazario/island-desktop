@@ -5,7 +5,7 @@ Origem: `design/markup.html` container `barRef`, pílula esquerda (`dropLeft`) e
 ## Layout
 
 - Container no topo de cada monitor: `left: 12px`, `right: 12px`, `top: 2px` (era 0 até o design v3), três filhos em linha com `gap: 6px`, alinhados pelo topo (a ilha cresce para baixo sem mover as laterais).
-- **Pílulas laterais**: dividem igualmente o espaço que sobra da ilha (`flex: 1 1 0`); altura 30px, raio 15px, fundo `bg`, anel 1px `neutral-800`, padding horizontal 6px. Sem o blur do design: o `Shell.BlurEffect` é retangular (não segue o raio) e deixa as quinas quadradas.
+- **Pílulas laterais**: dividem igualmente o espaço que sobra da ilha (`flex: 1 1 0`); altura 30px, raio 15px, fundo `bg`, anel 1px `neutral-800`, padding horizontal 6px. Sem o blur do design por enquanto (spec 01).
 - **Ilha**: largura/altura/raio do modo atual (spec 03), centralizada entre as laterais.
 
 ### Pílula esquerda
@@ -32,32 +32,40 @@ Clicar num gatilho cujo modo já está aberto fecha a ilha (`openFromBar`).
 - Suporte a partir de **1280px lógicos** por monitor.
 - Botão de ambiente e botões fixos da pílula direita nunca somem. Quando os widgets não cabem, a regra de corte é a da spec 16 (primeiro NET → GPU → TEMP do hardware, depois widgets inteiros, do mais longe da ilha para o mais perto).
 
+## Superfícies
+
+Cada monitor tem duas superfícies layer-shell (`plugin/ui/ScreenBar.qml`):
+
+- **Faixa** (`island-strut`, camada `Bottom`): 32px no topo, transparente, sem entrada (`mask` vazia). Só reserva o espaço.
+- **Camada** (`island`, camada `Top`): tela cheia, transparente, `ExclusionMode.Ignore`. Desenha pílulas, ilha e banner. A `mask` é a união dos retângulos das pílulas e da ilha, então o resto da tela recebe cliques normalmente.
+
+Uma superfície só não serve: ancorada nas quatro bordas (para a ilha crescer para baixo), o layer-shell ignora a zona exclusiva.
+
 ## Monitores
 
-- Uma barra por monitor, recriada quando monitores entram/saem (`Main.layoutManager` `monitors-changed`).
-- Existe **um** estado de ilha. Ao abrir um modo, a ilha do monitor-alvo expande e as outras ficam em `compact`:
+- Uma barra por monitor (`Variants` sobre `Quickshell.screens`), criada e removida quando monitores entram/saem.
+- Existe **um** estado de ilha (`IslandState` no `Bar.qml`). Ao abrir um modo, a ilha do monitor-alvo expande e as outras ficam em `compact`:
   - clique numa barra → monitor daquela barra
-  - modos transitórios (notificação, música, volume, brilho) e `Super+S` → monitor da janela focada (primário se não houver janela focada)
+  - modos transitórios (notificação, música, volume, brilho) e atalhos → monitor focado no Hyprland (`Hyprland.focusedMonitor`; o primeiro da lista se não houver)
 
-## Tela cheia, overview e lock
+## Tela cheia e lock
 
-- Monitor com janela em tela cheia: a barra daquele monitor some.
-- Overview: a barra continua visível e funcional.
-- Tela de bloqueio: a extensão está desabilitada (o GNOME chama `disable()`), nada da Island aparece.
+- Monitor com janela em tela cheia: a barra daquele monitor some. O Hyprland desenha a janela em tela cheia acima da camada `Top`.
+- Tela de bloqueio: o `WlSessionLock` do Omarchy cobre tudo, a barra continua carregada por baixo e nada dela aparece.
 
-## Espaço reservado (struts)
+## Espaço reservado
 
-A barra reserva 32px no topo de cada monitor (2px de margem + 30px); janela maximizada começa em y=32. Com auto-ocultar ligado, não reserva nada (spec 18).
+A faixa reserva 32px no topo de cada monitor (2px de margem + 30px); janela maximizada começa em y=32. Com auto-ocultar ligado, não reserva nada (spec 18).
 
 ## Clique fora
 
-Com modo fixo (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`, `note`, `music` fixado) ou cartão central aberto, um clique em qualquer ponto fora da ilha/cartão fecha tudo e é **consumido** (não chega à janela embaixo), como os menus do GNOME.
+Com modo fixo (`stack`, `calendar`, `quick`, `wifi`, `bt`, `ai`, `note`, `music` fixado) ou cartão central aberto, a camada do monitor-alvo troca a `mask` pela tela inteira e pega o foco de teclado (`WlrKeyboardFocus.Exclusive`). Um clique em qualquer ponto fora da ilha/cartão fecha tudo e é **consumido** (não chega à janela embaixo).
 
 ## Critérios de aceite
 
 - [x] As duas laterais têm sempre a mesma largura e a ilha fica centralizada no monitor.
-- [x] Maximizar uma janela a deixa encostada em y=32 sem sobrepor a barra.
-- [x] Em 1280px lógicos com a ilha em `wifi` (520px) e o ambiente Trabalho, nenhum texto da barra é cortado (widgets somem inteiros, spec 16).
-- [x] Conectar/desconectar um segundo monitor cria/remove a barra dele sem reiniciar a extensão.
-- [x] Uma janela em tela cheia esconde a barra só no monitor dela.
-- [x] Clique fora de um modo fixo fecha a ilha e não ativa a janela clicada.
+- [ ] Maximizar uma janela a deixa encostada em y=32 sem sobrepor a barra.
+- [ ] Em 1280px lógicos com a ilha em `wifi` (520px) e o ambiente Trabalho, nenhum texto da barra é cortado (widgets somem inteiros, spec 16).
+- [ ] Conectar/desconectar um segundo monitor cria/remove a barra dele sem reiniciar o shell.
+- [ ] Uma janela em tela cheia esconde a barra só no monitor dela.
+- [ ] Clique fora de um modo fixo fecha a ilha e não ativa a janela clicada.

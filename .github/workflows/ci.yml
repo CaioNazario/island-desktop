@@ -8,13 +8,12 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # Arch: quickshell e qt6-declarative vêm do repositório oficial, e o
+    # qmllint precisa dos .qmltypes do Quickshell para checar o plugin.
+    container: archlinux:latest
     steps:
+      - run: pacman -Syu --noconfirm --needed git make nodejs npm quickshell qt6-declarative
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: sudo apt-get update && sudo apt-get install -y libglib2.0-bin
       - run: npm ci
       - run: make lint
       - run: make test

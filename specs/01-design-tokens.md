@@ -1,10 +1,10 @@
 # 01 · Design tokens
 
-Origem: `design/tokens.css` (`:root` a partir da linha ~256, classes `.btn*` a partir da ~389) e cores literais em `design/logic.js`.
+Origem: `design/tokens.css` (bloco `:root`, classes `.btn*`) e cores literais em `design/logic.js`.
 
 ## Cores
 
-O CSS do St não tem variáveis. Uma tabela única em `src/ui/tokens.ts` é a fonte: gera o `stylesheet.css` no build e alimenta o que é pintado por código.
+Uma tabela única em `plugin/ui/Tokens.qml` (singleton QML) é a fonte de toda cor, medida e curva da UI.
 
 | Token | Hex |
 |---|---|
@@ -19,9 +19,9 @@ O CSS do St não tem variáveis. Uma tabela única em `src/ui/tokens.ts` é a fo
 
 ### Cores pré-calculadas
 
-St não entende `oklch()` nem `color-mix()`. Valores convertidos:
+O QML não entende `oklch()` nem `color-mix()`. Valores convertidos (alfa via `Qt.alpha()`):
 
-| Uso no design | Original | St |
+| Uso no design | Original | QML |
 |---|---|---|
 | Vermelho de alerta (IA ≥90%, TEMP ≥70°) | `oklch(0.68 0.19 25)` | `#f75d59` |
 | Texto vermelho (IA ≥90%, erro de senha) | `oklch(0.72 0.17 25)` | `#fd736d` |
@@ -40,27 +40,27 @@ St não entende `oklch()` nem `color-mix()`. Valores convertidos:
 
 ## Tipografia
 
-- **Inter** peso 500 para rótulos e 400 para corpo, conforme o design. Se Inter não estiver instalada, `install.sh` avisa e o St cai no fallback do sistema.
+- **Inter** peso 500 para rótulos e 400 para corpo, conforme o design. Sem Inter instalada, o Qt cai no fallback do fontconfig.
 - Tamanhos usados: 8.5 (rótulo hardware, `letter-spacing .08em`), 8 (número dentro da bateria, peso 600), 10, 10.5, 11, 11.5, 12, 12.5, 13, 14px.
-- Números sempre com dígitos tabulares (`font-feature-settings: "tnum"`).
+- Números sempre com dígitos tabulares (`font.features: { "tnum": 1 }`, em `IslandText.qml`).
 
 ## Ícones
 
 - **Phosphor** nas variantes regular (`ph`), fill (`ph-fill`) e bold (`ph-bold`), exatamente as usadas no design.
-- Empacotados como SVG simbólicos em `icons/` dentro da extensão e carregados por `Gio.FileIcon`; só os ícones usados, não a fonte inteira.
+- Empacotados como SVG simbólicos em `icons/` dentro do plugin; só os ícones usados, não a fonte inteira.
 - Ícones de marca sem equivalente no Phosphor caem em `ph-music-note` (música) ou `ph-globe` (notificação de site).
 
-## Efeitos (equivalentes St)
+## Efeitos (equivalentes QML)
 
-| Design | St |
+| Design | QML |
 |---|---|
-| `backdrop-filter: blur(16px)` nas pílulas, `blur(20px)` no cartão | Sem blur: o `Shell.BlurEffect` não segue o `border-radius` e deixa as quinas quadradas (spec 02) |
-| Mola da ilha `cubic-bezier(.3,1.2,.4,1)` .46s | `ease()` de 460ms + `set_cubic_bezier_progress((.3,1.2), (.4,1))` nas transições criadas (`easeSpring` em `src/ui/spring.ts`). Não usar `EASE_OUT_BACK`: passa ~10% do alvo, a curva do design ~1,25% |
-| Cartões `cubic-bezier(.3,1.15,.4,1)` .4s | `EASE_OUT_BACK`, 400ms |
-| Crossfade de conteúdo `.22s ease` com atraso `.08s` | `ease()` de `opacity`, 220ms, `delay: 80` |
-| `box-shadow: 0 0 0 1px` (anel) | `box-shadow` do St (suporta um valor) ou `border` de 1px |
-| `:hover` / `:active` | pseudo-classes `:hover` / `:active` do St |
-| `:focus-visible` anel 2px `accent` | pseudo-classe `:focus` do St com `outline` via `border`/`box-shadow` de 2px |
+| `backdrop-filter: blur(16px)` nas pílulas, `blur(20px)` no cartão | Ainda sem blur. Candidato: `BackgroundEffect.blurRegion` do Quickshell, que aceita `Region` com `radius` (a v1.1 ficou sem blur porque o do GNOME era retangular) |
+| Mola da ilha `cubic-bezier(.3,1.2,.4,1)` .46s | `NumberAnimation` de 460ms com `Easing.BezierSpline` e `bezierCurve: [.3, 1.2, .4, 1, 1, 1]` (`Tokens.springCurve`) |
+| Cartões `cubic-bezier(.3,1.15,.4,1)` .4s | Mesma técnica, `Tokens.cardCurve`, 400ms |
+| Crossfade de conteúdo `.22s ease` com atraso `.08s` | `SequentialAnimation` com `PauseAnimation` de 80ms + `opacity` em 220ms |
+| `box-shadow: 0 0 0 1px` (anel) | `border.width: 1` do `Rectangle` |
+| `:hover` / `:active` | `HoverHandler`/`MouseArea.containsMouse` e `pressed` |
+| `:focus-visible` anel 2px `accent` | `activeFocus` com borda de 2px `accent` |
 
 ## Critérios de aceite
 
