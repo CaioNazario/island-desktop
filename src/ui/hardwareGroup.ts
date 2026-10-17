@@ -11,6 +11,7 @@ import {
 } from '../core/hardware.js';
 import type { HardwareSource } from '../system/hardware.js';
 import { colors, derivedColors, typography } from './tokens.js';
+import { Tooltip } from './tooltip.js';
 
 const BLOCK_ORDER: readonly HardwareBlockId[] = ['cpu', 'ram', 'gpu', 'temp', 'net'];
 
@@ -65,13 +66,18 @@ const HardwareBlockView = GObject.registerClass(
   class HardwareBlockView extends St.BoxLayout {
     private readonly titleLabel: InstanceType<typeof TightLabel>;
     private readonly valueLabel: InstanceType<typeof TightLabel>;
+    private readonly tooltip: Tooltip;
 
     constructor(id: HardwareBlockId) {
+      // `reactive` só para o hover do tooltip; clique não faz nada.
       super({
         orientation: Clutter.Orientation.VERTICAL,
         style: 'spacing: 2px;',
         y_align: Clutter.ActorAlign.CENTER,
+        reactive: true,
+        track_hover: true,
       });
+      this.tooltip = new Tooltip(this);
       this.titleLabel = new TightLabel(typography.sizes.hardwareLabel, {
         style: `
           font-size: ${typography.sizes.hardwareLabel}px;
@@ -98,6 +104,7 @@ const HardwareBlockView = GObject.registerClass(
       this.titleLabel.text = block.label;
       this.valueLabel.text = block.value;
       this.valueLabel.style = `${VALUE_STYLE} color: ${TONE_COLOR[block.tone]};`;
+      this.tooltip.text = block.tooltip;
       this.visible = true;
     }
   },
