@@ -4,6 +4,7 @@
 // formato inesperado vira `null`, nunca exceção.
 
 import { formatClock } from './clock.js';
+import { decodeUtf8 } from './utf8.js';
 
 export type ProviderId = 'claude' | 'codex';
 
@@ -105,12 +106,9 @@ function jwtClaims(token: unknown): Json | null {
   if (!payload) return null;
   const bytes = base64UrlDecode(payload);
   if (!bytes) return null;
-  let claims: unknown;
-  try {
-    claims = parseJson(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
-  } catch {
-    return null;
-  }
+  const text = decodeUtf8(bytes);
+  if (text === null) return null;
+  const claims = parseJson(text);
   return isObject(claims) ? claims : null;
 }
 
