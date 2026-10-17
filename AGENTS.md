@@ -1,6 +1,8 @@
 # Island
 
-Extensão GNOME Shell que substitui o painel superior por três pílulas flutuantes (uso de IA · ilha · sistema). A ilha central se expande estilo Dynamic Island para notificações, música, volume/brilho, calendário, controles rápidos, Wi‑Fi, Bluetooth e uso de IA.
+Plugin de barra do Omarchy (shell em Quickshell, sobre Hyprland) que substitui a barra padrão por três pílulas flutuantes (uso de IA · ilha · sistema). A ilha central se expande estilo Dynamic Island para notificações, música, volume/brilho, calendário, controles rápidos, Wi‑Fi, Bluetooth e uso de IA.
+
+Até a v1.1 a Island era uma extensão do GNOME Shell. Esse código está na tag `v1.1.0` e não é mais mantido.
 
 ## Fonte da verdade
 
@@ -24,74 +26,77 @@ Quando o design mudar, rode `python3 scripts/extract-design.py` e atualize as sp
 
 ## Stack
 
-- GNOME Shell 50+, Wayland. Arch é o alvo; nenhum código assume caminho, pacote ou driver do Arch.
-- TypeScript + tipos `@girs/*`, compilado com `tsc` (um `.js` legível por módulo, sem bundler e sem minificação). Os tipos `@girs` podem atrasar em relação à 50.x: confira a API no código-fonte do Shell (gitlab.gnome.org/GNOME/gnome-shell, `js/ui/`, na tag da versão) antes de usar.
-- GJS não é navegador nem Node: sem DOM, `fetch`, `require` ou npm em runtime. HTTP via `gi://Soup` 3, arquivos e processos via Gio.
-- UI em St/Clutter. Layout por layout managers do Clutter. O CSS do St não tem flex/grid, `backdrop-filter`, `color-mix()`, `oklch()`, `:focus-visible` nem curva `cubic-bezier`. Equivalentes adotados em `specs/01-design-tokens.md`.
-- UI em pt-BR via gettext; código, identificadores e commits em inglês.
+- Omarchy 4+ (`omarchy-shell`), Quickshell 0.3+, Qt 6.11+, Hyprland. Nenhum código assume caminho, pacote ou driver do Arch fora do que o próprio Omarchy instala.
+- A Island é um plugin `kind: "bar"` + `kind: "service"` carregado de `~/.config/omarchy/plugins/caionazario.island/`. O contrato de plugin está em `/usr/share/omarchy/shell/README.md` e `services/PluginRegistry.qml`. Leia, nunca edite `/usr/share/omarchy/`.
+- UI em QML (QtQuick + módulos `Quickshell.*`). Antes de usar uma API do Quickshell, confira em `/usr/lib/qt6/qml/Quickshell/**/*.qmltypes` ou em quickshell.org/docs na versão instalada (`qs --version`).
+- Lógica em TypeScript (`src/core`), compilada com `tsc` para módulos ES (`.mjs`) que o QML importa (`import "../core/island.mjs" as IslandCore`). O motor JS do QML (V4) não é navegador nem Node: sem DOM, `fetch`, `setTimeout`, `TextDecoder`, `Intl` nem class fields do ES2022. Por isso o core compila com `target: ES2020` (spec 14, S5).
+- HTTP via `XMLHttpRequest` do QML, arquivos via `FileView`, processos via `Process` (`Quickshell.Io`). D-Bus sem módulo dedicado no Quickshell vai por `busctl`/`gdbus` em `Process`.
+- UI em pt-BR; código, identificadores e commits em inglês. O Omarchy não usa gettext, então os textos ficam em pt-BR no código.
 
 ## Arquitetura
 
 ```
-src/
-  core/         lógica pura: estados da ilha, roteamento de notificação, limiares, formatação, tamanhos
-  system/       fontes de dados (D-Bus, MPRIS, NM, BlueZ, UPower, /proc, /sys, GWeather, HTTP de IA), cada uma atrás de uma interface
-  ui/           atores St: barra, pílulas, ilha, modos, cartão central
-  extension.ts  enable()/disable()
-  prefs.ts      preferências (GTK4/Adw, outro processo, fala só via GSettings)
+src/core/        lógica pura em TS: estados da ilha, roteamento de notificação, limiares, formatação, tamanhos
+plugin/          o plugin, copiado como está para o build
+  manifest.json
+  Bar.qml        entrada `bar`: uma barra por monitor, recriada a cada hot-reload
+  Service.qml    entrada `service` (keepLoaded): servidor de notificações, IPC `osd`/`notifications`, estado que sobrevive ao reload
+  system/        fontes de dados (Pipewire, Mpris, UPower, Networking, Bluetooth, /proc, /sys, HTTP de IA), cada uma um QtObject com interface estável
+  ui/            componentes QML: pílulas, ilha, modos, cartão central
+dev/             harness que hospeda o plugin como o omarchy-shell, para rodar fora da sessão do usuário
+scripts/         build do core (`build-core.mjs`) e extração do design
 ```
 
-- `core/` nunca importa `gi://` nem `resource://`. É onde mora toda regra testável.
+- `src/core/` nunca depende de QML, Quickshell nem Node em runtime. É onde mora toda regra testável. O QML só liga eventos ao core e renderiza o resultado.
 - Todo serviço é opcional: sem a dependência (sem bateria, sem GPU conhecida, sem credencial de IA, sem cidade), o bloco da UI some sem erro nem log ruidoso.
-- A Island é dona do painel: esconde `Main.panel` no `enable()` e o devolve intacto no `disable()`.
+- A Island é dona da barra, das notificações e do OSD: `omarchy.notifications` e `omarchy.osd` ficam em `disabledPlugins`, e o `Service.qml` registra os mesmos alvos IPC (`notifications`, `osd`) que os scripts `omarchy-*` chamam.
 
-## Ciclo de vida: disable() roda a cada bloqueio de tela
+## Ciclo de vida: hot-reload e serviço persistente
 
-Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores destruídos, signals desconectados, timeouts removidos, injeções limpas, painel original restaurado. Um lock/unlock não pode vazar nem perder estado visível (notificações vêm do MessageTray, que sobrevive ao lock).
+O host recria o `Bar.qml` a cada hot-reload de plugin (qualquer arquivo salvo em `~/.config/omarchy/plugins/`) e quando o usuário troca de barra. O `Service.qml` tem `keepLoaded: true` e só morre quando o shell reinicia.
 
-- Signals: `obj.connectObject('sig', cb, this)` + `obj.disconnectObject(this)`.
-- Monkey patch: `InjectionManager` com `overrideMethod(...)` e `clear()` no disable; use `function`, não arrow, por causa do `this`.
-- Timeouts: guarde o id de `GLib.timeout_add*` e dê `GLib.Source.remove` no disable.
-- Sem efeito colateral no escopo do módulo nem em `constructor` fora do `enable()`.
-- Main loop é single-thread e o Shell é o compositor: I/O, subprocess e HTTP sempre assíncronos (`*_async`, `Gio._promisify`, `communicate_utf8_async`). Uma exceção não tratada derruba a sessão inteira.
+- Tudo que a barra cria vive na árvore QML dela (`Timer`, `Process`, `FileView`, `Connections`) e morre com ela. Nada de `createObject(null)` nem de estado em singleton fora da árvore.
+- Estado visível que precisa sobreviver ao reload (notificações, não lidas, ambiente ativo, pomodoro) mora no `Service.qml` ou no arquivo de configuração, nunca na barra.
+- O lock do Omarchy (`WlSessionLock`) cobre a barra sem descarregá-la: não há enable/disable a cada bloqueio.
+- O QML roda na thread da UI do shell: I/O, subprocess e HTTP sempre assíncronos (`Process`, `FileView` com `blockLoading: false`, `XMLHttpRequest`). Uma exceção em binding só gera aviso, mas um loop síncrono trava o shell inteiro.
 
 ## Comandos
 
 | Comando | Faz |
 |---|---|
 | `make test` | Vitest em `src/core` |
-| `make lint` | ESLint + Prettier + `tsc --noEmit` |
-| `make build` | `tsc` + `glib-compile-schemas` |
-| `make dev` | build + Shell aninhado: `dbus-run-session gnome-shell --devkit --wayland` |
-| `make smoke` | **Ainda não existe; criar antes de usar.** Sobe o Shell headless, faz ciclos de enable/disable e falha se o journal tiver `JS ERROR` ou `Gjs-CRITICAL` |
-| `./install.sh` / `./install.sh --uninstall` | instala em `~/.local/share/gnome-shell/extensions/island@caionazario.dev/` |
+| `make lint` | ESLint + Prettier + `tsc --noEmit` + `qmllint` no plugin |
+| `make build` | core → `.mjs` + plugin + ícones em `dist/caionazario.island/` |
+| `make dev` | build + Hyprland aninhado numa janela, com o harness `dev/` rodando o plugin dentro dele |
+| `make smoke` | build + Hyprland aninhado sem interação: carrega o plugin, força 5 hot-reloads e falha se o log do Quickshell tiver `ERROR` ou `TypeError` |
+| `./install.sh` / `./install.sh --uninstall` | copia o build para `~/.config/omarchy/plugins/caionazario.island/`, troca a barra e desliga/religa `omarchy.notifications` e `omarchy.osd` |
 
-- Shell headless: `dbus-run-session -- gnome-shell --headless --virtual-monitor 1600x900`.
-- Logs (`console.log` do Shell): `journalctl -f -o cat /usr/bin/gnome-shell`.
+- Logs do harness: `dist/dev.log`. Logs do omarchy-shell real: `qs log -p /usr/share/omarchy/shell`.
+- Captura do Hyprland aninhado: `make shot` (grim no socket do aninhado) grava `dist/shot.png`.
 
 ## Código
 
 - Funções de 4–20 linhas. Máximo 2 níveis de indentação; prefira early return.
 - Arquivos de no máximo 400 linhas (exceto os extraídos em `design/`). Antes de passar disso, divida o módulo.
 - Nomes únicos e greppáveis. Evite `data`, `handler`, `Manager`, `Service` sozinhos.
-- Sem `any`. API sem tipo no `@girs`: declare o tipo localmente, com comentário apontando o arquivo e a tag do gnome-shell de onde ele veio.
+- Sem `any` no TS. Em QML, tipe as propriedades (`property int`, `property list<…>`) e use `var` só para objetos JS do core.
 - Mensagem de erro inclui o valor recebido e o formato esperado.
 - Sem duplicação: extraia a lógica compartilhada para `core/`.
 
 ## Comentários
 
 - Escreva POR QUE, não O QUE.
-- Workaround de Shell/Mutter/GJS cita o arquivo, a tag ou a issue de origem.
+- Workaround de Quickshell/Hyprland/Omarchy cita o arquivo, a versão ou a issue de origem.
 - Não remova comentários existentes em refactor. Eles carregam proveniência.
 
 ## Segredos
 
-- Credencial de IA só via libsecret. Nunca em GSettings, log, fixture, teste ou commit.
+- Credencial de IA só via libsecret (`secret-tool` em `Process`). Nunca no arquivo de configuração, log, fixture, teste ou commit.
 - Antes de commitar, confira `git diff --cached` procurando token, key ou `.env`.
 
 ## Nunca sem perguntar
 
-- Instalar ou habilitar a extensão na sessão atual. Para testar, use `make dev` ou o Shell headless.
+- Instalar o plugin na sessão atual, trocar a barra ou mexer em `~/.config/omarchy/shell.json`. Para testar, use `make dev` ou `make smoke`.
 - Rodar comando com `sudo` ou que escreva fora do repositório.
 - Apagar arquivo que você não criou nesta tarefa.
 
@@ -105,7 +110,7 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 
 - CI obrigatória: todo push e PR roda `make lint`, `make test` (todos os testes) e `make build`. CI vermelha não entra na main.
 - Mudou comportamento, atualize a spec correspondente no mesmo commit. Spec e código nunca divergem.
-- API de GJS/St/Mutter que você não confirmou no código-fonte do Shell ou em gjs.guide: diga "não sei" e verifique, em vez de chutar.
+- API de Quickshell/Qt/Omarchy que você não confirmou nos `.qmltypes`, na doc da versão instalada ou no código do Omarchy: diga "não sei" e verifique, em vez de chutar.
 - Ponto em aberto marcado como spike (`specs/14-spikes.md`) se resolve antes de implementar a feature que depende dele, e o resultado vai para a spec.
 - Commits em Conventional Commits: `tipo(escopo): descrição` no imperativo, minúscula, sem ponto, ≤72 caracteres. Tipos: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`. Um commit = uma mudança lógica; `refactor` nunca junto com `feat`/`fix`. Breaking change: `!` + rodapé `BREAKING CHANGE:`.
 
@@ -113,15 +118,15 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 
 Problema já encontrado e sua solução. Adicione aqui toda vez que algo custar mais de uma tentativa.
 
-- GNOME 50 não tem `gnome-shell --nested`: use `--devkit`.
-- Wayland não recarrega o Shell: mudança na extensão instalada exige logout/login.
-- `disable()` roda a cada lock de tela, não só ao desativar a extensão.
-- Tipos `@girs` atrasam em relação à 50.x: confira a API na tag do Shell.
+- O V4 do QML recusa class fields (`Expected token '('`): o core compila com `target: ES2020`.
+- O QML só trata como módulo ES arquivos `.mjs`: o build renomeia a saída do `tsc` e reescreve os imports `./x.js` → `./x.mjs`.
+- O V4 não tem `setTimeout`, `TextDecoder` nem `Intl`: timers do core recebem um `Scheduler` feito de `Timer` QML, e bytes chegam ao core já como string.
+- `Qt.quit()` não encerra o `qs` (sem receptor para `QQmlEngine::quit`): scripts usam `timeout` ou `Quickshell` IPC.
 
 ## Antes de dizer que terminou
 
-- [ ] `make lint`, `make test` e `make build` verdes
+- [ ] `make lint`, `make test`, `make build` e `make smoke` verdes
 - [ ] Spec afetada atualizada no mesmo commit
-- [ ] Tudo que `enable()` cria, `disable()` desfaz
-- [ ] Nenhum I/O síncrono no main loop
+- [ ] Estado visível que precisa sobreviver ao hot-reload mora no `Service.qml`
+- [ ] Nenhum I/O síncrono na thread da UI
 - [ ] Nenhuma credencial fora do libsecret

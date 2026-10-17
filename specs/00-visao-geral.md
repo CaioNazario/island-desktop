@@ -2,7 +2,9 @@
 
 ## O produto
 
-A Island substitui o painel superior do GNOME por três pílulas flutuantes. A do meio, a **ilha**, muda de tamanho conforme o contexto (estilo Dynamic Island) e concentra estados transitórios e controles. Usuário-alvo: dev em Linux/GNOME que quer ver estado do sistema e uso de IA sem clicar, e alcançar volume, brilho, Wi‑Fi, Bluetooth e energia em um clique ou `Super+S`.
+A Island é um plugin de barra do Omarchy (Quickshell sobre Hyprland) que substitui a barra padrão por três pílulas flutuantes. A do meio, a **ilha**, muda de tamanho conforme o contexto (estilo Dynamic Island) e concentra estados transitórios e controles. Usuário-alvo: dev em Omarchy que quer ver estado do sistema e uso de IA sem clicar, e alcançar volume, brilho, Wi‑Fi, Bluetooth e energia em um clique ou atalho.
+
+Até a v1.1 a Island era uma extensão do GNOME Shell (tag `v1.1.0`). A v2 é o porte para o Omarchy: mesmo design e mesmas regras do `src/core`, UI reescrita em QML.
 
 ## Glossário
 
@@ -46,14 +48,17 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 
 ## Ordem de implementação
 
-1. Esqueleto: `extension.ts`, `install.sh`, `Makefile`, Vitest, ESLint, `tsc`, schema GSettings
+A v1.x (GNOME) seguiu as specs 01–18 nessa ordem. O porte v2 (Omarchy) refaz a UI e as fontes de dados na mesma ordem e reaproveita `src/core` sem mudança de regra:
+
+1. Base: toolchain (core → `.mjs`), esqueleto do plugin (`manifest.json`, `Bar.qml`, `Service.qml`), harness `dev/`, `make smoke`
 2. 01 → 02 → 03 (barra vazia + ilha com relógio, estados e animação)
 3. 08 (controles rápidos, volume, brilho, Wi‑Fi, Bluetooth) → 09 → 11
 4. 04 (notificações) → 05/06 (música, calendário, cartão central)
 5. 10 (hardware) → 07 (clima) → 12 (IA)
-6. 13 (preferências) consolida as opções que cada spec já declarou
-7. v1.1 (design v3): 15 → 16 → 17 → 11 → 18, com os spikes da spec 14 antes da spec dependente; a 11 entra pelo desenho da bateria que o v3 trouxe
-8. Specs anteriores que o v3 reabriu (02, 03, 05, 13): conferir o que as specs 15–18 já cobriram e implementar o resto antes da tag v1.1.0
+6. 15 → 16 → 17 → 18 (ambientes, widgets, editor, auto-ocultar)
+7. 13 (preferências) consolida as opções que cada spec já declarou
+
+Cada spec é reescrita para o Omarchy no mesmo commit que porta a feature dela. Até lá, o texto descreve a v1.1 (GNOME): o comportamento continua valendo, os nomes de API não.
 
 ## Fora de escopo (v1.x)
 
@@ -62,14 +67,15 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 - Atalhos numerados de ambiente (`Alt+1–N` do design)
 - Extensão de navegador companion (a música de navegador mostra ícone genérico)
 - Ubuntu/outras distros testadas (o código não assume Arch, mas só o Arch é validado)
-- Publicação no extensions.gnome.org (instalação via `install.sh`)
+- Outros ambientes além do Omarchy (Hyprland puro, outros compositores). O GNOME fica na tag `v1.1.0`
+- Publicação no repositório de plugins do Omarchy (instalação via `install.sh`)
 - Tema claro, botões de ação em notificações, bandeja AppIndicator, troca de layout de teclado
 - GPU NVIDIA no bloco de hardware (sem máquina para validar o `nvidia-smi`)
 - Cor de realce escolhida pelo usuário (painel de matiz/saturação do design v3): o `accent` é fixo (spec 01)
 
 ## Critérios de aceite globais
 
-- [x] Lock/unlock de tela 20 vezes seguidas: nenhum ator, signal ou timeout vaza (Looking Glass/`journalctl` limpos) e o painel original do GNOME nunca aparece durante a sessão desbloqueada.
-- [x] Desabilitar a extensão devolve o painel padrão do GNOME funcionando.
-- [x] Nenhuma exceção não tratada chega ao Shell em uso normal.
-- [x] Animações da ilha sem queda perceptível de quadros a 60Hz.
+- [ ] 20 hot-reloads seguidos do plugin (`make smoke`): nenhum aviso de QML, nenhuma barra duplicada, e notificações, não lidas e ambiente ativo continuam iguais.
+- [ ] Trocar a barra de volta para `omarchy.bar` (ou o plugin falhar ao carregar) devolve a barra padrão do Omarchy funcionando.
+- [ ] Nenhum `TypeError`/`ReferenceError` no log do shell em uso normal.
+- [ ] Animações da ilha sem queda perceptível de quadros a 60Hz.
