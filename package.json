@@ -1,6 +1,6 @@
 {
   "name": "island",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "GNOME Shell extension: Dynamic Island topbar",
   "private": true,
   "type": "module",
