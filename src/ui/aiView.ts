@@ -12,7 +12,7 @@ import {
 } from '../core/aiUsage.js';
 import type { AiUsageSource, ProviderSnapshot } from '../system/aiUsage.js';
 import { phosphor } from './icons.js';
-import { aiIconName, LEVEL_COLORS, PROVIDER_META, statusNotice } from './aiProvider.js';
+import { aiIconName, levelColors, PROVIDER_META, statusNotice } from './aiProvider.js';
 import { colors } from './tokens.js';
 
 // Medidas de specs/12-uso-ia.md "Modo `ai`". A altura do cartão fecha a conta
@@ -77,7 +77,7 @@ const UsageColumn = GObject.registerClass(
     display(window: UsageWindow | null): void {
       this.window = window;
       const percent = window?.percent ?? 0;
-      const level = LEVEL_COLORS[usageLevel(percent)];
+      const level = levelColors(usageLevel(percent));
       this.percentLabel.text = window ? formatPercent(percent) : '—';
       this.percentLabel.style = `font-weight: 500; color: ${window ? level.text : colors.neutral500};`;
       this.fill.style = `background-color: ${level.bar}; border-radius: 2px;`;

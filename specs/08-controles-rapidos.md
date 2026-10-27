@@ -4,11 +4,11 @@ Origem: `design/markup.html` 92–101 (`volume`), 134–157 (`quick`), 158–215
 
 ## Linha de controles (comum a `quick`, `wifi` e `bt`)
 
-58px de altura, padding 0 10px, gap 8px, da esquerda para a direita:
+46px de altura, padding 0 7px, gap 6px, da esquerda para a direita:
 
-1. **Brilho**: pílula `flex: 1`, 38px, raio 19, `neutral-900`, padding 0 12px, gap 8px; `ph ph-sun` 16px + slider. Some se não houver backlight controlável (o volume ocupa o espaço).
+1. **Brilho**: pílula `flex: 1`, 32px, raio 16, `neutral-900`, padding 0 11px, gap 8px; `ph ph-sun` 16px + slider. Some se não houver backlight controlável (o volume ocupa o espaço).
 2. **Volume**: igual, com o ícone de volume.
-3. **Tiles** 38×38 raio 19 (ligado: `accent-600` / ícone `neutral-100`; desligado: `neutral-800` / `neutral-300`; transição 180ms):
+3. **Tiles** 32×32 raio 16 (ligado: `accent-600` / ícone `neutral-100`; desligado: `neutral-800` / `neutral-300`; transição 180ms):
 
    | Tile | Ícone | Clique |
    |---|---|---|
@@ -23,7 +23,7 @@ Origem: `design/markup.html` 92–101 (`volume`), 134–157 (`quick`), 158–215
 
 ### Slider
 
-- Trilho 4px raio 2 `neutral-800`, preenchimento `accent`, thumb 12×12 `neutral-100` (no modo `volume`: 14×14 com brilho `accent` 60% 12px).
+- Trilho 4px raio 2 `neutral-800`, preenchimento `accent`, thumb 12×12 `neutral-100` (no modo `volume`: também 12×12, com brilho `accent` 60% 12px).
 - Pressionar posiciona pelo x; arrastar continua fora do trilho até soltar. Setas do teclado ±5 com foco.
 - Valor 0–100, inteiro.
 
@@ -31,23 +31,23 @@ Origem: `design/markup.html` 92–101 (`volume`), 134–157 (`quick`), 158–215
 
 - Fonte: `Gvc.MixerControl` do Shell (saída padrão). Máximo 100%, sem amplificação.
 - Ícone (`ph-fill`): mudo ou 0 → `ph-speaker-x`; <40 → `ph-speaker-low`; senão `ph-speaker-high`.
-- **Modo `volume`** (320×50, 1500ms): padding 0 18px, gap 14px: ícone 18px · slider · valor `70%` (34px, alinhado à direita, 12px `neutral-300`).
+- **Modo `volume`** (320×36, 1500ms): padding 0 16px, gap 12px: ícone 16px · slider · valor `70%` (34px, alinhado à direita, 12px `neutral-300`).
 - Abre pelo ícone de volume da barra ou pela tecla de volume/mudo (regra 4 da spec 03).
 
 ## Brilho
 
 - Fonte: o mesmo mecanismo que o slider de brilho nativo do Shell 50.x usa (confirmar no código-fonte antes de implementar).
-- **Modo `brightness`** (320×50, 1500ms): clone do `volume` com `ph ph-sun`. Abre pela tecla de brilho.
+- **Modo `brightness`** (320×36, 1500ms): clone do `volume` com `ph ph-sun`. Abre pela tecla de brilho.
 
 ## Teclas de mídia
 
 O OSD nativo de volume e brilho não aparece: o pedido de OSD do Shell é redirecionado para a ilha (injeção no `OsdWindowManager` ou equivalente da 50.x, confirmado no código-fonte) e restaurado no `disable()`. OSDs de outros tipos (ex.: teclado) continuam nativos.
 
-## Modo `quick` (520×58)
+## Modo `quick` (520×46)
 
-Só a linha de controles. Com a linha de energia aberta: 106px (spec 09). Abre por `Super+S`, bateria, seta ou o widget Hardware (spec 16).
+Só a linha de controles. Com a linha de energia aberta: 94px (spec 09). Abre por `Super+S`, bateria, seta ou o widget Hardware (spec 16).
 
-## Modo `wifi` (520×292)
+## Modo `wifi` (520×280)
 
 Linha de controles · linha de energia (opcional) · divisor · seção de redes (padding 0 12px):
 
@@ -79,7 +79,7 @@ Captive portal não é detectável antes de conectar: a rede aparece como aberta
 - **Conectar**: cria o perfil com a PSK (`key-mgmt` `sae` para WPA3, senão `wpa-psk`) e ativa (`add_and_activate_connection`); o painel fecha e a rede mostra "Conectando…". Perfis criados pela ilha (inclusive de rede aberta) são só do usuário (`permissions=user:<nome>`), o que não pede senha de admin; o Shell faz o mesmo quando o polkit nega `settings.modify.system`. Em falha (senha errada ou 30s), o perfil é apagado.
 - **Senha errada**: o pedido de novo segredo que o NM faz para essa conexão é interceptado (o diálogo nativo do Shell não aparece), o perfil recém-criado é apagado e o painel reabre com "Senha incorreta". A interceptação é uma injeção (`InjectionManager`) em `_showNotification`/`_handleRequest` do protótipo do agente de rede do Shell (`js/ui/components/networkAgent.js`), filtrando pelo UUID do perfil criado pela ilha e respondendo `USER_CANCELED` (com `INTERNAL_ERROR` o NM repassa o pedido pra outro agente).
 
-## Modo `bt` (520×348, desligado 300)
+## Modo `bt` (520×336, desligado 288)
 
 Linha de controles · linha de energia (opcional) · divisor · seção (padding 0 12px):
 

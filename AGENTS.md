@@ -63,7 +63,7 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 | `make lint` | ESLint + Prettier + `tsc --noEmit` |
 | `make build` | `tsc` + `glib-compile-schemas` |
 | `make dev` | build + Shell aninhado: `dbus-run-session gnome-shell --devkit --wayland` |
-| `make smoke` | **Ainda não existe; criar antes de usar.** Sobe o Shell headless, faz ciclos de enable/disable e falha se o journal tiver `JS ERROR` ou `Gjs-CRITICAL` |
+| `make smoke` | build + Shell headless isolado em `dist/smoke` (HOME, dconf e extensões próprios): 20 ciclos de enable/disable, falha se a extensão não ficar ativa ou se o log do Shell tiver erro ou aviso de JS (`SMOKE_CYCLES=n` muda os ciclos) |
 | `./install.sh` / `./install.sh --uninstall` | instala em `~/.local/share/gnome-shell/extensions/island@caionazario.dev/` |
 
 - Shell headless: `dbus-run-session -- gnome-shell --headless --virtual-monitor 1600x900`.
@@ -75,7 +75,7 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 - Arquivos de no máximo 400 linhas (exceto os extraídos em `design/`). Antes de passar disso, divida o módulo.
 - Nomes únicos e greppáveis. Evite `data`, `handler`, `Manager`, `Service` sozinhos.
 - Sem `any`. API sem tipo no `@girs`: declare o tipo localmente, com comentário apontando o arquivo e a tag do gnome-shell de onde ele veio.
-- Mensagem de erro inclui o valor recebido e o formato esperado.
+- Mensagem de erro inclui o valor recebido e o formato esperado, exceto quando o valor é credencial.
 - Sem duplicação: extraia a lógica compartilhada para `core/`.
 
 ## Comentários
@@ -86,7 +86,8 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 
 ## Segredos
 
-- Credencial de IA só via libsecret. Nunca em GSettings, log, fixture, teste ou commit.
+- A Island não guarda credencial: usa a dos CLIs já logados, só leitura, e nunca escreve nem renova token. Claude e Codex pelos arquivos dos próprios CLIs (`~/.claude/.credentials.json`, `~/.codex/auth.json`, spec 12); GitHub por `gh auth token` (spec 16).
+- Token só em memória. Nunca em GSettings, log, mensagem de erro, fixture, teste ou commit; a saída do `gh` não vai para o log.
 - Antes de commitar, confira `git diff --cached` procurando token, key ou `.env`.
 
 ## Nunca sem perguntar
@@ -98,12 +99,16 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 ## Testes
 
 - TDD em `src/core`: teste vermelho primeiro, depois o código.
-- Serviços são testados contra fakes nomeados que implementam a interface (`FakeMprisService`), não stubs inline.
-- Bug fix entra com teste de regressão.
+- Teste que precisa de um serviço usa um fake nomeado que implementa a interface dele (`FakeMprisService`), não stub inline. Não crie fake que nenhum teste usa.
+- Bug fix entra com teste de regressão. Fix em `ui/`, que não tem testes: se a lógica do fix cabe em `core/`, ela vai para lá com o teste; se não cabe, o corpo do commit descreve o teste manual que confirmou a correção.
 
 ## Regras de trabalho
 
-- CI obrigatória: todo push e PR roda `make lint`, `make test` (todos os testes) e `make build`. CI vermelha não entra na main.
+- CI obrigatória: todo push e PR roda `make lint`, `make test` (todos os testes) e `make build`. CI vermelha não entra na `dev` nem na `main`.
+- Só duas branches: `dev` recebe o trabalho do dia a dia; `main` só recebe o merge da `dev` numa release. Nada de branch por versão.
+- Toda mudança visível entra em `## [Não lançada]` no `CHANGELOG.md`, no mesmo commit.
+- Release: na `dev`, um commit `chore(release): X.Y.Z` move a seção `[Não lançada]` para `[X.Y.Z] - data` e troca a versão em `package.json`, `package-lock.json` (`npm version X.Y.Z --no-git-tag-version`) e `metadata.json` (`version-name`). Depois, merge `--no-ff` da `dev` na `main`, tag anotada `vX.Y.Z` na `main` e push da tag: o workflow `release` cria a GitHub Release com o zip da extensão e as notas do CHANGELOG.
+- Numeração SemVer na série 0.x: `minor` para feature ou quebra de compatibilidade, `patch` só para correção.
 - Mudou comportamento, atualize a spec correspondente no mesmo commit. Spec e código nunca divergem.
 - API de GJS/St/Mutter que você não confirmou no código-fonte do Shell ou em gjs.guide: diga "não sei" e verifique, em vez de chutar.
 - Ponto em aberto marcado como spike (`specs/14-spikes.md`) se resolve antes de implementar a feature que depende dele, e o resultado vai para a spec.
@@ -124,4 +129,4 @@ Problema já encontrado e sua solução. Adicione aqui toda vez que algo custar 
 - [ ] Spec afetada atualizada no mesmo commit
 - [ ] Tudo que `enable()` cria, `disable()` desfaz
 - [ ] Nenhum I/O síncrono no main loop
-- [ ] Nenhuma credencial fora do libsecret
+- [ ] Nenhum token em log, GSettings, mensagem de erro ou teste

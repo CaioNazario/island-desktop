@@ -4,10 +4,19 @@
     <value nick="center-card" value="0"/>
     <value nick="calendar" value="1"/>
   </enum>
+  <enum id="org.gnome.shell.extensions.island.Theme">
+    <value nick="nocturne" value="0"/>
+    <value nick="high-contrast" value="1"/>
+  </enum>
   <schema id="org.gnome.shell.extensions.island" path="/org/gnome/shell/extensions/island/">
     <key name="click-action" enum="org.gnome.shell.extensions.island.ClickAction">
       <default>'center-card'</default>
       <summary>Clique na ilha abre</summary>
+    </key>
+    <key name="theme" enum="org.gnome.shell.extensions.island.Theme">
+      <default>'nocturne'</default>
+      <summary>Tema</summary>
+      <description>Nocturne ou Alto contraste (specs/19-temas.md).</description>
     </key>
     <key name="weather-location" type="v">
       <default>&lt;@mv nothing&gt;</default>

@@ -20,7 +20,7 @@ export interface DragHooks {
 export type SliderRowVariant = 'popup' | 'pill';
 
 // Linha ícone + slider (+ valor no variant `popup`), usada pelos modos
-// `volume`/`brightness` (`popup`, 320×50) e pela linha de controles de
+// `volume`/`brightness` (`popup`, 320×36) e pela linha de controles de
 // `quick`/`wifi`/`bt` (`pill`, specs/08-controles-rapidos.md). O ícone usa
 // nomes simbólicos do sistema como substituto temporário do ícone Phosphor
 // até a spec 01 ganhar um pipeline de fonte de ícones.
@@ -46,8 +46,8 @@ export const SliderRow = GObject.registerClass(
       super({
         ...(isPill ? { style_class: 'island-control-pill' } : {}),
         style: isPill
-          ? `padding: 0 12px; spacing: 8px; height: 38px; border-radius: 19px; background-color: ${colors.neutral900};`
-          : 'padding: 0 18px; spacing: 14px;',
+          ? `padding: 0 11px; spacing: 8px; height: 32px; border-radius: 16px; background-color: ${colors.neutral900};`
+          : 'padding: 0 16px; spacing: 12px;',
         y_align: Clutter.ActorAlign.CENTER,
         x_expand: true,
       });
@@ -56,7 +56,7 @@ export const SliderRow = GObject.registerClass(
       this.iconName = iconName;
 
       this.icon = new St.Icon({
-        icon_size: isPill ? 16 : 18,
+        icon_size: 16,
         style: `color: ${colors.neutral300};`,
       });
       this.add_child(this.icon);

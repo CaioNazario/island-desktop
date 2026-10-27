@@ -47,7 +47,7 @@ Referência de como os dados são obtidos: [ai-usagebar](https://github.com/akit
 
 ## Widget `ai`
 
-O antigo botão da pílula esquerda virou o widget `ai` (spec 16). No ambiente Padrão ele fica na pílula esquerda, como na v1.0.
+O antigo botão da pílula esquerda virou o widget `ai` (spec 16). No ambiente Padrão ele fica na pílula esquerda, como na v0.1.
 
 - Moldura e padding do widget (spec 16: 24px, padding 0 9px, hover `neutral-900`); gap 12px entre provedores. O fundo `neutral-900` com `ai` aberto do design antigo saiu.
 - Por provedor logado (gap 6px): ícone 13px `neutral-300` · mini barra 26×4 raio 2 (`neutral-800` + preenchimento da **sessão**, transição 600ms) · `62%` 11.5px/500 alinhado à direita, largura mínima 3.2ch.

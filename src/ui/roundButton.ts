@@ -10,12 +10,11 @@ export interface RoundButtonColors {
   fg: string;
 }
 
-export const ROUND_BUTTON_RESTING: RoundButtonColors = {
-  bg: colors.neutral800,
-  fg: colors.neutral300,
-};
+export function roundButtonResting(): RoundButtonColors {
+  return { bg: colors.neutral800, fg: colors.neutral300 };
+}
 
-// Botão 38×38 raio 19 depois do divisor da linha de controles
+// Botão 32×32 raio 16 depois do divisor da linha de controles
 // (specs/09-sessao-energia.md): hover `neutral-700` / `text`, pressionado
 // `accent-800`. `resting` dá as cores fora do hover (o Energia muda quando a
 // linha de energia está aberta); `refresh()` reaplica quando elas mudam.
@@ -26,10 +25,10 @@ export const RoundButton = GObject.registerClass(
     constructor(
       glyph: string,
       onClick: () => void,
-      resting: () => RoundButtonColors = () => ROUND_BUTTON_RESTING,
+      resting: () => RoundButtonColors = roundButtonResting,
     ) {
       super({
-        child: new St.Icon({ gicon: phosphor(glyph), icon_size: 17 }),
+        child: new St.Icon({ gicon: phosphor(glyph), icon_size: 15 }),
         track_hover: true,
         x_align: Clutter.ActorAlign.CENTER,
         y_align: Clutter.ActorAlign.CENTER,
@@ -50,9 +49,9 @@ export const RoundButton = GObject.registerClass(
     refresh(): void {
       const { bg, fg } = this.colorsNow();
       this.style = `
-        width: 38px;
-        height: 38px;
-        border-radius: 19px;
+        width: 32px;
+        height: 32px;
+        border-radius: 16px;
         background-color: ${bg};
         color: ${fg};
         transition-duration: 180ms;

@@ -3,6 +3,7 @@ import type { EventSourceBase } from 'resource:///org/gnome/shell/ui/calendar.js
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import type { CalendarEvent } from '../core/calendar.js';
+import { DayTracker } from '../core/dayTracker.js';
 
 export interface CalendarEventsSource {
   /** Eventos que tocam hoje, crus: filtro, ordem e formato são do core. */
@@ -25,14 +26,10 @@ function shellEventSource(): EventSourceBase | null {
 
 const DAY_CHECK_SECONDS = 60;
 
-function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
 // Eventos de hoje (specs/06-calendario.md, "Eventos").
 export class SystemCalendarEvents implements CalendarEventsSource {
   private source: EventSourceBase | null = null;
-  private day = startOfDay(new Date());
+  private readonly dayTracker = new DayTracker(new Date());
   private dayTimerId: number | null;
   private readonly listeners = new Set<() => void>();
 
@@ -43,9 +40,7 @@ export class SystemCalendarEvents implements CalendarEventsSource {
     // Por comparação de data, não por timer até a meia-noite: o relógio
     // monotônico para na suspensão.
     this.dayTimerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, DAY_CHECK_SECONDS, () => {
-      const today = startOfDay(new Date());
-      if (today.getTime() !== this.day.getTime()) {
-        this.day = today;
+      if (this.dayTracker.advance(new Date())) {
         this.requestRange();
         this.notify();
       }
@@ -55,8 +50,9 @@ export class SystemCalendarEvents implements CalendarEventsSource {
 
   get today(): readonly CalendarEvent[] {
     if (!this.source) return [];
-    const end = new Date(this.day.getFullYear(), this.day.getMonth(), this.day.getDate() + 1);
-    return this.source.getEvents(this.day, end).map((event) => ({
+    const day = this.dayTracker.day;
+    const end = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
+    return this.source.getEvents(day, end).map((event) => ({
       id: event.id,
       summary: event.summary,
       start: event.date,
@@ -96,8 +92,9 @@ export class SystemCalendarEvents implements CalendarEventsSource {
   // antes do dia 1 e termina até 36 dias depois), para o menu nativo seguir
   // certo quando a extensão é desativada.
   private requestRange(): void {
-    const year = this.day.getFullYear();
-    const month = this.day.getMonth();
+    const day = this.dayTracker.day;
+    const year = day.getFullYear();
+    const month = day.getMonth();
     this.source?.requestRange(new Date(year, month, 1 - 14), new Date(year, month + 1, 14));
   }
 

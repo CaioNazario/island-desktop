@@ -86,7 +86,7 @@ function powerButtons(
   onAction: (action: PowerAction) => void,
 ): St.BoxLayout {
   const row = new St.BoxLayout({
-    style: 'height: 40px; padding: 0 10px 8px; spacing: 6px;',
+    style: 'height: 40px; padding: 0 7px 8px; spacing: 6px;',
     x_expand: true,
   });
   (row.layout_manager as Clutter.BoxLayout).homogeneous = true;

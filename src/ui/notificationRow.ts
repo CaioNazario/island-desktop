@@ -134,16 +134,16 @@ export const NotificationRow = GObject.registerClass(
 export type NotificationRowActor = InstanceType<typeof NotificationRow>;
 
 const NOTIF_METRICS: NotificationRowMetrics = {
-  blockSize: 36,
-  blockRadius: 10,
-  iconSize: 20,
-  closeSize: 26,
+  blockSize: 32,
+  blockRadius: 16,
+  iconSize: 17,
+  closeSize: 24,
   closeIconSize: 12,
   closeFilled: true,
-  gap: 12,
+  gap: 10,
 };
 
-/** `notif` (specs/04-notificacoes.md): 400×62, padding 0 12px, gap 12px. */
+/** `notif` (specs/04-notificacoes.md): 400×48, padding 0 10px 0 8px, gap 10px. */
 export function notifContent(onClose: () => void): {
   content: St.Bin;
   row: NotificationRowActor;
@@ -151,7 +151,7 @@ export function notifContent(onClose: () => void): {
   const row = new NotificationRow(NOTIF_METRICS, onClose);
   const content = new St.Bin({
     child: row,
-    style: 'padding: 0 12px;',
+    style: 'padding: 0 10px 0 8px;',
     x_expand: true,
     y_expand: true,
   });

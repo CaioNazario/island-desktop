@@ -4,7 +4,7 @@ Origem: `design/tokens.css` (`:root` a partir da linha ~256, classes `.btn*` a p
 
 ## Cores
 
-O CSS do St não tem variáveis. Uma tabela única em `src/ui/tokens.ts` é a fonte: gera o `stylesheet.css` no build e alimenta o que é pintado por código.
+O CSS do St não tem variáveis. As cores do Nocturne (os valores desta tabela) vivem em `src/core/theme.ts`, junto com o Alto contraste (spec 19); `src/ui/tokens.ts` guarda a paleta ativa. Uma tabela única é a fonte: gera o `stylesheet.css` no build e alimenta o que é pintado por código.
 
 | Token | Hex |
 |---|---|

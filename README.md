@@ -210,6 +210,11 @@ Requer o [`gh`](https://cli.github.com/) com login feito (`gh auth login`). A ex
 
 ***
 ## Instalação
+Pela [última release](https://github.com/CaioNazario/island-desktop/releases/latest):
+```
+gnome-extensions install --force island@caionazario.dev.shell-extension.zip
+```
+Ou pelo código da `main`:
 ```
 git clone https://github.com/CaioNazario/island-desktop.git
 cd island-desktop
