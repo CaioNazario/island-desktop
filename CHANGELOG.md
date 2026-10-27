@@ -4,6 +4,10 @@ Versões da Island, extensão do GNOME Shell. Formato de [Keep a Changelog](http
 
 ## [Não lançada]
 
+## [0.3.0] - 2026-10-27
+
+Design v4.
+
 ### Adicionado
 
 - Temas: paleta de alto contraste e escolha do tema nas preferências (spec 19).
@@ -54,7 +58,8 @@ Primeira versão.
 - Uso de IA do Claude e do Codex.
 - Preferências: geral, clima e uso de IA.
 
-[Não lançada]: https://github.com/CaioNazario/island-desktop/compare/v0.2.1...dev
+[Não lançada]: https://github.com/CaioNazario/island-desktop/compare/v0.3.0...dev
+[0.3.0]: https://github.com/CaioNazario/island-desktop/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/CaioNazario/island-desktop/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/CaioNazario/island-desktop/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/CaioNazario/island-desktop/releases/tag/v0.1.0
