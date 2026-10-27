@@ -21,15 +21,16 @@ jobs:
       - run: make lint
       - run: make test
       - run: make pack
-      # Notas: a seção da versão no CHANGELOG.md, sem o título.
+      # Notas: o link do site e a seção da versão no CHANGELOG.md, sem o título.
       - run: |
           version="${GITHUB_REF_NAME#v}"
+          printf '🌐 Site: https://islandesktop.vercel.app/\n' > notes.md
           awk -v v="$version" '
             index($0, "## [" v "]") == 1 { on = 1; next }
             on && /^## \[/ { exit }
             on && /^\[/ { exit }
             on { print }
-          ' CHANGELOG.md > notes.md
+          ' CHANGELOG.md >> notes.md
           gh release create "$GITHUB_REF_NAME" island@caionazario.dev.shell-extension.zip \
             --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
         env:
