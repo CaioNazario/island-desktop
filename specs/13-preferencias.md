@@ -2,7 +2,7 @@
 
 Origem: `design/props.json` (`clickAction`) e o estado persistido do protótipo (`localStorage` em `design/logic.js`: `LS`, `island-v3-edge`). `battery` e `charging` são controles de demonstração e **não** viram preferência. `barPosition` está fora de escopo (spec 00).
 
-O design v3 muda o padrão de `clickAction` para "Calendário compacto" e só aplica a opção fora do ambiente Padrão. A Island mantém o comportamento da v1.0: opção global, padrão cartão central.
+O design v3 muda o padrão de `clickAction` para "Calendário compacto" e só aplica a opção fora do ambiente Padrão. A Island mantém o comportamento da v0.1: opção global, padrão cartão central.
 
 ## Schema GSettings
 
@@ -56,5 +56,5 @@ A notificação de dica do clima (spec 07) abre esta janela direto na página Cl
 - [x] Cada chave do schema muda o comportamento na hora, com a extensão rodando.
 - [x] `glib-compile-schemas` roda sem aviso no build e no `install.sh`.
 - [x] A janela abre pelo app Extensões e por `gnome-extensions prefs island@caionazario.dev`.
-- [x] As chaves novas da v1.1 mudam o comportamento na hora, com a extensão rodando.
+- [x] As chaves novas da v0.2 mudam o comportamento na hora, com a extensão rodando.
 - [x] Mudar a data da contagem nas preferências atualiza o widget sem reiniciar.

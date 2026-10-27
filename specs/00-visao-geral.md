@@ -53,11 +53,11 @@ A Island substitui o painel superior do GNOME por três pílulas flutuantes. A d
 4. 04 (notificações) → 05/06 (música, calendário, cartão central)
 5. 10 (hardware) → 07 (clima) → 12 (IA)
 6. 13 (preferências) consolida as opções que cada spec já declarou
-7. v1.1 (design v3): 15 → 16 → 17 → 11 → 18, com os spikes da spec 14 antes da spec dependente; a 11 entra pelo desenho da bateria que o v3 trouxe
-8. v1.1.1 (design v4): 19 (temas) e a ilha mais fina, que mudou os tamanhos das specs 03, 04, 05, 08, 09 e 15
-9. Specs anteriores que o v3 reabriu (02, 03, 05, 13): conferir o que as specs 15–18 já cobriram e implementar o resto antes da tag v1.1.0
+7. v0.2 (design v3): 15 → 16 → 17 → 11 → 18, com os spikes da spec 14 antes da spec dependente; a 11 entra pelo desenho da bateria que o v3 trouxe
+8. v0.3 (design v4): 19 (temas) e a ilha mais fina, que mudou os tamanhos das specs 03, 04, 05, 08, 09 e 15
+9. Specs anteriores que o v3 reabriu (02, 03, 05, 13): conferir o que as specs 15–18 já cobriram e implementar o resto antes da tag v0.2.0
 
-## Fora de escopo (v1.x)
+## Fora de escopo (v0.x)
 
 - Botão Atividades, terminais/Ghostty, modo Download e modo `system` (existem ou existiram no design e foram cortados)
 - Barra na base ou nas laterais (`barPosition` do design), ilha vertical (`SIZES.compactV`) e widgets verticais: a barra fica só no topo

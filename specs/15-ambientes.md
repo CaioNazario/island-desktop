@@ -23,7 +23,7 @@ Ambientes iniciais (`DEFAULT_ENVS`):
 | Estudos | `ph-book-open` | Progresso do dia, Pomodoro | Nota |
 | Fim de semana | `ph-sun-horizon` | Música | Contagem regressiva |
 
-O Padrão reproduz a barra da v1.0 (IA à esquerda, hardware à direita).
+O Padrão reproduz a barra da v0.1 (IA à esquerda, hardware à direita).
 
 ### Persistência
 
