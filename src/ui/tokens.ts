@@ -1,35 +1,24 @@
 // Fonte: design/tokens.css (:root ~L256) e cores literais de design/logic.js.
 // specs/01-design-tokens.md documenta a origem de cada valor.
 
-export const colors = {
-  bg: '#161826',
-  surface: '#232532',
-  text: '#e9e9ed',
-  accent: '#9184d9',
+import {
+  buildTheme,
+  DEFAULT_THEME,
+  type ThemeColors,
+  type ThemeDerived,
+  type ThemeId,
+  type ThemeSurfaces,
+} from '../core/theme.js';
 
-  neutral100: '#f3f5fe',
-  neutral200: '#e4e7f5',
-  neutral300: '#cfd3e5',
-  neutral400: '#b2b6ca',
-  neutral500: '#9397ab',
-  neutral600: '#75798c',
-  neutral700: '#595d6c',
-  neutral800: '#3f424d',
-  neutral900: '#292b31',
-
-  accent100: '#f5f4ff',
-  accent200: '#e7e5fe',
-  accent300: '#d2cefd',
-  accent400: '#b5abfc',
-  accent500: '#968ae0',
-  accent600: '#796cbf',
-  accent700: '#5d5294',
-  accent800: '#423a6a',
-  accent900: '#2b2741',
-} as const;
+// Paleta ativa (specs/19-temas.md). Os objetos são mutados no lugar por
+// `applyTheme`; quem guarda uma cor em constante de módulo a deixa velha
+// depois da troca, então leia sempre dentro de função.
+export const colors: ThemeColors = { ...buildTheme(DEFAULT_THEME).colors };
+export const surfaces: ThemeSurfaces = { ...buildTheme(DEFAULT_THEME).surfaces };
 
 // oklch()/color-mix() convertidos para hex/rgba equivalentes (St não entende as funções CSS4).
-export const derivedColors = {
+// As cores de exceção (specs/02-barra.md) valem em qualquer tema.
+const exceptionColors = {
   alertRed: '#f75d59', // IA ≥90%, TEMP ≥70°
   alertText: '#fd736d', // texto de alerta (IA ≥90%, erro de senha)
   batteryRed: '#c62f2f', // bateria ≤20%, sólido
@@ -38,17 +27,20 @@ export const derivedColors = {
   powerOpenBg: '#932b2a', // fundo do botão Energia aberto
   powerOffText: '#ff958d', // texto "Desligar"
   passwordErrorBorder: '#bd413f', // borda do campo de senha com erro
+};
 
-  volumeThumbGlow: 'rgba(145,132,217,0.60)', // accent 60%
+export const derivedColors: typeof exceptionColors & ThemeDerived = {
+  ...exceptionColors,
+  ...buildTheme(DEFAULT_THEME).derived,
+};
 
-  btnPrimaryHover: 'rgba(145,132,217,0.12)',
-  btnPrimaryActive: 'rgba(145,132,217,0.22)',
-  btnGhostHover: 'rgba(145,132,217,0.10)',
-  btnGhostActive: 'rgba(145,132,217,0.18)',
-
-  divider: 'rgba(233,233,237,0.16)', // text 16%
-  dividerFadeEnd: 'rgba(63,66,77,0)', // neutral-800 0%, ponta dos divisores em degradê
-} as const;
+/** Troca a paleta ativa. A UI que já foi construída precisa ser recriada para refletir. */
+export function applyTheme(id: ThemeId, accentHue?: number): void {
+  const theme = buildTheme(id, accentHue);
+  Object.assign(colors, theme.colors);
+  Object.assign(surfaces, theme.surfaces);
+  Object.assign(derivedColors, theme.derived);
+}
 
 export const typography = {
   fontFamily: 'Inter',

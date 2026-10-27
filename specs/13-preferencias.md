@@ -11,6 +11,7 @@ O design v3 muda o padrão de `clickAction` para "Calendário compacto" e só ap
 | Chave | Tipo | Padrão | Usada em |
 |---|---|---|---|
 | `click-action` | enum `center-card` \| `calendar` | `center-card` | spec 03 (clique na ilha compacta) |
+| `theme` | enum `nocturne` \| `high-contrast` | `nocturne` | spec 19 (tema; a janela de preferências, página Geral, troca na hora) |
 | `weather-location` | `v` (localização GWeather serializada) | vazio | spec 07 |
 | `weather-hint-shown` | `b` | `false` | spec 07 (interna, sem UI) |
 | `prefs-page` | `s` | vazio | página a abrir nas preferências (interna, sem UI) |

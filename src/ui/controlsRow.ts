@@ -16,7 +16,7 @@ import {
 import type { IslandSystem } from './island.js';
 import type { PowerAction } from '../system/session.js';
 import type { PowerToggle } from './powerRow.js';
-import { ROUND_BUTTON_RESTING, RoundButton } from './roundButton.js';
+import { roundButtonResting, RoundButton } from './roundButton.js';
 import { SliderRow, type DragHooks, type SliderRowActor } from './sliderRow.js';
 import { Tile, type TileActor, type TileSource } from './tile.js';
 import { colors, derivedColors } from './tokens.js';
@@ -55,7 +55,7 @@ export const ControlsRow = GObject.registerClass(
 
     constructor(system: IslandSystem, drag: DragHooks, options: ControlsRowOptions) {
       super({
-        style: 'height: 58px; padding: 0 10px; spacing: 8px;',
+        style: 'height: 46px; padding: 0 7px; spacing: 6px;',
         y_align: Clutter.ActorAlign.CENTER,
         x_expand: true,
       });
@@ -141,7 +141,7 @@ export const ControlsRow = GObject.registerClass(
         () =>
           power.open
             ? { bg: derivedColors.powerOpenBg, fg: colors.neutral100 }
-            : ROUND_BUTTON_RESTING,
+            : roundButtonResting(),
       );
       this.add_child(button);
       return power.onChange(() => button.refresh());

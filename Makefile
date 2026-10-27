@@ -1,7 +1,7 @@
 UUID := island@caionazario.dev
 INSTALL_DIR := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 
-.PHONY: test lint build dev clean
+.PHONY: test lint build dev smoke clean
 
 test:
 	npx vitest run
@@ -20,6 +20,9 @@ build: clean
 
 dev: build
 	dbus-run-session gnome-shell --devkit --wayland
+
+smoke: build
+	scripts/smoke.sh
 
 clean:
 	rm -rf dist

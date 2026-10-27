@@ -73,7 +73,7 @@ export const EnvironmentDots = GObject.registerClass(
 export type EnvironmentDotsActor = InstanceType<typeof EnvironmentDots>;
 
 // Conteúdo do modo `env` (specs/15-ambientes.md): ícone 16px `accent-300` ·
-// nome 13px/500 · pontos, centralizado com gap 10px.
+// nome 13px/500 · pontos, centralizado com gap 9px.
 export const EnvironmentModeRow = GObject.registerClass(
   class EnvironmentModeRow extends St.BoxLayout {
     private readonly source: EnvironmentSource;
@@ -82,7 +82,7 @@ export const EnvironmentModeRow = GObject.registerClass(
 
     constructor(source: EnvironmentSource) {
       super({
-        style: 'spacing: 10px;',
+        style: 'spacing: 9px;',
         x_align: Clutter.ActorAlign.CENTER,
         y_align: Clutter.ActorAlign.CENTER,
       });

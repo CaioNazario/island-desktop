@@ -3,7 +3,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import type { Mode } from '../core/island.js';
-import { colors, effects } from './tokens.js';
+import { colors, effects, surfaces } from './tokens.js';
 
 /** O que a ilha mostra: um modo ou o cartão central (specs/05-musica.md). */
 export type LayerId = Mode | 'card';
@@ -81,7 +81,7 @@ export const IslandSurface = GObject.registerClass(
     set radius(radius: number) {
       if (this.radiusPx === radius) return;
       this.radiusPx = radius;
-      this.style = `background-color: ${colors.bg}; border-radius: ${radius}px; border: ${this.ring}px solid ${colors.neutral800};`;
+      this.style = `background-color: ${surfaces.island}; border-radius: ${radius}px; border: ${this.ring}px solid ${colors.neutral800};`;
       this.notify('radius');
     }
   },

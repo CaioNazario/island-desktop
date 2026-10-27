@@ -6,6 +6,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { IslandState, type Mode, type Scheduler } from '../core/island.js';
 import { routeNotification, type IncomingNotification } from '../core/notifications.js';
+import { parseThemeId } from '../core/theme.js';
 import { SystemAiUsage } from '../system/aiUsage.js';
 import { SystemBattery } from '../system/battery.js';
 import { SystemBluetooth } from '../system/bluetooth.js';
@@ -28,6 +29,7 @@ import { SystemWifi } from '../system/wifi.js';
 import { SystemWeather } from '../system/weather.js';
 import { WeatherHint } from '../system/weatherHint.js';
 import { Bar } from './barChrome.js';
+import { applyTheme } from './tokens.js';
 import { phosphor } from './icons.js';
 import type { IslandSystem } from './island.js';
 
@@ -45,6 +47,7 @@ class GLibScheduler implements Scheduler {
 }
 
 const AUTO_HIDE_KEY = 'auto-hide';
+const THEME_KEY = 'theme';
 
 // Existe um único IslandState compartilhado entre monitores (specs/02-barra.md):
 // só a ilha do monitor-alvo mostra o modo atual, as outras ficam em `compact`.
@@ -79,6 +82,7 @@ export class BarManager {
 
   constructor(settings: Gio.Settings, openPreferences: () => void) {
     syncDebugLog();
+    applyTheme(parseThemeId(settings.get_string(THEME_KEY)));
     this.state = new IslandState(new GLibScheduler(), {
       islandClickOpens: () =>
         settings.get_string('click-action') === 'calendar' ? 'calendar' : 'card',
@@ -144,6 +148,8 @@ export class BarManager {
     Main.layoutManager.connectObject('monitors-changed', () => this.rebuild(), this);
     // Auto-ocultar (specs/18-auto-ocultar.md): o overview aberto mostra as barras.
     settings.connectObject(`changed::${AUTO_HIDE_KEY}`, () => this.syncAutoHide(), this);
+    // As cores entram nos estilos na construção dos atores: trocar de tema recria a barra.
+    settings.connectObject(`changed::${THEME_KEY}`, () => this.changeTheme(settings), this);
     Main.overview.connectObject(
       'showing',
       () => this.render(),
@@ -327,6 +333,12 @@ export class BarManager {
     this.targetMonitorIndex = monitorIndex;
     // Abrir a lista pelo `notif` marca tudo como lido (specs/04-notificacoes.md).
     if (this.state.islandClick() === 'opened-stack') this.notifications.markAllRead();
+    this.render();
+  }
+
+  private changeTheme(settings: Gio.Settings): void {
+    applyTheme(parseThemeId(settings.get_string(THEME_KEY)));
+    this.rebuild();
     this.render();
   }
 
