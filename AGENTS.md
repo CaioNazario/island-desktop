@@ -104,7 +104,11 @@ Tudo que `enable()` cria, conecta, injeta ou agenda, `disable()` desfaz: atores 
 
 ## Regras de trabalho
 
-- CI obrigatória: todo push e PR roda `make lint`, `make test` (todos os testes) e `make build`. CI vermelha não entra na main.
+- CI obrigatória: todo push e PR roda `make lint`, `make test` (todos os testes) e `make build`. CI vermelha não entra na `dev` nem na `main`.
+- Só duas branches: `dev` recebe o trabalho do dia a dia; `main` só recebe o merge da `dev` numa release. Nada de branch por versão.
+- Toda mudança visível entra em `## [Não lançada]` no `CHANGELOG.md`, no mesmo commit.
+- Release: na `dev`, um commit `chore(release): X.Y.Z` move a seção `[Não lançada]` para `[X.Y.Z] - data` e troca a versão em `package.json`, `package-lock.json` (`npm version X.Y.Z --no-git-tag-version`) e `metadata.json` (`version-name`). Depois, merge `--no-ff` da `dev` na `main`, tag anotada `vX.Y.Z` na `main` e push da tag: o workflow `release` cria a GitHub Release com o zip da extensão e as notas do CHANGELOG.
+- Numeração SemVer na série 0.x: `minor` para feature ou quebra de compatibilidade, `patch` só para correção.
 - Mudou comportamento, atualize a spec correspondente no mesmo commit. Spec e código nunca divergem.
 - API de GJS/St/Mutter que você não confirmou no código-fonte do Shell ou em gjs.guide: diga "não sei" e verifique, em vez de chutar.
 - Ponto em aberto marcado como spike (`specs/14-spikes.md`) se resolve antes de implementar a feature que depende dele, e o resultado vai para a spec.
